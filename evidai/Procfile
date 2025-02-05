@@ -1,0 +1,1 @@
+web: gunicorn --worker-tmp-dir /dev/shm evidai.wsgi:application --bind 0.0.0.0:$PORT
