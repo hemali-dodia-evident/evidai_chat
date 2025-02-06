@@ -747,7 +747,7 @@ def evidAI_chat(request):
                 
             questions.insert(0,question)
             # print(questions)
-            response, asset_found = handle_questions(token, roles, user_name, questions, chat_session_id, conversation_history,onboarding_step)
+            response, asset_found = handle_questions(token, roles, user_name, questions,onboarding_step)
             html_content = markdown.markdown(response)
             response = html_content
                         
