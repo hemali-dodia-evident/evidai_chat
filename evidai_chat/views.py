@@ -229,6 +229,7 @@ def get_chat_session_details(request):
 # Create Session
 @csrf_exempt 
 def create_chat_session(request):
+    log_message("info","Creating new chat session")
     try:
         if request.method=='POST':
             token = None
@@ -272,36 +273,39 @@ def create_chat_session(request):
                     'updated_at': new_chat_session.updated_at,
                 }
             }, status=200)
-
+        log_message("info","New chat session created successfully")
     except json.JSONDecodeError:
-        log_message('error','Invalid JSON format')
+        log_message('error','Invalid JSON format while creating new chat session')
         return JsonResponse({
             "message": "Invalid JSON format",
             "status": False,
             "data": {"response":''}
-        }, status=200)
+        }, status=400)
     
 
 # Update title of newly created chat session
 @csrf_exempt
 def update_chat_title(question,chat_session_id):
-    prompt = "Based on this question generate title for this conversation. Title should be short, in context of question, and it should not exceed 50 characters. Use proper formatting to enhance readability."
+    prompt = """Based on this question generate title for this conversation. 
+    Title should be short, in context of question, and it should have 30 characters maximum. 
+    Use proper formatting to enhance readability."""
     # Get the current date and time in UTC
     current_datetime = datetime.now(timezone.utc)
 
     # Convert to ISO 8601 format
     iso_format_datetime = current_datetime.isoformat()
     title = get_gemini_response(question,prompt)
-    
+    title = title.replace("*","")
     try:
         chat_session = models.ChatSession.objects.get(id=chat_session_id)
         chat_session.title = title
         chat_session.updated_at = iso_format_datetime
         chat_session.save()
-        return title
+        log_message('info',f"Title updated successfully for chat_session_id - {chat_session_id}")
     except Exception as e:
-        log_message('error',str(e))
-        return 
+        log_message('error',f"Failed to update title for chat_session_id - {chat_session_id} Due to - {str(e)}")
+        title = "Current Conversation"
+    return title
 
 
 def get_conversation_for_context(chat_session_id):
@@ -353,27 +357,29 @@ def get_conversations(request):
                         "response":convo_list
                     }
                 }
+                log_message('info',f'conversations fetched successfully for chat session id - {chat_session_id}')
                 return JsonResponse(response_data,status=200)
             except Exception as e:
-                log_message('error',str(e))
+                log_message('error',f'failed to fetch conversations for chat session id - {chat_session_id} due to - {str(e)}')
                 return JsonResponse({"message": "Unexpected error occurred.",
                     "status": False,
                     "dcata": {
                         "response":"Unable to get Conversations, Please try again."
-                    }},status=200)
+                    }},status=400)
         else:
+            log_message('error',f'failed to fetch conversations for chat session id - {chat_session_id}')
             return JsonResponse({
                 "message":"Failed to get conversations",
                 "data":{"response":"Failed to get conversation details, please check if correct chat session id is passed."},
                 "status":False
-            },status=200)
+            },status=400)
     else:
-        log_message('error', "Failed to get conversation. Invalid method, POST method is expected")
+        log_message('error',f'failed to fetch conversations for chat session id - {chat_session_id}')
         return JsonResponse({
             "message": "Unexpected error occurred.",
             "status": False,
             "data": {'response':'Invalid method, POST method is expected'}
-        }, status=200)
+        }, status=400)
 
 
 # Validate chat session id if it is active or not
@@ -384,7 +390,7 @@ def validate_chat_session(chat_session_id):
         return chat_session
     except Exception as e:
         # print(str(e))
-        log_message('error', "Failed to validate chat session due to - "+str(e))
+        log_message('error', f"Failed to validate chat session id - {chat_session_id} due to - {str(e)}")
         return 
 
 
@@ -412,43 +418,44 @@ def delete_chat_session(request):
             chat = models.ChatSession.objects.get(id=chat_session_id)
             chat.show = False
             chat.save()
+            log_message('info', f"deleted chat session id - {chat_session_id} successfully")
             return JsonResponse({"message":"Chat session deleted successfully","data":{
             "chat_session_id":chat_session_id, "title":chat.title},"status":True},status=200)
         except Exception as e:
-            log_message('error',str(e))
+            log_message('error', f"Failed to delete chat session id - {chat_session_id} due to - {str(e)}")
             return JsonResponse({"message":"Failed to delete Chat session","data":{"response":"Please check if correct chat session id is passed."},"status":False},status=400)
     else:
-        log_message('error','Invalid JSON format')
-        return JsonResponse({"message":"Invalid request type, POST method is expected","data":[],"status":False},status=400)
+        log_message('error', f"Failed to delete chat session id - {chat_session_id} due to - {str(e)}")
+        return JsonResponse({"message":"Invalid request type, POST method is expected","data":{'response':''},"status":False},status=400)
 
     
-@csrf_exempt
-def delete_multiple_chat_session(request):
-    if request.method=="POST":
-        data = json.loads(request.body)
-        chat_session_id = data.get("chat_session_id")
-        deleted_sessions = {}
-        try:
-            for chats in chat_session_id:
-                chat = models.ChatSession.objects.get(id=chats)
-                chat.show = False
-                chat.save()
-                deleted_sessions['chat_session_id']=chats
-                deleted_sessions['title']=chat.title
-        except Exception as e:
-            log_message('error',str(e))
-            return JsonResponse({"message":"Failed to delete Chat session","data":[],"status":False},status=200)
-        return JsonResponse({"message":"Chat session deleted successfully","data":deleted_sessions,"status":True},status=200)
-    else:
-        log_message('error','Invalid JSON format')
-        return JsonResponse({"message":"Invalid request type, POST method is expected","data":[],"status":False},status=200)
+# @csrf_exempt
+# def delete_multiple_chat_session(request):
+#     if request.method=="POST":
+#         data = json.loads(request.body)
+#         chat_session_id = data.get("chat_session_id")
+#         deleted_sessions = {}
+#         try:
+#             for chats in chat_session_id:
+#                 chat = models.ChatSession.objects.get(id=chats)
+#                 chat.show = False
+#                 chat.save()
+#                 deleted_sessions['chat_session_id']=chats
+#                 deleted_sessions['title']=chat.title
+#         except Exception as e:
+#             log_message('error',str(e))
+#             return JsonResponse({"message":"Failed to delete Chat session","data":[],"status":False},status=200)
+#         return JsonResponse({"message":"Chat session deleted successfully","data":deleted_sessions,"status":True},status=200)
+#     else:
+#         log_message('error','Invalid JSON format')
+#         return JsonResponse({"message":"Invalid request type, POST method is expected","data":[],"status":False},status=200)
 
 
 @csrf_exempt
 def chat_page(request):
     if request.method == 'GET':
-            # Render the HTML page for GET requests
-            return render(request, 'evidentchatbot.html') 
+        # Render the HTML page for GET requests
+        return render(request, 'evidentchatbot.html') 
     
 
 def search_on_internet(question):
@@ -469,6 +476,7 @@ def search_on_internet(question):
 
 
 def general_cat_based_question(prev_related,Asset_Related,user_name,questions,promp_cat,token,roles,onboarding_step):
+    log_message("info", f"In general cat based area data - {prev_related,Asset_Related,user_name,questions,promp_cat,token,roles,onboarding_step}")
     question = questions[0]
     final_response = ""
     asset_found = False

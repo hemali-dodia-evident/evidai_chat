@@ -10,7 +10,7 @@ class ChatSession(models.Model):
     show = models.BooleanField(default=True)
     class Meta:
         db_table = 'chat_sessions'
-        managed = True
+        managed = False
 
 class Conversation(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -24,7 +24,7 @@ class Conversation(models.Model):
 
     class Meta:
         db_table = 'conversations'
-        managed = True 
+        managed = False 
 
 class BasicPrompts(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -40,7 +40,7 @@ class BasicPrompts(models.Model):
     
     class Meta:
         db_table = 'evidai_prompts'
-        managed = True
+        managed = False
 
 class UserChatLogin(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -49,7 +49,7 @@ class UserChatLogin(models.Model):
 
     class Meta:
         db_table = "user_chat_evidai"
-        managed = True
+        managed = False
 
 class Asset_Key_Highlights(models.Model):
     id = models.AutoField(primary_key=True)
