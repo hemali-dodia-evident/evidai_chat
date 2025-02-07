@@ -454,38 +454,46 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
     asset_found = False
     promp_cat_new = ",".join(promp_cat)
     specific_category = promp_cat_new.replace("_",' ').split(',')  # Replace with the desired category
+    # print(specific_category)
     for promp_cat in specific_category:   
         # print("promp_cat at 453 - ",promp_cat)       
         if promp_cat!='FAILED' and promp_cat !='Personal Assets':
+            # print("461")
             try:
                 data = models.BasicPrompts.objects.filter(prompt_category=promp_cat)
                 prompt_data_list = []
                 for d in data:
                     prm = d.prompt
                     if 'Onboarding' in promp_cat:
-                        prm = prm+'\nUser\'s current onboarding status - '+onboarding_step
+                        # print("468")
+                        prm = f'{prm} \nUser\'s current onboarding status - {onboarding_step}'
                     prompt_data_list.append(prm)
+                # print(prompt_data_list)
                 prompt_data = f"""Customer:{user_name} is not providing you any information, all information is with you, DO NOT SAY TO CUSTOMER THAT THEY HAVE NOT PROVIDED INFORMATION,INSTEAD SAY YOU DONT HAVE INFORMATION CURRENTLY ON THIS. You are smart and intelligent chat-bot having good knowledge of finance sector considering this chat with user. 
-                Provide answer in a way that you are chatting with customer. Do not use any kind of emojis. Do not greet user while answering. Use below information to get answer -
+                Provide answer in a way that you are chatting with customer. Do not use any kind of emojis. Do not greet user while answering. Guide and help user to finish their steps and complete onboarding. Use below information to get answer -
                 {prompt_data_list}
                 NOTE - If you are not able to find answer then say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
                 Keep tone positive and polite while answering user's query. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'"""
                 response = get_gemini_response(question,prompt_data)
+                # print(477)
                 final_response = final_response + '\n' + response    
-            except:
+                # print(478)
+            except Exception as e:
+                # print(479, print(str(e)))
                 prm = """For this topic currently we don't have any information. 
                 Provide answer in a way that "I’m sorry I couldn’t assist you right now. 
                 However, our support team would be delighted to help! Please don’t hesitate to email 
                 them at hello@evident.capital with the details of your query, and they’ll assist you promptly." 
                 this will cover the part of question for which information is not available"""
                 final_response = get_gemini_response(question,prm)
-                
-        if promp_cat=='FAILED':
+                # print(488)
+        elif promp_cat=='FAILED':
+            # print(488)
             response = search_on_internet(question)
             asset_found = False
             final_response = final_response + '\n' + response   
-        if 'Personal Assets' in promp_cat or (Asset_Related==True and prev_related==True):    
-            # print("Asset related")    
+        elif 'Personal Assets' in promp_cat or (Asset_Related==True and prev_related==True):    
+            # print("Asset related - 493")    
             # Can i directly take from DB? API is taking too long
             all_assets_names = get_asset_list(token,roles)
             # print("Got asset list - \n", all_assets_names)
@@ -521,6 +529,7 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
                     final_response = final_response + '\n' + response  
                     asset_found = False
         else:
+            # print(529)
             response = search_on_internet(question)
             asset_found = False
             final_response = final_response + '\n' + response  
