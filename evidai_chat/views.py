@@ -27,6 +27,7 @@ def hello_world(request):
 @csrf_exempt 
 def get_gemini_response(question,prompt):
         try:
+            prompt = "Your name is EvidAI a smart intelligent bot to provide customer support and help them."+ prompt
             model = genai.GenerativeModel('gemini-pro')
             response_content = model.generate_content([prompt, question])
             return response_content.text.strip()
@@ -430,7 +431,7 @@ def delete_chat_session(request):
     
 
 def search_on_internet(question):
-    prompt = """You are smart and intelligent chat-bot having good knowledge of finance sector considering this chat with user.
+    prompt = """You are smart and intelligent chat-bot having good knowledge of finance and investment sector considering this chat with user.
                 Provide answer in a way that you are chatting with customer. Do not use any kind of emojis.
                 Chat with user, provide all information you can, support them, resolve their queries if they have and 
                 inform that this information is from internet search. Be nice and sweet along with inteligent while chatting. 
@@ -472,7 +473,13 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
                 response = get_gemini_response(question,prompt_data)
                 final_response = final_response + '\n' + response    
             except:
-                final_response = "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
+                prm = """For this topic currently we don't have any information. 
+                Provide answer in a way that "I’m sorry I couldn’t assist you right now. 
+                However, our support team would be delighted to help! Please don’t hesitate to email 
+                them at hello@evident.capital with the details of your query, and they’ll assist you promptly." 
+                this will cover the part of question for which information is not available"""
+                final_response = get_gemini_response(question,prm)
+                
         if promp_cat=='FAILED':
             response = search_on_internet(question)
             asset_found = False
