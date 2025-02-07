@@ -186,24 +186,30 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'INFO',  # Change this to 'WARNING' or 'ERROR' to suppress info/debug logs
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'level': 'INFO',  # Change as needed
+            'class': 'logging.FileHandler',
+            'filename': 'application.log',  # Log file path
             'formatter': 'verbose',
         },
     },
     'root': {
-        'handlers': ['console'],
-        'level': 'WARNING',  # Adjust this to control the root logger's level
+        'handlers': ['console', 'file'],  # Add file handler here
+        'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console'],
-            'level': 'WARNING',  # Suppress less critical logs from Django
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
             'propagate': True,
         },
         'django.request': {
-            'handlers': ['console'],
-            'level': 'ERROR',  # Suppress request logs below ERROR level
+            'handlers': ['console', 'file'],
+            'level': 'ERROR',
             'propagate': False,
         },
     },

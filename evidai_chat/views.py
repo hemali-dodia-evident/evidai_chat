@@ -18,35 +18,7 @@ asset_verticals = {1:'Private Equity',2:'Venture Capital',3:'Private Credit',4:'
                     7:'Real Estate',8:'Collectibles'}
 
 # Configure the logging settings
-logging.basicConfig(
-    filename='application.log',         # File to save logs
-    level=logging.INFO,                 # Log level
-    format='%(asctime)s - %(levelname)s - %(message)s',  # Log message format
-    datefmt='%Y-%m-%d %H:%M:%S'         # Date format
-)
-
-
-def log_message(level, message):
-    """
-    Logs a message with a specified level and the current date and time.
-    
-    Args:
-        level (str): The log level ('info', 'warning', 'error', etc.).
-        message (str): The message to log.
-    """
-    logger = logging.getLogger()
-
-    if level.lower() == 'info':
-        logger.info(message)
-    elif level.lower() == 'warning':
-        logger.warning(message)
-    elif level.lower() == 'error':
-        logger.error(message)
-    elif level.lower() == 'critical':
-        logger.critical(message)
-    else:
-        logger.debug(message)  # Default to debug level for unknown levels
-
+logger = logging.getLogger(__name__)
 
 def hello_world(request):
     return JsonResponse({"message":"Request received successfully","data":[],"status":True},status=200)
@@ -59,7 +31,7 @@ def get_gemini_response(question,prompt):
             response_content = model.generate_content([prompt, question])
             return response_content.text.strip()
         except Exception as e:
-            log_message('critical','Failed to get answer from gemini due to - '+str(e))
+            logger.critical(f'Failed to get answer from gemini due to - {str(e)}')
             response = "Sorry! I am not able to find answer for your question. \nRequest you to coordinate with our support team on - hello@evident.capital.\nThank You."
             return response
     
@@ -176,7 +148,7 @@ def add_to_conversations(user_id,chat_session_id,question, answer, is_asset):
         new_conv.save()
         return new_conv.id  
     except Exception as e:
-        log_message('error',f'Failed to add conversation for user_id={user_id}, chat_session_is={chat_session_id},question={question},and answer={answer} due to - '+str(e))
+        logger.error(f'Failed to add conversation for user_id={user_id}, chat_session_is={chat_session_id},question={question},and answer={answer} due to - '+str(e))
         return None  
 
 
@@ -201,7 +173,7 @@ def get_chat_session_details(request):
         token_valid,user_id,*extra = token_validation(token)
         del extra
         if token_valid is None:
-            log_message("error",f"Invalid Token, Token: {token}")            
+            logger.error(f"Invalid Token, Token: {token}")            
             return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400) 
         try:
             chats = models.ChatSession.objects.filter(user_id=user_id,show=True).order_by('-id')
@@ -215,9 +187,9 @@ def get_chat_session_details(request):
             return JsonResponse({"message":"All chat sessions fetched successfully",
                                 "data":{"response":convos},"status":True},status=200)
         except Exception as e:
-            log_message('error',str(e))
+            logger.error(f"No chat sessions found - {str(e)}")
             return JsonResponse({"message":"No chat sessions found",
-                                "data":{"response":[]},"status":True},status=200)
+                                "data":{"response":[]},"status":True},status=400)
     else:
         return JsonResponse({
             "message": "Invalid JSON format",
@@ -229,7 +201,6 @@ def get_chat_session_details(request):
 # Create Session
 @csrf_exempt 
 def create_chat_session(request):
-    log_message("info","Creating new chat session")
     try:
         if request.method=='POST':
             token = None
@@ -244,7 +215,7 @@ def create_chat_session(request):
             del extra
             # print(token)
             if token_valid is None:
-                log_message("error",f"Invalid Token, Token: {token}")            
+                logger.error(f"Invalid Token, Token: {token}")            
                 return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
                 
             # Get the current date and time in UTC
@@ -273,9 +244,9 @@ def create_chat_session(request):
                     'updated_at': new_chat_session.updated_at,
                 }
             }, status=200)
-        log_message("info","New chat session created successfully")
+        logger.info("New chat session created successfully")
     except json.JSONDecodeError:
-        log_message('error','Invalid JSON format while creating new chat session')
+        logger.error('Invalid JSON format while creating new chat session')
         return JsonResponse({
             "message": "Invalid JSON format",
             "status": False,
@@ -301,9 +272,9 @@ def update_chat_title(question,chat_session_id):
         chat_session.title = title
         chat_session.updated_at = iso_format_datetime
         chat_session.save()
-        log_message('info',f"Title updated successfully for chat_session_id - {chat_session_id}")
+        logger.info(f"Title updated successfully for chat_session_id - {chat_session_id}")
     except Exception as e:
-        log_message('error',f"Failed to update title for chat_session_id - {chat_session_id} Due to - {str(e)}")
+        logger.error(f"Failed to update title for chat_session_id - {chat_session_id} Due to - {str(e)}")
         title = "Current Conversation"
     return title
 
@@ -334,7 +305,7 @@ def get_conversations(request):
         token_valid,*extra = token_validation(token)
         del extra
         if token_valid is None:
-            log_message("error",f"Invalid Token, Token: {token}")            
+            logger.error(f"Invalid Token, Token: {token}")            
             return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
             
         data = json.loads(request.body)
@@ -357,24 +328,24 @@ def get_conversations(request):
                         "response":convo_list
                     }
                 }
-                log_message('info',f'conversations fetched successfully for chat session id - {chat_session_id}')
+                logger.info(f'conversations fetched successfully for chat session id - {chat_session_id}')
                 return JsonResponse(response_data,status=200)
             except Exception as e:
-                log_message('error',f'failed to fetch conversations for chat session id - {chat_session_id} due to - {str(e)}')
+                logger.error(f'failed to fetch conversations for chat session id - {chat_session_id} due to - {str(e)}')
                 return JsonResponse({"message": "Unexpected error occurred.",
                     "status": False,
-                    "dcata": {
-                        "response":"Unable to get Conversations, Please try again."
+                    "data": {
+                        "response":f"Unable to get Conversations due to - {str(e)}, Please try again."
                     }},status=400)
         else:
-            log_message('error',f'failed to fetch conversations for chat session id - {chat_session_id}')
+            logger.error(f'failed to fetch conversations for chat session id - {chat_session_id}')
             return JsonResponse({
                 "message":"Failed to get conversations",
                 "data":{"response":"Failed to get conversation details, please check if correct chat session id is passed."},
                 "status":False
             },status=400)
     else:
-        log_message('error',f'failed to fetch conversations for chat session id - {chat_session_id}')
+        logger.error(f'failed to fetch conversations for chat session id - {chat_session_id}')
         return JsonResponse({
             "message": "Unexpected error occurred.",
             "status": False,
@@ -390,7 +361,7 @@ def validate_chat_session(chat_session_id):
         return chat_session
     except Exception as e:
         # print(str(e))
-        log_message('error', f"Failed to validate chat session id - {chat_session_id} due to - {str(e)}")
+        logger.error( f"Failed to validate chat session id - {chat_session_id} due to - {str(e)}")
         return 
 
 
@@ -409,7 +380,7 @@ def delete_chat_session(request):
         token_valid,*extra = token_validation(token)
         del extra
         if token_valid is None:
-            log_message("error",f"Invalid Token, Token: {token}")            
+            logger.error("error",f"Invalid Token, Token: {token}")            
             return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
             
         data = json.loads(request.body)
@@ -418,14 +389,14 @@ def delete_chat_session(request):
             chat = models.ChatSession.objects.get(id=chat_session_id)
             chat.show = False
             chat.save()
-            log_message('info', f"deleted chat session id - {chat_session_id} successfully")
+            logger.info(f"deleted chat session id - {chat_session_id} successfully")
             return JsonResponse({"message":"Chat session deleted successfully","data":{
             "chat_session_id":chat_session_id, "title":chat.title},"status":True},status=200)
         except Exception as e:
-            log_message('error', f"Failed to delete chat session id - {chat_session_id} due to - {str(e)}")
+            logger.error( f"Failed to delete chat session id - {chat_session_id} due to - {str(e)}")
             return JsonResponse({"message":"Failed to delete Chat session","data":{"response":"Please check if correct chat session id is passed."},"status":False},status=400)
     else:
-        log_message('error', f"Failed to delete chat session id - {chat_session_id} due to - {str(e)}")
+        logger.error(f"Failed to delete chat session id - {chat_session_id} due to - {str(e)}")
         return JsonResponse({"message":"Invalid request type, POST method is expected","data":{'response':''},"status":False},status=400)
 
     
@@ -443,19 +414,19 @@ def delete_chat_session(request):
 #                 deleted_sessions['chat_session_id']=chats
 #                 deleted_sessions['title']=chat.title
 #         except Exception as e:
-#             log_message('error',str(e))
+#             log_message(str(e))
 #             return JsonResponse({"message":"Failed to delete Chat session","data":[],"status":False},status=200)
 #         return JsonResponse({"message":"Chat session deleted successfully","data":deleted_sessions,"status":True},status=200)
 #     else:
-#         log_message('error','Invalid JSON format')
+#         log_message('Invalid JSON format')
 #         return JsonResponse({"message":"Invalid request type, POST method is expected","data":[],"status":False},status=200)
 
 
-@csrf_exempt
-def chat_page(request):
-    if request.method == 'GET':
-        # Render the HTML page for GET requests
-        return render(request, 'evidentchatbot.html') 
+# @csrf_exempt
+# def chat_page(request):
+#     if request.method == 'GET':
+#         # Render the HTML page for GET requests
+#         return render(request, 'evidentchatbot.html') 
     
 
 def search_on_internet(question):
@@ -476,7 +447,7 @@ def search_on_internet(question):
 
 
 def general_cat_based_question(prev_related,Asset_Related,user_name,questions,promp_cat,token,roles,onboarding_step):
-    log_message("info", f"In general cat based area data - {prev_related,Asset_Related,user_name,questions,promp_cat,token,roles,onboarding_step}")
+    logger.info(f"In general cat based area data - {prev_related,Asset_Related,user_name,questions,promp_cat,token,roles,onboarding_step}")
     question = questions[0]
     final_response = ""
     asset_found = False
@@ -491,7 +462,7 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
                 for d in data:
                     prm = d.prompt
                     if 'Onboarding' in promp_cat:
-                        prm = prm+'\nPersonalised Onboarding status - '+onboarding_step
+                        prm = prm+'\nUser\'s current onboarding status - '+onboarding_step
                     prompt_data_list.append(prm)
                 prompt_data = f"""Customer:{user_name} is not providing you any information, all information is with you, DO NOT SAY TO CUSTOMER THAT THEY HAVE NOT PROVIDED INFORMATION,INSTEAD SAY YOU DONT HAVE INFORMATION CURRENTLY ON THIS. You are smart and intelligent chat-bot having good knowledge of finance sector considering this chat with user. 
                 Provide answer in a way that you are chatting with customer. Do not use any kind of emojis. Do not greet user while answering. Use below information to get answer -
@@ -722,7 +693,6 @@ def login(request):
 @csrf_exempt
 def evidAI_chat(request):
     try:
-        log_message('info', 'Inside Try method of evidAI_chat function, request received successfully.')
         if request.method == 'POST':
             token = None
             # Extract the Bearer token from the Authorization header
@@ -734,19 +704,17 @@ def evidAI_chat(request):
             token = auth_header.split(' ')[1]
             token_valid,user_id,user_name,roles,onboarding_step = token_validation(token)
             if token_valid is None:
-                log_message("error",f"Invalid Token, Token: {token}")            
+                logger.error(f"Invalid Token, Token: {token}")            
                 return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
             
             data = json.loads(request.body)
             question = data.get('question')
             chat_session_id = int(data.get('chat_session_id'))
 
-            log_message("info",f"all param received - User ID: {user_id}, Chat session ID: {chat_session_id}, Token: {token}, Qestion: {question}")
-            
             # chat session validation
             chat_session_validation = validate_chat_session(chat_session_id)
             if chat_session_validation is None:
-                log_message('error', f'Invalid chat session, kindly create new chat session for user ID - {user_id}')
+                logger.error(f'Invalid chat session, kindly create new chat session for user ID - {user_id}')
                 return JsonResponse({"message":"Unexpected error occured","data":{
                 "response":"Invalid chat session, kindly create new chat session"},"status":False},status=200)
             
@@ -768,11 +736,11 @@ def evidAI_chat(request):
                                     "response":response},"status":True},status=200)
         
         else:
-            log_message('error', 'Invalid method request, POST method is expected.')
+            logger.error('Invalid method request, POST method is expected.')
             return JsonResponse({"message":"Unexpected error occurred","data":{
                 "response":"Invalid method request, POST method is expected."},"status":False},status=400)
     except Exception as e:
-        log_message('error', str(e))
+        logger.error(f"Error occured from main function - {str(e)}")
         return JsonResponse({"message":"Unexpected error occured","data":{
-                "response":str(e)},"status":False},status=400)
+                "response":''},"status":False},status=400)
 
