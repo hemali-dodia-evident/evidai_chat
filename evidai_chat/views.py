@@ -622,6 +622,7 @@ def get_asset_based_response(user_name,assets_identified,question,token):
                 Asset Details: - {assets}"""
             response = get_gemini_response(question,prompt)      
             final_response = final_response + response  
+            logger.info(f"625 - {final_response}")
     except:
         pass
     return final_response
