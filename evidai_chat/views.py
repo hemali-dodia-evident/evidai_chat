@@ -431,20 +431,23 @@ def delete_chat_session(request):
     
 
 def search_on_internet(question):
-    prompt = """You are smart and intelligent chat-bot having good knowledge of finance and investment sector considering this chat with user.
-                Provide answer in a way that you are chatting with customer. Do not use any kind of emojis.
-                Chat with user, provide all information you can, support them, resolve their queries if they have and 
-                inform that this information is from internet search. Be nice and sweet along with inteligent while chatting. 
-                If its greeting text then simply greet them and ask how you can help them. Keep asnwer to the point.
-                NOTE - Keep tone positive and polite while answering user's query.
-                Avoid mentioning or implying that the user has not provided information.
-                Do not greet the user in your response. If you are unable to find answer then just say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
-                Use proper formatting such as line breaks to enhance readability. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
-                Maintain a positive and polite tone throughout the response.
-                The response should be clear, concise, and user-friendly, adhering to these guidelines.
-            """
-    response = get_gemini_response(question,prompt)
-    logger.info(f"447 - {response}")
+    try:
+        prompt = """You are smart and intelligent chat-bot having good knowledge of finance and investment sector considering this chat with user.
+                    Provide answer in a way that you are chatting with customer. Do not use any kind of emojis.
+                    Chat with user, provide all information you can, support them, resolve their queries if they have and 
+                    inform that this information is from internet search. Be nice and sweet along with inteligent while chatting. 
+                    If its greeting text then simply greet them and ask how you can help them. Keep asnwer to the point.
+                    NOTE - Keep tone positive and polite while answering user's query.
+                    Avoid mentioning or implying that the user has not provided information.
+                    Do not greet the user in your response. If you are unable to find answer then just say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
+                    Use proper formatting such as line breaks to enhance readability. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
+                    Maintain a positive and polite tone throughout the response.
+                    The response should be clear, concise, and user-friendly, adhering to these guidelines.
+                """
+        response = get_gemini_response(question,prompt)
+        logger.info(f"447 - {response}")
+    except Exception as e:
+        logger.info(f"search_on_internet - {str(e)}")
     return response
 
 
@@ -455,7 +458,7 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
     asset_found = False
     promp_cat_new = ",".join(promp_cat)
     specific_category = promp_cat_new.replace("_",' ').split(',')  # Replace with the desired category
-    logger.info(f"specific_category")
+    logger.info(f"specific_category - {specific_category}")
     for promp_cat in specific_category:   
         logger.info(f"promp_cat at 453 - {promp_cat}")       
         if promp_cat!='FAILED' and promp_cat !='Personal Assets':
@@ -466,7 +469,7 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
                 for d in data:
                     prm = d.prompt
                     if 'Onboarding' in promp_cat:
-                        logger.info("468")
+                        logger.info("472 - onboarding is present")
                         prm = f'{prm} \nUser\'s current onboarding status - {onboarding_step}'
                     prompt_data_list.append(prm)
                 logger.info(prompt_data_list)
@@ -476,18 +479,18 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
                 NOTE - If you are not able to find answer then say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
                 Keep tone positive and polite while answering user's query. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'"""
                 response = get_gemini_response(question,prompt_data)
-                logger.info(477)
+                logger.info("482")
                 final_response = final_response + '\n' + response    
-                logger.info(478)
+                logger.info("484")
             except Exception as e:
-                logger.info(f"482 - {str(e)}")
+                logger.info(f"486 - {str(e)}")
                 prm = """For this topic currently we don't have any information. 
                 Provide answer in a way that "I’m sorry I couldn’t assist you right now. 
                 However, our support team would be delighted to help! Please don’t hesitate to email 
                 them at hello@evident.capital with the details of your query, and they’ll assist you promptly." 
                 this will cover the part of question for which information is not available"""
                 final_response = get_gemini_response(question,prm)
-                logger.info("489")
+                logger.info("493")
         elif promp_cat=='FAILED':
             logger.info("491")
             response = search_on_internet(question)
@@ -573,7 +576,8 @@ def get_asset_list(token,roles):
             name = names['name']
             all_asset_names.append(name)
         return all_asset_names
-    except:
+    except Exception as e:
+        logger.info(f"580 - {str(e)}")
         return
 
 def get_specific_asset_details(asset_name,token):  
