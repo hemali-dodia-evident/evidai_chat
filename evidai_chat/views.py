@@ -517,17 +517,17 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
                     assets_identified = ''
             except:    
                 assets_identified = asset_response.strip().split(",")
-                logger.info(f"assets_identified - {assets_identified}")
-                if len(assets_identified)>0:
-                    asset_found=True
-                    response = get_asset_based_response(user_name,assets_identified,question,token)
-                    logger.info(f"get_asset_based_response - {response}")
-                    final_response = final_response + '\n' + response  
-                else:
-                    logger.info(527)
-                    response = search_on_internet(question)
-                    final_response = final_response + '\n' + response  
-                    asset_found = False
+            logger.info(f"assets_identified - {assets_identified}")
+            if len(assets_identified)>0:
+                asset_found=True
+                response = get_asset_based_response(user_name,assets_identified,question,token)
+                logger.info(f"get_asset_based_response - {response}")
+                final_response = final_response + '\n' + response  
+            else:
+                logger.info(527)
+                response = search_on_internet(question)
+                final_response = final_response + '\n' + response  
+                asset_found = False
         else:
             logger.info(532)
             response = search_on_internet(question)
