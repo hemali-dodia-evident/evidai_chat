@@ -574,46 +574,56 @@ def get_asset_list(token,roles):
     except:
         return
 
-def get_specific_asset_details(asset_name,token):   
-    all_asset_details = None
-    # Investor assets
-    url = "https://api-uat.evident.capital/asset/investor/list?page=1"
-    payload = json.dumps({"name":f"{asset_name}"})
+def get_specific_asset_details(asset_name,token):  
+    logger.info("get_specific_asset_details") 
+    try:
+        all_asset_details = None
+        # Investor assets
+        url = "https://api-uat.evident.capital/asset/investor/list?page=1"
+        payload = json.dumps({"name":f"{asset_name}"})
 
-    headers = {
-                'Authorization': f'Bearer {token}',
-                'Content-Type': 'application/json'
-            }
+        headers = {
+                    'Authorization': f'Bearer {token}',
+                    'Content-Type': 'application/json'
+                }
 
-    response = requests.request("POST", url, headers=headers, data=payload)
-    data = response.json()
-    all_asset_details = data['data']
-    return all_asset_details
+        response = requests.request("POST", url, headers=headers, data=payload)
+        data = response.json()
+        all_asset_details = data['data']
+        return all_asset_details
+    except:
+        return "No information found"
+    
 
 
 def get_asset_based_response(user_name,assets_identified,question,token):
     # print("Inputs - ",user_name,assets_identified,question,token)
+    logger.info("get_asset_based_response")
     assets = []
     final_response = ''
-    for ass in assets_identified:
-        data = get_specific_asset_details(ass,token)
-        assets.append(data)
-        # print("get_specific_asset_details - ",assets)
-        note = """Ensure the response keeps the provided information intact without altering or modifying any details.
-                If certain information is unavailable, state politelyjust say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
-                Else, Keep information as it is.
-                Avoid mentioning or implying that the user has provided or not provided information or response in requested format.
-                Do not greet the user in your response.
-                Use proper formatting such as line breaks to enhance readability while keeping answer as it is. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
-                Maintain a positive and polite tone throughout the response.
-                Note: The response should be clear, concise, and user-friendly, adhering to these guidelines."""
-        prompt = f"""Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about.
-            To get proper trade values, add all results of that perticular assets. 
-            e.g. if you want overall records of units then it will be sum of all units of respective column, to get final unit counts add all values of units.
-            NOTE - {note}
-            Asset Details: - {assets}"""
-        response = get_gemini_response(question,prompt)      
-        final_response = final_response + response  
+    try:
+        for ass in assets_identified:
+            logger.info(ass)
+            data = get_specific_asset_details(ass,token)
+            assets.append(data)
+            # print("get_specific_asset_details - ",assets)
+            note = """Ensure the response keeps the provided information intact without altering or modifying any details.
+                    If certain information is unavailable, state politelyjust say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
+                    Else, Keep information as it is.
+                    Avoid mentioning or implying that the user has provided or not provided information or response in requested format.
+                    Do not greet the user in your response.
+                    Use proper formatting such as line breaks to enhance readability while keeping answer as it is. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
+                    Maintain a positive and polite tone throughout the response.
+                    Note: The response should be clear, concise, and user-friendly, adhering to these guidelines."""
+            prompt = f"""Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about.
+                To get proper trade values, add all results of that perticular assets. 
+                e.g. if you want overall records of units then it will be sum of all units of respective column, to get final unit counts add all values of units.
+                NOTE - {note}
+                Asset Details: - {assets}"""
+            response = get_gemini_response(question,prompt)      
+            final_response = final_response + response  
+    except:
+        pass
     return final_response
 
 
