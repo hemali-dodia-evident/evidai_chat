@@ -454,49 +454,49 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
     asset_found = False
     promp_cat_new = ",".join(promp_cat)
     specific_category = promp_cat_new.replace("_",' ').split(',')  # Replace with the desired category
-    print(specific_category)
+    logger.info(f"specific_category")
     for promp_cat in specific_category:   
-        print("promp_cat at 453 - ",promp_cat)       
+        logger.info(f"promp_cat at 453 - {promp_cat}")       
         if promp_cat!='FAILED' and promp_cat !='Personal Assets':
-            print("461")
+            logger.info("461")
             try:
                 data = models.BasicPrompts.objects.filter(prompt_category=promp_cat)
                 prompt_data_list = []
                 for d in data:
                     prm = d.prompt
                     if 'Onboarding' in promp_cat:
-                        print("468")
+                        logger.info("468")
                         prm = f'{prm} \nUser\'s current onboarding status - {onboarding_step}'
                     prompt_data_list.append(prm)
-                print(prompt_data_list)
+                logger.info(prompt_data_list)
                 prompt_data = f"""Customer:{user_name} is not providing you any information, all information is with you, DO NOT SAY TO CUSTOMER THAT THEY HAVE NOT PROVIDED INFORMATION,INSTEAD SAY YOU DONT HAVE INFORMATION CURRENTLY ON THIS. You are smart and intelligent chat-bot having good knowledge of finance sector considering this chat with user. 
                 Provide answer in a way that you are chatting with customer. Do not use any kind of emojis. Do not greet user while answering. Guide and help user to finish their steps and complete onboarding. Use below information to get answer -
                 {prompt_data_list}
                 NOTE - If you are not able to find answer then say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
                 Keep tone positive and polite while answering user's query. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'"""
                 response = get_gemini_response(question,prompt_data)
-                print(477)
+                logger.info(477)
                 final_response = final_response + '\n' + response    
-                print(478)
+                logger.info(478)
             except Exception as e:
-                print(479, print(str(e)))
+                logger.info(f"482 - {str(e)}")
                 prm = """For this topic currently we don't have any information. 
                 Provide answer in a way that "I’m sorry I couldn’t assist you right now. 
                 However, our support team would be delighted to help! Please don’t hesitate to email 
                 them at hello@evident.capital with the details of your query, and they’ll assist you promptly." 
                 this will cover the part of question for which information is not available"""
                 final_response = get_gemini_response(question,prm)
-                print(488)
+                logger.info("489")
         elif promp_cat=='FAILED':
-            print(488)
+            logger.info("491")
             response = search_on_internet(question)
             asset_found = False
             final_response = final_response + '\n' + response   
         elif 'Personal Assets' in promp_cat or (Asset_Related==True and prev_related==True):    
-            print("Asset related - 493")    
+            logger.info("Asset related - 496")    
             # Can i directly take from DB? API is taking too long
             all_assets_names = get_asset_list(token,roles)
-            print("Got asset list - \n", all_assets_names)
+            logger.info(f"Got asset list - {all_assets_names}")
             prompt = f"""Identify if question is about any specific asset or its user wants to know about all assets present for him/her.
                         If question is about specific assets then STRICTLY ONLY return Name of that asset from below asset list, if there is more than one asset then separate them with coma(,). E.g. openai,
                         else if question is about generically all the assets then retun 1, else return 0.
@@ -509,7 +509,7 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
                         Question: what are highlights of mumbai
                         Answer: 0""" 
             asset_response = get_gemini_response("".join(questions),prompt)
-            print("asset_response - ",asset_response)
+            logger.info(f"asset_response - {asset_response}")
             try:
                 if int(asset_response.strip())==1:
                     assets_identified = all_assets_names
@@ -517,19 +517,19 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
                     assets_identified = ''
             except:    
                 assets_identified = asset_response.strip().split(",")
-                print("assets_identified - ",assets_identified)
+                logger.info(f"assets_identified - {assets_identified}")
                 if len(assets_identified)>0:
                     asset_found=True
                     response = get_asset_based_response(user_name,assets_identified,question,token)
-                    print("get_asset_based_response - ",response)
+                    logger.info(f"get_asset_based_response - {response}")
                     final_response = final_response + '\n' + response  
                 else:
-                    print(505)
+                    logger.info(527)
                     response = search_on_internet(question)
                     final_response = final_response + '\n' + response  
                     asset_found = False
         else:
-            print(529)
+            logger.info(532)
             response = search_on_internet(question)
             asset_found = False
             final_response = final_response + '\n' + response  
