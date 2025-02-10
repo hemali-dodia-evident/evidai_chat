@@ -539,38 +539,40 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
 
 
 def get_asset_list(token,roles): 
-    all_asset_details = None
-    roles = [role.strip() for role in roles]
-    all_asset_names = []
-    # Investor assets
-    url = "https://api-uat.evident.capital/asset/investor/list?page=1"
+    try:
+        all_asset_details = None
+        roles = [role.strip() for role in roles]
+        all_asset_names = []
+        # Investor assets
+        url = "https://api-uat.evident.capital/asset/investor/list?page=1"
 
-    payload = {}
-    headers = {
-                'Authorization': f'Bearer {token}',
-                'Content-Type': 'application/json'
-            }
-
-    response = requests.request("POST", url, headers=headers, data=payload)
-    data = response.json()
-    page_numbers = data['meta']['last_page_url'].split("=")[-1]
-    all_asset_details = data['data']
-    for p in range(2, int(page_numbers)+1):
-        url = f"https://api-uat.evident.capital/asset/investor/list?page={str(p)}"
         payload = {}
         headers = {
                     'Authorization': f'Bearer {token}',
                     'Content-Type': 'application/json'
                 }
+
         response = requests.request("POST", url, headers=headers, data=payload)
         data = response.json()
-        all_asset_details = all_asset_details + data['data']
+        page_numbers = data['meta']['last_page_url'].split("=")[-1]
+        all_asset_details = data['data']
+        for p in range(2, int(page_numbers)+1):
+            url = f"https://api-uat.evident.capital/asset/investor/list?page={str(p)}"
+            payload = {}
+            headers = {
+                        'Authorization': f'Bearer {token}',
+                        'Content-Type': 'application/json'
+                    }
+            response = requests.request("POST", url, headers=headers, data=payload)
+            data = response.json()
+            all_asset_details = all_asset_details + data['data']
 
-    for names in all_asset_details:
-        name = names['name']
-        all_asset_names.append(name)
-    return all_asset_names
-
+        for names in all_asset_details:
+            name = names['name']
+            all_asset_names.append(name)
+        return all_asset_names
+    except:
+        return
 
 def get_specific_asset_details(asset_name,token):   
     all_asset_details = None
