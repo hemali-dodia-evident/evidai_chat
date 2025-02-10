@@ -26,15 +26,15 @@ def hello_world(request):
 
 @csrf_exempt 
 def get_gemini_response(question,prompt):
-        try:
-            prompt = "Your name is EvidAI a smart intelligent bot to provide customer support and help them."+ prompt
-            model = genai.GenerativeModel('gemini-pro')
-            response_content = model.generate_content([prompt, question])
-            return response_content.text.strip()
-        except Exception as e:
-            logger.critical(f'Failed to get answer from gemini due to - {str(e)}')
-            response = "Sorry! I am not able to find answer for your question. \nRequest you to coordinate with our support team on - hello@evident.capital.\nThank You."
-            return response
+    try:
+        prompt = "Your name is EvidAI a smart intelligent bot to provide customer support and help them."+ prompt
+        model = genai.GenerativeModel('gemini-pro')
+        response_content = model.generate_content([prompt, question])
+        return response_content.text.strip()
+    except Exception as e:
+        logger.critical(f'Failed to get answer from gemini due to - {str(e)}')
+        response = "Sorry! I am not able to find answer for your question. \nRequest you to coordinate with our support team on - hello@evident.capital.\nThank You."
+        return response
     
 
 def get_prompt_category(question):
@@ -444,6 +444,7 @@ def search_on_internet(question):
                 The response should be clear, concise, and user-friendly, adhering to these guidelines.
             """
     response = get_gemini_response(question,prompt)
+    logger.info(f"447 - {response}")
     return response
 
 
