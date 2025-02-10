@@ -535,6 +535,7 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
             final_response = final_response + '\n' + response  
     if final_response == "":
         return "Sorry! I am unable understand the question. Can you provide more details so I can assist you better?", False
+    logger.info(f"Final Response - {final_response}")
     return final_response, asset_found
 
 
@@ -665,7 +666,7 @@ def handle_questions(token, roles, user_name, questions,onboarding_step):
         Asset_Related = True
     # print("Asset_Related - ",Asset_Related, "\nprev_related - ",prev_related)
     response,asset_found = general_cat_based_question(prev_related,Asset_Related,user_name,questions,promp_cat,token,roles,onboarding_step)
-    
+    logger.info(f"669 - {response}")
     return response,asset_found
 
 
@@ -758,7 +759,7 @@ def evidAI_chat(request):
             response, asset_found = handle_questions(token, roles, user_name, questions,onboarding_step)
             html_content = markdown.markdown(response)
             response = html_content
-                        
+            logger.info(f"762 - {response}")
             add_to_conversations(user_id,chat_session_id,question,response,asset_found)      
             
             return JsonResponse({"message":"Response generated successfully","data":{
