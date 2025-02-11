@@ -560,6 +560,7 @@ def get_asset_list(token,roles):
                 }
 
         response = requests.request("POST", url, headers=headers, data=payload)
+        logger.info(f"asset api response - {response}")
         data = response.json()
         page_numbers = data['meta']['last_page_url'].split("=")[-1]
         all_asset_details = data['data']
@@ -598,6 +599,7 @@ def get_specific_asset_details(asset_name,token):
 
         response = requests.request("POST", url, headers=headers, data=payload)
         data = response.json()
+        logger.info(f"asset specific detail - {data}")
         all_asset_details = data['data']
         logger.info(f"individual asset details - {all_asset_details}")
         return all_asset_details
