@@ -38,6 +38,7 @@ def get_gemini_response(question,prompt):
     
 
 def get_prompt_category(question):
+    logger.info("Finding prompt from get_prompt_category")
     prompt = f"""Based on user's question and context, identify what is the category of this question from below mentioned categories And STRICTLY PROVIDE ONLY NAME OF CATEGORIES NOTHING ELSE, IF NO CATEGORY MATCHES THEN RETURN "FAILED" -
                  USER's QUESTION - {question}
                  Greetings: Formal or friendly greetings. Hi hello or any other generic greetings.
@@ -87,7 +88,7 @@ def get_prompt_category(question):
                       Bot: Personal_Assets
                  """
     response = get_gemini_response(question,prompt)
-    # print(response)
+    logger.info(f"prompt category - {response}")
     return response
 
 
@@ -447,7 +448,7 @@ def search_on_internet(question):
         response = get_gemini_response(question,prompt)
         logger.info(f"447 - {response}")
     except Exception as e:
-        logger.info(f"search_on_internet - {str(e)}")
+        logger.error(f"search_on_internet - {str(e)}")
     return response
 
 
@@ -545,6 +546,7 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
 
 def get_asset_list(token,roles): 
     try:
+        logger.info(f"getting asset list for - {token,roles}")
         all_asset_details = None
         roles = [role.strip() for role in roles]
         all_asset_names = []
@@ -575,9 +577,10 @@ def get_asset_list(token,roles):
         for names in all_asset_details:
             name = names['name']
             all_asset_names.append(name)
+        logger.info(f"found asset list - {all_asset_names}")
         return all_asset_names
     except Exception as e:
-        logger.info(f"580 - {str(e)}")
+        logger.error(f"failed while getting asset list - {str(e)}")
         return
 
 def get_specific_asset_details(asset_name,token):  
@@ -596,14 +599,15 @@ def get_specific_asset_details(asset_name,token):
         response = requests.request("POST", url, headers=headers, data=payload)
         data = response.json()
         all_asset_details = data['data']
+        logger.info(f"individual asset details - {all_asset_details}")
         return all_asset_details
-    except:
+    except Exception as e:
+        logger.error(f"failed to get asset details - {str(e)}")
         return "No information found"
     
 
 
 def get_asset_based_response(user_name,assets_identified,question,token):
-    # print("Inputs - ",user_name,assets_identified,question,token)
     logger.info("get_asset_based_response")
     assets = []
     final_response = ''
@@ -612,7 +616,6 @@ def get_asset_based_response(user_name,assets_identified,question,token):
             logger.info(ass)
             data = get_specific_asset_details(ass,token)
             assets.append(data)
-            # print("get_specific_asset_details - ",assets)
             note = """Ensure the response keeps the provided information intact without altering or modifying any details.
                     If certain information is unavailable, state politelyjust say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
                     Else, Keep information as it is.
@@ -629,7 +632,8 @@ def get_asset_based_response(user_name,assets_identified,question,token):
             response = get_gemini_response(question,prompt)      
             final_response = final_response + response  
             logger.info(f"625 - {final_response}")
-    except:
+    except Exception as e:
+        logger.error(f"failed while handling asset based question - {str(e)}")
         pass
     return final_response
 
