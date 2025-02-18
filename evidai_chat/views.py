@@ -27,7 +27,7 @@ def hello_world(request):
 @csrf_exempt 
 def get_gemini_response(question,prompt):
     try:
-        prompt = "Your name is EvidAI a smart intelligent bot to provide customer support and help them."+ prompt
+        prompt = "Your name is EvidAI a smart intelligent bot of Evident LLP. You provide customer support and help them."+ prompt
         model = genai.GenerativeModel('gemini-pro')
         response_content = model.generate_content([prompt, question])
         return response_content.text.strip()
@@ -55,6 +55,7 @@ def get_prompt_category(question):
                     Complete details of assets, current status, investment, trade, structure, tags, etc. related to 
                     that asset, commitments. Here user asks about different things on asset. 
                     These are user specific assets. When user wants to know about his/her asset details.
+                 Investment_Instructions: Contains general investment instructions and information like how one can proceed ahead with investment.
                  Assets_Creation: Detailed step by step process only to create assets. 
                  Asset_Managers:This category contains information about EVIDENT's due diligence process for asset managers, the structuring and tokenization of assets, and the various fundraising methods available on the platform, emphasizing efficiency, transparency, and investor protection.
                  Onboarding_Distributor:Step by step process for distributor onboarding process
@@ -114,7 +115,7 @@ def token_validation(token):
         validate = data["user"]["twoFactorAuthenticationSession"]
         user_id = data["user"]["id"]
         user_name = data['user']['kyc']['fullName'].split()[0]
-        roles = [role['name'] for role in data['user']['roles']]
+        # roles = [role['name'] for role in data['user']['roles']]
         onboarding_details = data['user']['individualOnboarding']
         onboarding_steps = []
         for stp in onboarding_details:
@@ -124,7 +125,7 @@ def token_validation(token):
             onboarding_steps.append(temp_stp)       
         
         if validate:
-            return token,user_id,user_name,roles,onboarding_steps
+            return token,user_id,user_name,onboarding_steps
         else:
             return None, None, None, None, None
     except:
@@ -426,9 +427,9 @@ def delete_chat_session(request):
 
 # @csrf_exempt
 # def chat_page(request):
-#     if request.method == 'GET':
-#         # Render the HTML page for GET requests
-#         return render(request, 'evidentchatbot.html') 
+    if request.method == 'GET':
+        # Render the HTML page for GET requests
+        return render(request, 'evidentchatbot.html') 
     
 
 def search_on_internet(question):
@@ -446,14 +447,33 @@ def search_on_internet(question):
                     The response should be clear, concise, and user-friendly, adhering to these guidelines.
                 """
         response = get_gemini_response(question,prompt)
-        logger.info(f"447 - {response}")
+        logger.info(f"internet search response - {response}")
     except Exception as e:
         logger.error(f"search_on_internet - {str(e)}")
     return response
 
 
-def general_cat_based_question(prev_related,Asset_Related,user_name,questions,promp_cat,token,roles,onboarding_step):
-    logger.info(f"In general cat based area data - {prev_related,Asset_Related,user_name,questions,promp_cat,token,roles,onboarding_step}")
+def users_assets(token):
+    url = "https://api-uat.evident.capital/investor/investment/transactions"
+    payload = {}
+    headers = {
+                'Authorization': f'Bearer {token}',
+                'Content-Type': 'application/json'
+            }
+    response = requests.request("GET", url, headers=headers, data=payload)
+    data = response.json() 
+    return data
+
+
+def get_asset_list():
+    asset_names = models.Asset.objects.exclude(visibility='PRIVATE').values_list('name',flat=True)
+    # invested_assets = models.Asset.objects.filter()
+    return asset_names,"invested_assets"
+
+# get_asset_list()
+
+def general_cat_based_question(prev_related,Asset_Related,user_name,questions,promp_cat,token,user_id,onboarding_step):
+    # logger.info(f"In general cat based area data - {prev_related,Asset_Related,user_name,questions,promp_cat,token,user_id,onboarding_step}")
     question = questions[0]
     final_response = ""
     asset_found = False
@@ -463,7 +483,7 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
     for promp_cat in specific_category:   
         logger.info(f"promp_cat at 453 - {promp_cat}")       
         if promp_cat!='FAILED' and promp_cat !='Personal Assets':
-            logger.info("461")
+            logger.info("General category based question")
             try:
                 data = models.BasicPrompts.objects.filter(prompt_category=promp_cat)
                 prompt_data_list = []
@@ -480,43 +500,48 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
                 NOTE - If you are not able to find answer then say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
                 Keep tone positive and polite while answering user's query. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'"""
                 response = get_gemini_response(question,prompt_data)
-                logger.info("482")
                 final_response = final_response + '\n' + response    
-                logger.info("484")
             except Exception as e:
-                logger.info(f"486 - {str(e)}")
+                logger.info(f"Failed to find general category related information in DB - {str(e)}")
                 prm = """For this topic currently we don't have any information. 
                 Provide answer in a way that "I’m sorry I couldn’t assist you right now. 
                 However, our support team would be delighted to help! Please don’t hesitate to email 
                 them at hello@evident.capital with the details of your query, and they’ll assist you promptly." 
                 this will cover the part of question for which information is not available"""
                 final_response = get_gemini_response(question,prm)
-                logger.info("493")
         elif promp_cat=='FAILED':
-            logger.info("491")
+            logger.info("Prompt Category is 'FAILED'")
             response = search_on_internet(question)
             asset_found = False
             final_response = final_response + '\n' + response   
         elif 'Personal Assets' in promp_cat or (Asset_Related==True and prev_related==True):    
-            logger.info("Asset related - 496")    
-            # Can i directly take from DB? API is taking too long
-            all_assets_names = get_asset_list(token,roles)
-            logger.info(f"Got asset list - {all_assets_names}")
-            prompt = f"""Identify if question is about any specific asset or its user wants to know about all assets present for him/her.
-                        If question is about specific assets then STRICTLY ONLY return Name of that asset from below asset list, if there is more than one asset then separate them with coma(,). E.g. openai,
-                        else if question is about generically all the assets then retun 1, else return 0.
-                        Asset List - {all_assets_names}
-                        Examples:-
+            logger.info("Prompt Category is Personal Asset")    
+            all_assets_names,invested_assets = get_asset_list()
+
+            prompt = f"""Identify - if question is about assets owned or personal or invested by user then return 1
+                    - If question is all assets in generic then return 2
+                    - If question is about any specific asset then STRICTLY ONLY return Name of that asset from below asset list, if there is more than one asset then separate them with coma(,).
+                    - Else return 0 
+                    Asset List - {all_assets_names}
+                    Examples:-
                         Question: what is commitment status of my assets?
                         Answer: 1
                         Question: what is minimum investment amount for Keith Haring?
                         Answer:Keith Haring - Untitled
                         Question: what are highlights of mumbai
-                        Answer: 0""" 
+                        Answer: 0
+                        Question: what is minimum investment amount for openai and Keith Haring?
+                        Answer:Keith Haring - Untitled,OpenAI - Co-Investment
+                        Question: Provide me all asset names
+                        Answer: 2""" 
             asset_response = get_gemini_response("".join(questions),prompt)
             logger.info(f"asset_response - {asset_response}")
+            # return final_response, False
             try:
                 if int(asset_response.strip())==1:
+                    my_assets = users_assets(token)
+                    assets_identified = my_assets
+                elif int(asset_response.strip())==2:
                     assets_identified = all_assets_names
                 elif int(asset_response.strip())==0:
                     assets_identified = ''
@@ -525,67 +550,71 @@ def general_cat_based_question(prev_related,Asset_Related,user_name,questions,pr
             logger.info(f"assets_identified - {assets_identified}")
             if len(assets_identified)>0:
                 asset_found=True
-                response = get_asset_based_response(user_name,assets_identified,question,token)
+                response = get_asset_based_response(assets_identified,question,token)
                 logger.info(f"get_asset_based_response - {response}")
                 final_response = final_response + '\n' + response  
             else:
-                logger.info(527)
                 response = search_on_internet(question)
                 final_response = final_response + '\n' + response  
                 asset_found = False
         else:
-            logger.info(532)
             response = search_on_internet(question)
             asset_found = False
             final_response = final_response + '\n' + response  
     if final_response == "":
         return "Sorry! I am unable understand the question. Can you provide more details so I can assist you better?", False
+    final_response = get_gemini_response(final_response,"""Remove all repeatative statements and make proper answer from this 
+                                                        while keeping all information as it is. Maintain readability of answer.""")
+    # logger.info(f"Final Response before- {final_response}")
+    # final_response = "\n".join((set(final_response.split("\n"))))
     logger.info(f"Final Response - {final_response}")
     return final_response, asset_found
 
 
-def get_asset_list(token,roles): 
-    try:
-        logger.info(f"getting asset list for - {token,roles}")
-        all_asset_details = None
-        roles = [role.strip() for role in roles]
-        all_asset_names = []
-        # Investor assets
-        url = "https://api-uat.evident.capital/asset/investor/list?page=1"
+# def get_asset_list(token,roles): 
+#     try:
+#         logger.info(f"getting asset list for - {token,roles}")
+#         all_asset_details = None
+#         all_asset_names = []
 
-        payload = {}
-        headers = {
-                    'Authorization': f'Bearer {token}',
-                    'Content-Type': 'application/json'
-                }
+#         # Investor assets
+#         url = "https://api-uat.evident.capital/asset/investor/list?page=1"
 
-        response = requests.request("POST", url, headers=headers, data=payload)
-        logger.info(f"asset api response - {response}")
-        data = response.json()
-        page_numbers = data['meta']['last_page_url'].split("=")[-1]
-        all_asset_details = data['data']
-        for p in range(2, int(page_numbers)+1):
-            url = f"https://api-uat.evident.capital/asset/investor/list?page={str(p)}"
-            payload = {}
-            headers = {
-                        'Authorization': f'Bearer {token}',
-                        'Content-Type': 'application/json'
-                    }
-            response = requests.request("POST", url, headers=headers, data=payload)
-            data = response.json()
-            all_asset_details = all_asset_details + data['data']
+#         payload = {}
+#         headers = {
+#                     'Authorization': f'Bearer {token}',
+#                     'Content-Type': 'application/json'
+#                 }
 
-        for names in all_asset_details:
-            name = names['name']
-            all_asset_names.append(name)
-        logger.info(f"found asset list - {all_asset_names}")
-        return all_asset_names
-    except Exception as e:
-        logger.error(f"failed while getting asset list - {str(e)}")
-        return
+#         response = requests.request("POST", url, headers=headers, data=payload)
+#         logger.info(f"asset api response - {response}")
+#         data = response.json()
+#         page_numbers = data['meta']['last_page_url'].split("=")[-1]
+#         all_asset_details = data['data']
+#         logger.info(f"Total pages - {page_numbers}")
+#         if int(page_numbers)>1:
+#             for p in range(2, int(page_numbers)+1):
+#                 url = f"https://api-uat.evident.capital/asset/investor/list?page={str(p)}"
+#                 payload = {}
+#                 headers = {
+#                             'Authorization': f'Bearer {token}',
+#                             'Content-Type': 'application/json'
+#                         }
+#                 response = requests.request("POST", url, headers=headers, data=payload)
+#                 data = response.json()
+#                 all_asset_details = all_asset_details + data['data']
 
-def get_specific_asset_details(asset_name,token):  
-    logger.info("get_specific_asset_details") 
+#         for names in all_asset_details:
+#             name = names['name']
+#             all_asset_names.append(name)
+#         logger.info(f"found asset list - {all_asset_names}")
+#         return all_asset_names
+#     except Exception as e:
+#         logger.error(f"failed while getting asset list - {str(e)}")
+#         return
+
+
+def get_specific_asset_details(asset_name,token): 
     try:
         all_asset_details = None
         # Investor assets
@@ -599,25 +628,19 @@ def get_specific_asset_details(asset_name,token):
 
         response = requests.request("POST", url, headers=headers, data=payload)
         data = response.json()
-        logger.info(f"asset specific detail - {data}")
         all_asset_details = data['data']
         logger.info(f"individual asset details - {all_asset_details}")
         return all_asset_details
     except Exception as e:
         logger.error(f"failed to get asset details - {str(e)}")
         return "No information found"
-    
 
 
-def get_asset_based_response(user_name,assets_identified,question,token):
-    logger.info("get_asset_based_response")
-    assets = []
+def get_asset_based_response(assets_identified,question,token):
     final_response = ''
     try:
         for ass in assets_identified:
-            logger.info(ass)
             data = get_specific_asset_details(ass,token)
-            assets.append(data)
             note = """Ensure the response keeps the provided information intact without altering or modifying any details.
                     If certain information is unavailable, state politelyjust say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
                     Else, Keep information as it is.
@@ -630,29 +653,26 @@ def get_asset_based_response(user_name,assets_identified,question,token):
                 To get proper trade values, add all results of that perticular assets. 
                 e.g. if you want overall records of units then it will be sum of all units of respective column, to get final unit counts add all values of units.
                 NOTE - {note}
-                Asset Details: - {assets}"""
+                Asset Details: - {data}"""
             response = get_gemini_response(question,prompt)      
-            final_response = final_response + response  
-            logger.info(f"625 - {final_response}")
+            final_response = final_response + '\n'+ response  
+        logger.info(f"asset based response - {final_response}")
     except Exception as e:
         logger.error(f"failed while handling asset based question - {str(e)}")
-        pass
     return final_response
 
 
-def handle_questions(token, roles, user_name, questions,onboarding_step):     
+def handle_questions(token, user_id, user_name, questions,onboarding_step):     
     asset_found = False
     response = ''
     question = questions[0]
     prev_related = False
-    # print("question - ",question)
     # Identify question
     promp_cat = get_prompt_category(question)
     promp_cat = promp_cat.split(",")
     promp_cat = [p.strip() for p in promp_cat]
     FAILED = False
     Asset_Related = False
-    # print("promp_cat - ",promp_cat)
     # If question is just a greeting nothing else is asked in that question
     if 'Greetings' in promp_cat[0] and len(promp_cat)==1:
         prompt = f"""User name is - {user_name}, reply to user in polite and positive way."""
@@ -676,8 +696,8 @@ def handle_questions(token, roles, user_name, questions,onboarding_step):
     else:
         Asset_Related = True
     # print("Asset_Related - ",Asset_Related, "\nprev_related - ",prev_related)
-    response,asset_found = general_cat_based_question(prev_related,Asset_Related,user_name,questions,promp_cat,token,roles,onboarding_step)
-    logger.info(f"669 - {response}")
+    response,asset_found = general_cat_based_question(prev_related,Asset_Related,user_name,questions,promp_cat,token,user_id,onboarding_step)
+    logger.info(f"final response from handle_questios - {response}")
     return response,asset_found
 
 
@@ -686,7 +706,9 @@ def login(request):
     # print("in login")
     url = "https://api-uat.evident.capital/user/login"
     payload = json.dumps({
-    "email": "sai.mansanpally+2801issuer@evident.capital",
+    # "email": "shweta+indinvuat03@evident.capital",
+    # "password": "Evident@2024",
+    "email": "sai.mansanpally+0402cpi@evident.capital",
     "password": "Evident@2025",
     "ipInfo": {
         "asn": "asn",
@@ -713,6 +735,7 @@ def login(request):
     }
     response = requests.request("POST", url, headers=headers, data=payload)
     data = response.json()
+    print(response, data)
     token = data['token']
     # 2FA
     twoFA_url = "https://api-uat.evident.capital/user/two-factor-authentication"
@@ -726,7 +749,7 @@ def login(request):
             }
     response = requests.request("POST", twoFA_url, headers=headers, data=payload)
     data = response.content
-
+    print(data)
     return JsonResponse({"token":token},status=200)
 
 
@@ -743,7 +766,7 @@ def evidAI_chat(request):
             
             # Get the token and validate it
             token = auth_header.split(' ')[1]
-            token_valid,user_id,user_name,roles,onboarding_step = token_validation(token)
+            token_valid,user_id,user_name,onboarding_step = token_validation(token)
             if token_valid is None:
                 logger.error(f"Invalid Token, Token: {token}")            
                 return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
@@ -767,10 +790,10 @@ def evidAI_chat(request):
                 
             questions.insert(0,question)
             # print(questions)
-            response, asset_found = handle_questions(token, roles, user_name, questions,onboarding_step)
+            response, asset_found = handle_questions(token, user_id, user_name, questions,onboarding_step)
             html_content = markdown.markdown(response)
             response = html_content
-            logger.info(f"762 - {response}")
+            logger.info(f"After HTML markup from main function - {response}")
             add_to_conversations(user_id,chat_session_id,question,response,asset_found)      
             
             return JsonResponse({"message":"Response generated successfully","data":{
