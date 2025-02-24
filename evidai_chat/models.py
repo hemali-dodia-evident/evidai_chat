@@ -20,8 +20,8 @@ class Conversation(models.Model):
     answer = models.TextField()
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
-    is_asset = models.BooleanField(null=True,default=False)
-
+    is_asset = models.TextField(null=True)
+    last_ques_cat = models.TextField(null=True)
     class Meta:
         db_table = 'conversations'
         managed = False 
