@@ -46,7 +46,7 @@ def get_prompt_category(current_question,user_role):
     prompt = f"""Based on user's question identify the category of a question from below mentioned categories. STRICTLY PROVIDE ONLY NAME OF CATEGORIES NOTHING ELSE, IF NO CATEGORY MATCHES THEN RETURN "FAILED".
                  USER's QUESTION - {current_question}
                  USER's ROLE - {user_role}
-                 Greetings:Generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
+                 Greetings: Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
                  Personal_Assets: Following details are present for variety of assets like openai, spacex and many more - These assets include various categories such as Private Equity, Venture Capital, 
                     Private Credit, Infrastructure, Hedge Funds, Digital Assets, Real Estate, Collectibles, 
                     Structuring, Private Company Debenture, Note, Bond, Fund, and Equity. 
@@ -174,7 +174,7 @@ def add_to_conversations(user_id, chat_session_id, current_question, response, c
             created_at=iso_format_datetime,
             updated_at=iso_format_datetime,
             is_asset=current_asset,
-            last_ques_cat=", ".join(current_ques_cat)
+            last_ques_cat=current_ques_cat
         )
         new_conv.save()
         return new_conv.id  
@@ -314,8 +314,11 @@ def update_chat_title(question,chat_session_id):
 def get_conv_details(chat_session_id):
     all_convo = models.Conversation.objects.filter(chat_session_id=chat_session_id).order_by('-id')
     previous_questions = [q.question for q in all_convo]
-    last_asset = all_convo[0].is_asset
-    last_ques_cat = all_convo[0].last_ques_cat
+    last_asset = ''
+    last_ques_cat = ''
+    if len(previous_questions)>1:
+        last_asset = all_convo[0].is_asset
+        last_ques_cat = all_convo[0].last_ques_cat    
     return previous_questions, last_asset, last_ques_cat
 
 
@@ -534,6 +537,46 @@ def get_asset_list():
     return asset_names
 
 
+# all_assets_names = get_asset_list()
+# previous_questions = ['can you give me details about openai',"hi how are you"]
+# last_asset = "openai"
+# prompt = f"""Identify - if question is about assets owned or personal or invested by user then return 1
+#         - If question is about any specific asset then STRICTLY ONLY return Name of that asset from below asset list, if there is more than one asset then separate them with coma(,).
+#         - If question is all assets in generic then return 2
+#         - Else return 0 
+#         General Asset List - {all_assets_names}
+#         Last Asset user asked about - {"Openai"}
+#         If current question is related to Last Asset user asked about then if last asset name belongs to "General Asset List" then return Last Asset name as it is.
+#         Previous Questions for context understanding - {",".join(previous_questions)}
+
+#         Examples:-
+#             Question: what is commitment status of my assets?
+#             Answer: 1
+#             Question: what is minimum investment amount for Keith Haring?
+#             Answer:Keith Haring - Untitled
+#             Question: what are highlights of mumbai
+#             Answer: 0
+#             Question: what is minimum investment amount for openai and Keith Haring?
+#             Answer:Keith Haring - Untitled,OpenAI - Co-Investment
+#             Question: Provide me all asset names
+#             Answer: 2
+#             """ 
+# asset_response = get_gemini_response("can you give me minimum investment amount required for this?",prompt)
+# logger.info(f"asset_response - {asset_response}")
+# personalAssets = False
+# try:
+#     if int(asset_response.strip())==1:
+#         assets_identified = users_assets("NDk3OQ.2xFso9oUrqUrE_SleJrpXSVmU5hK-raLHjRdP7T7Pdx0PPk6pldMhORkMpH6")
+#         personalAssets = True
+#     elif int(asset_response.strip())==2:
+#         assets_identified = all_assets_names[:3]
+#     elif int(asset_response.strip())==0:
+#         assets_identified = ''
+# except:    
+#     assets_identified = asset_response.strip().split(",")
+# logger.info(f"assets_identified - {assets_identified}")
+
+
 # Check category of question and then based on category generate response
 # IP Count:10, OP Count:3
 def category_based_question(current_question,previous_questions,promp_cat,token,user_id,onboarding_step,isRelated,isAssetRelated,last_asset,last_ques_cat):
@@ -583,7 +626,7 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                 asset_found = ''
                 final_response = final_response + '\n' + response   
             elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True:    
-                logger.info("Prompt Category is Personal Asset")    
+                logger.info("Prompt Category is Personal Asset") 
                 all_assets_names = get_asset_list()
                 prompt = f"""Identify - if question is about assets owned or personal or invested by user then return 1
                         - If question is about any specific asset then STRICTLY ONLY return Name of that asset from below asset list, if there is more than one asset then separate them with coma(,).
@@ -717,13 +760,14 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
                     If current question is in context or related to previous question then return 1.
                     Else return 0."""
         question_related = get_gemini_response("",prompt)
-
+        
         try:
             if int(question_related.strip())==1 and last_asset=='':
                 isRelated = True
             elif int(question_related.strip())==1 and last_asset!='':
                 isRelated = True
-                isAssetRelated = True                        
+                isAssetRelated = True     
+            logger.info(f"Question is related to previous question status is - {isRelated}")                   
         except Exception as e:
             logger.error(f"Failed to check if question is related to previous question or not, following error occured - {str(e)}")
 
@@ -731,12 +775,12 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
     promp_cat = get_prompt_category(current_question,user_role)
     promp_cat = promp_cat.split(",")
     promp_cat = [p.strip() for p in promp_cat]
-
+    
     # If question is just a greeting nothing else is asked in that question
     if 'Greetings' in promp_cat[0] and len(promp_cat)==1:
         prompt = f"""User name is - {user_name}, reply to user in polite and positive way. Encourage for further communication."""
         response = get_gemini_response(current_question,prompt)
-        return response,False
+        return response,'','Greetings'
     # Remove greetings category from prompt categories
     else:
         promp_cat = [p.strip() for p in promp_cat if 'Greetings' not in p.strip()]
@@ -744,6 +788,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
     response,asset_found,specific_category = category_based_question(current_question,previous_questions,promp_cat,token,user_id,onboarding_step,isRelated,isAssetRelated,last_asset, last_ques_cat)
     logger.info(f"final response from handle_questios - {response}")
     specific_category = ",".join(specific_category)
+    print("specific_category= ",specific_category)
     return response,asset_found,specific_category
 
 
@@ -825,7 +870,7 @@ def evidAI_chat(request):
             auth_header = request.headers.get('Authorization')
             if not auth_header or not auth_header.startswith('Bearer '):
                 return JsonResponse({"message":"missing header, please pass authentication token","data":{"response":"No authentication token present"},"status":False},status=400)
-            
+
             # Get the token and validate it
             token = auth_header.split(' ')[1]
             token_valid,user_id,user_name,user_role,onboarding_step = token_validation(token)
@@ -854,7 +899,8 @@ def evidAI_chat(request):
             response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_role, previous_questions, current_question, onboarding_step)
             html_content = markdown.markdown(response)
             response = html_content
-            logger.info(f"After HTML markup from main function - {response}")
+            # logger.info(f"After HTML markup from main function - {response}")
+            print("current_ques_cat- ",current_ques_cat)
             add_to_conversations(user_id, chat_session_id, current_question, response, current_asset, current_ques_cat)      
             
             return JsonResponse({"message":"Response generated successfully","data":{
