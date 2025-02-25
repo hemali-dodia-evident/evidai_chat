@@ -627,36 +627,39 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                 final_response = final_response + '\n' + response   
             elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True:    
                 logger.info("Prompt Category is Personal Asset") 
-                all_assets_names = get_asset_list()
-                prompt = f"""Identify - if question is about assets owned or personal or invested by user then return 1
-                        - If question is about any specific asset then STRICTLY ONLY return Name of that asset from below asset list, if there is more than one asset then separate them with coma(,).
-                        - If question is all assets in generic then return 2
-                        - Else return 0 
-                        General Asset List - {all_assets_names}
-                        Examples:-
-                            Question: what is commitment status of my assets?
-                            Answer: 1
-                            Question: what is minimum investment amount for Keith Haring?
-                            Answer:Keith Haring - Untitled
-                            Question: what are highlights of mumbai
-                            Answer: 0
-                            Question: what is minimum investment amount for openai and Keith Haring?
-                            Answer:Keith Haring - Untitled,OpenAI - Co-Investment
-                            Question: Provide me all asset names
-                            Answer: 2""" 
-                asset_response = get_gemini_response("".join(previous_questions),prompt)
-                logger.info(f"asset_response - {asset_response}")
-                personalAssets = False
-                try:
-                    if int(asset_response.strip())==1:
-                        assets_identified = users_assets(token)
-                        personalAssets = True
-                    elif int(asset_response.strip())==2:
-                        assets_identified = all_assets_names[:3]
-                    elif int(asset_response.strip())==0:
-                        assets_identified = ''
-                except:    
-                    assets_identified = asset_response.strip().split(",")
+                if isRelated==True and isAssetRelated==True:
+                    assets_identified = [last_asset]
+                else:
+                    all_assets_names = get_asset_list()
+                    prompt = f"""Identify - if question is about assets owned or personal or invested by user then return 1
+                            - If question is about any specific asset then STRICTLY ONLY return Name of that asset from below asset list, if there is more than one asset then separate them with coma(,).
+                            - If question is all assets in generic then return 2
+                            - Else return 0 
+                            General Asset List - {all_assets_names}
+                            Examples:-
+                                Question: what is commitment status of my assets?
+                                Answer: 1
+                                Question: what is minimum investment amount for Keith Haring?
+                                Answer:Keith Haring - Untitled
+                                Question: what are highlights of mumbai
+                                Answer: 0
+                                Question: what is minimum investment amount for openai and Keith Haring?
+                                Answer:Keith Haring - Untitled,OpenAI - Co-Investment
+                                Question: Provide me all asset names
+                                Answer: 2""" 
+                    asset_response = get_gemini_response("".join(previous_questions),prompt)
+                    logger.info(f"asset_response - {asset_response}")
+                    personalAssets = False
+                    try:
+                        if int(asset_response.strip())==1:
+                            assets_identified = users_assets(token)
+                            personalAssets = True
+                        elif int(asset_response.strip())==2:
+                            assets_identified = all_assets_names[:3]
+                        elif int(asset_response.strip())==0:
+                            assets_identified = ''
+                    except:    
+                        assets_identified = asset_response.strip().split(",")
                 logger.info(f"assets_identified - {assets_identified}")
                 if len(assets_identified)>0 and personalAssets==False:
                     asset_found = ",".join(assets_identified)
