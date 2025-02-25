@@ -916,5 +916,5 @@ def evidAI_chat(request):
     except Exception as e:
         logger.error(f"Error occured from main function - {str(e)}")
         return JsonResponse({"message":"Unexpected error occured","data":{
-                "response":''},"status":False},status=400)
+                "response":f'{str(e)}'},"status":False},status=400)
 
