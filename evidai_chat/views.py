@@ -520,7 +520,8 @@ def users_assets(token):
             temp["numberOfClients"]=trd["numberOfClients"]
             temp["assetCurrency"]=trd["asset"]["currency"]
             temp['assetMaker']=trd['maker']
-            trade_details.append(temp)
+            temp = json.dumps(temp)
+            trade_details.append(temp, indent=4)
 
     commitments = data['commitments']
     commitment_details = None
@@ -534,6 +535,7 @@ def users_assets(token):
             temp['commitmentAmount']=commit['commitmentAmount']
             temp['allotedUnits']=commit['allotedUnits']
             temp['commitmentStatus']=commit['status']
+            temp = json.dumps(temp, indent=4)
             commitment_details.append(temp)
     my_assets = [trade_details,commitment_details]
     return my_assets
@@ -569,7 +571,8 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                     for d in data:
                         prm = d.prompt
                         if 'Onboarding' in promp_cat:
-                            prm = f'{prm} \nUser\'s current onboarding status - {onboarding_step}'
+                            prm = f"""{prm} \nUser\'s current onboarding status - {onboarding_step}
+                                    If user's any step is not having stepStatus as 'COMPLETED' then ask user to Complete that step."""
                         prompt_data_list.append(prm)
                     logger.info(prompt_data_list)
                     prompt_data = f"""Customer is not providing you any information, all information is with you, DO NOT SAY TO CUSTOMER THAT THEY HAVE NOT PROVIDED INFORMATION,INSTEAD SAY YOU DONT HAVE INFORMATION CURRENTLY ON THIS. You are smart and intelligent chat-bot having good knowledge of finance sector considering this chat with user. 
@@ -639,7 +642,8 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                     Understand user's question carefully and provide answer using below mentioned details. 
                     Answer should be clear, and in positive and polite tone. Make sure answer is readable. 
                     If you are unable to answer then ask user to visit - 'https://uat.investor.evident.capital/portfolio/assets'
-                    Invested Asset Details - {assets_identified}"""
+                    User's Trade:-{assets_identified[0]}
+                    User's Commitments:-{assets_identified[1]}"""
                     response = get_gemini_response(question,prompt)
                     final_response = final_response + '\n' + response                    
                     logger.info(f"Response generated for assets:{assets_identified} in which user has invested - {response}")
