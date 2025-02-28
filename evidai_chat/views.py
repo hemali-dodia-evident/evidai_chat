@@ -25,13 +25,16 @@ logger = logging.getLogger(__name__)
 def hello_world(request):
     return JsonResponse({"message":"Request received successfully","data":[],"status":True},status=200)
 
+# model = genai.GenerativeModel("gemini-1.5-pro")
+# response_content = model.generate_content(["", "Hi, who are you?"])
+# print(response_content.text)
 
 # Get response from gemini
 @csrf_exempt 
 def get_gemini_response(question,prompt):
     try:
-        prompt = "Your name is EvidAI a smart intelligent bot of Evident LLP. You provide customer support and help them."+ prompt
-        model = genai.GenerativeModel('gemini-pro')
+        # prompt = "Your name is EvidAI a smart intelligent bot of Evident LLP. You provide customer support and help them."+ prompt
+        model = genai.GenerativeModel('gemini-1.5-pro')
         response_content = model.generate_content([prompt, question])
         return response_content.text.strip()
     except Exception as e:
@@ -39,11 +42,14 @@ def get_gemini_response(question,prompt):
         response = "Sorry! I am not able to find answer for your question. \nRequest you to coordinate with our support team on - hello@evident.capital.\nThank You."
         return response
     
+# res = get_gemini_response("Hi",'')
+# print(res)
 
 # Identify prompt category based on current and previous questions
 def get_prompt_category(current_question,user_role):
     logger.info("Finding prompt from get_prompt_category")
     prompt = f"""Based on user's question identify the category of a question from below mentioned categories. STRICTLY PROVIDE ONLY NAME OF CATEGORIES NOTHING ELSE, IF NO CATEGORY MATCHES THEN RETURN "FAILED".
+                 Note - While answering do not add any other information or words. Just reply as per specified way. ONLY PROVIDE ONLY NAME OF CATEGORIES. 
                  USER's QUESTION - {current_question}
                  USER's ROLE - {user_role}
                  Greetings: Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
@@ -92,6 +98,8 @@ def get_prompt_category(current_question,user_role):
                       Bot: buy_and_sell_tokenized_assets
                       Question: Tell me about openai
                       Bot: Personal_Assets
+                      Question: Hey i want some help
+                      Bot: Greetings
                  """
     response = get_gemini_response(current_question,prompt)
     logger.info(f"prompt category - {response}")
@@ -537,46 +545,6 @@ def get_asset_list():
     return asset_names
 
 
-# all_assets_names = get_asset_list()
-# previous_questions = ['can you give me details about openai',"hi how are you"]
-# last_asset = "openai"
-# prompt = f"""Identify - if question is about assets owned or personal or invested by user then return 1
-#         - If question is about any specific asset then STRICTLY ONLY return Name of that asset from below asset list, if there is more than one asset then separate them with coma(,).
-#         - If question is all assets in generic then return 2
-#         - Else return 0 
-#         General Asset List - {all_assets_names}
-#         Last Asset user asked about - {"Openai"}
-#         If current question is related to Last Asset user asked about then if last asset name belongs to "General Asset List" then return Last Asset name as it is.
-#         Previous Questions for context understanding - {",".join(previous_questions)}
-
-#         Examples:-
-#             Question: what is commitment status of my assets?
-#             Answer: 1
-#             Question: what is minimum investment amount for Keith Haring?
-#             Answer:Keith Haring - Untitled
-#             Question: what are highlights of mumbai
-#             Answer: 0
-#             Question: what is minimum investment amount for openai and Keith Haring?
-#             Answer:Keith Haring - Untitled,OpenAI - Co-Investment
-#             Question: Provide me all asset names
-#             Answer: 2
-#             """ 
-# asset_response = get_gemini_response("can you give me minimum investment amount required for this?",prompt)
-# logger.info(f"asset_response - {asset_response}")
-# personalAssets = False
-# try:
-#     if int(asset_response.strip())==1:
-#         assets_identified = users_assets("NDk3OQ.2xFso9oUrqUrE_SleJrpXSVmU5hK-raLHjRdP7T7Pdx0PPk6pldMhORkMpH6")
-#         personalAssets = True
-#     elif int(asset_response.strip())==2:
-#         assets_identified = all_assets_names[:3]
-#     elif int(asset_response.strip())==0:
-#         assets_identified = ''
-# except:    
-#     assets_identified = asset_response.strip().split(",")
-# logger.info(f"assets_identified - {assets_identified}")
-
-
 # Check category of question and then based on category generate response
 # IP Count:10, OP Count:3
 def category_based_question(current_question,previous_questions,promp_cat,token,user_id,onboarding_step,isRelated,isAssetRelated,last_asset,last_ques_cat):
@@ -591,7 +559,7 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
         assets_identified = ""
         for promp_cat in specific_category:   
             logger.info(f"Getting answer for category - {promp_cat}")    
-            if (promp_cat!='FAILED' and promp_cat !='Personal Assets') or (isRelated==True and (isAssetRelated==False and last_asset=='')):
+            if (promp_cat!='FAILED' and promp_cat !='Personal Assets'): #or (isRelated==True and (isAssetRelated==False and last_asset=='')):
                 logger.info("General category based question")
                 try:
                     categories = last_ques_cat.split(",")
@@ -628,26 +596,25 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
             elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True:    
                 logger.info("Prompt Category is Personal Asset") 
                 if isRelated==True and isAssetRelated==True:
+                    # print(f"\n\nisRelated, isAssetRelated - {isRelated,isAssetRelated}")
                     assets_identified = [last_asset]
                 else:
                     all_assets_names = get_asset_list()
-                    prompt = f"""Identify - if question is about assets owned or personal or invested by user then return 1
+                    # print(f"\n\n{all_assets_names}\n\n")
+                    prompt = f"""Follow below instructions strictly 
+                            - if question is about assets owned or personal or invested by user then return 1
                             - If question is about any specific asset then STRICTLY ONLY return Name of that asset from below asset list, if there is more than one asset then separate them with coma(,).
                             - If question is all assets in generic then return 2
                             - Else return 0 
+                            NOTE - While answering do not add any other information or words, and formating. Follow below examples to provide answer. Just reply as mentioned in examples.
                             General Asset List - {all_assets_names}
                             Examples:-
-                                Question: what is commitment status of my assets?
-                                Answer: 1
-                                Question: what is minimum investment amount for Keith Haring?
-                                Answer:Keith Haring - Untitled
-                                Question: what are highlights of mumbai
-                                Answer: 0
-                                Question: what is minimum investment amount for openai and Keith Haring?
-                                Answer:Keith Haring - Untitled,OpenAI - Co-Investment
-                                Question: Provide me all asset names
-                                Answer: 2""" 
-                    asset_response = get_gemini_response("".join(previous_questions),prompt)
+                                1. If Question is like "what is commitment status of my assets?", then return 1.
+                                2. If Question is like "what is minimum investment amount for Keith Haring?", then return "Keith Haring - Untitled".
+                                3. If Question is like "what are highlights of mumbai", then return 0.
+                                4. If Question is like "what is minimum investment amount for openai and Keith Haring?", then return "Keith Haring - Untitled,OpenAI - Co-Investment".
+                                5. If Question is like "Provide me list of all asset", then return 2""" 
+                    asset_response = get_gemini_response(current_question,prompt)
                     logger.info(f"asset_response - {asset_response}")
                     personalAssets = False
                     try:
@@ -757,12 +724,12 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
     # Check if question is in context of current question or not if this is not fresh conversation
     if len(previous_questions)>=1:        
         prompt = f"""Identify if current question is related or is in context of previous questions.
-                    Current Question - {current_question}
                     Asset Names - {last_asset}
                     Previous Questions - {previous_questions}
-                    If current question is in context or related to previous question then return 1.
-                    Else return 0."""
-        question_related = get_gemini_response("",prompt)
+                    If current question is in context or related to previous question then RETURN 1.
+                    Else STRICTLY RETURN 0.
+                    Note - Strictly revert in way specified above. DO NOT add or create response in any other way or format."""
+        question_related = get_gemini_response(current_question,prompt)
         
         try:
             if int(question_related.strip())==1 and last_asset=='':
@@ -791,7 +758,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
     response,asset_found,specific_category = category_based_question(current_question,previous_questions,promp_cat,token,user_id,onboarding_step,isRelated,isAssetRelated,last_asset, last_ques_cat)
     logger.info(f"final response from handle_questios - {response}")
     specific_category = ",".join(specific_category)
-    print("specific_category= ",specific_category)
+    # print("specific_category= ",specific_category)
     return response,asset_found,specific_category
 
 
@@ -843,7 +810,7 @@ def login(request):
             }
     response = requests.request("POST", twoFA_url, headers=headers, data=payload)
     data = response.json()
-    print(data)
+    # print(data)
     if data['code']=='2FA_VERIFIED':
         # Get User details
         url = "https://api-uat.evident.capital/user/me"
@@ -859,7 +826,7 @@ def login(request):
 
         response = requests.request("GET", url, headers=headers, data=payload)
         data = response.json()
-        print(data)
+        # print(data)
     return JsonResponse({"token":token},status=200)
 
 
@@ -903,7 +870,7 @@ def evidAI_chat(request):
             html_content = markdown.markdown(response)
             response = html_content
             # logger.info(f"After HTML markup from main function - {response}")
-            print("current_ques_cat- ",current_ques_cat)
+            # print("current_ques_cat- ",current_ques_cat)
             add_to_conversations(user_id, chat_session_id, current_question, response, current_asset, current_ques_cat)      
             
             return JsonResponse({"message":"Response generated successfully","data":{
