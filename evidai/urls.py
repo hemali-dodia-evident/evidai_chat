@@ -9,6 +9,7 @@ urlpatterns = [
     path('evidAI_chat',views.evidAI_chat,name='evidAI_chat'),
     path('delete_chat_session',views.delete_chat_session,name='delete_chat_session'),
     path('get_chat_session_details',views.get_chat_session_details,name='get_chat_session_details'),
-    # path('chat_page',views.chat_page,name='chat_page'),
-    path('login',views.login,name='login')
+    path('update_prompt_values',views.update_prompt_values,name='update_prompt_values'),
+    path('login',views.login,name='login'),
+    path('add_prompt_values',views.add_prompt_values,name='add_prompt_values')
 ]
