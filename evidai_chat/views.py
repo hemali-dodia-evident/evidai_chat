@@ -611,7 +611,7 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                             - If question is about any specific asset then STRICTLY ONLY return Name of that asset from below asset list, if there is more than one asset then separate them with coma(,).
                             - If question is all assets in generic then return 2
                             - Else return 0 
-                            NOTE - While answering do not add any other information or words, and formating. Follow below examples to provide answer. Just reply as mentioned in examples.
+                            NOTE - While answering strictly do not add any other information or words, and formating. Strictly Follow below examples to provide answer. Just reply as mentioned in examples.
                             General Asset List - {all_assets_names}
                             Examples:-
                                 1. If Question is like "what is commitment status of my assets?", then return 1.
