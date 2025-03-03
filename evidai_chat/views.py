@@ -66,7 +66,7 @@ def get_prompt_category(current_question,user_role):
                     Complete details of assets, current status, investment, trade, structure, tags, etc. related to 
                     that asset, commitments. Here user asks about different things on asset. 
                     These are user specific assets. When user wants to know about his/her asset details.
-                 Investment_Instructions: Contains general investment instructions and information like how one can proceed ahead with investment.
+                 Forget_Password: Contains step by step process to change or update password.
                  Assets_Creation: Detailed process only to create assets. 
                  Asset_Managers:This category contains information about EVIDENT's due diligence process for asset managers, the structuring and tokenization of assets, and the various fundraising methods available on the platform, emphasizing efficiency, transparency, and investor protection.
                  Onboarding_Distributor:Detailed process for distributor onboarding process.
