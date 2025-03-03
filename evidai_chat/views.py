@@ -889,3 +889,52 @@ def evidAI_chat(request):
         return JsonResponse({"message":"Unexpected error occured","data":{
                 "response":f'{str(e)}'},"status":False},status=400)
 
+
+@csrf_exempt
+def update_prompt_values(request):
+    if request.method=='POST':
+        try:
+            data = json.loads(request.body)
+            value = data['value']
+            category = data['category'].replace("_"," ")
+
+            prompt_table = models.BasicPrompts.objects.get(prompt_category=category)
+            prompt_table.prompt = value
+            prompt_table.save()
+
+            prompt_table = models.BasicPrompts.objects.get(prompt_category=category)
+            value = prompt_table.prompt
+            return JsonResponse({"message":"Value updated successfully","data":{"updated_prompt":value},"status":True},status=200)
+        except Exception as e:
+            return JsonResponse({"message":"Failed to update prompt","data":{"error":str(e)},"status":False},status=400)
+
+
+@csrf_exempt
+def add_prompt_values(request):
+    if request.method=='POST':
+        try:
+            # Get the current date and time in UTC
+            current_datetime = datetime.now(timezone.utc)
+            data = json.loads(request.body)
+            value = data['value']
+            category = data['category'].replace("_"," ")
+            asset_name = data['asset_name']
+            asset_sub_cat = data['asset_sub_cat']
+            # Convert to ISO 8601 format
+            iso_format_datetime = current_datetime.isoformat()
+            new_cat = models.BasicPrompts.objects.create(
+                prompt_category=category,
+                prompt=value,
+                asset_name=asset_name,
+                asset_sub_cat=asset_sub_cat,
+                created_at=iso_format_datetime,
+                updated_at=iso_format_datetime               
+            )
+            new_cat.save()
+            return JsonResponse({"message":"Value added successfully",
+                                 "data":{"prompt_category":category,'prompt':value,
+                                         "asset_name":asset_name,"asset_sub_cat":asset_sub_cat},"status":True},status=200) 
+        except Exception as e:
+            return JsonResponse({"message":"Failed to add prompt","data":{"error":str(e)},"status":False},status=400)
+
+   
