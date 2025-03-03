@@ -598,10 +598,12 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                 final_response = final_response + '\n' + response   
             elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True:    
                 logger.info("Prompt Category is Personal Asset") 
+                personalAssets = False
                 if isRelated==True and isAssetRelated==True:
                     # print(f"\n\nisRelated, isAssetRelated - {isRelated,isAssetRelated}")
                     assets_identified = [last_asset]
                 else:
+                    
                     all_assets_names = get_asset_list()
                     # print(f"\n\n{all_assets_names}\n\n")
                     prompt = f"""Follow below instructions strictly 
@@ -619,7 +621,6 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                                 5. If Question is like "Provide me list of all asset", then return 2""" 
                     asset_response = get_gemini_response(current_question,prompt)
                     logger.info(f"asset_response - {asset_response}")
-                    personalAssets = False
                     try:
                         if int(asset_response.strip())==1:
                             assets_identified = users_assets(token)
