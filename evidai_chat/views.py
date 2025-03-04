@@ -112,19 +112,19 @@ def get_prompt_category(current_question,user_role):
 def token_validation(token):    
     try:
         # Validate token 
-        # twoFA_url = "https://api-uat.evident.capital/user/two-factor-authentication"
-        # payload = json.dumps({
-        #         "code": "123456",
-        #         "ipAddress": "127.0.0.1"
-        #         })
-        # headers = {
-        #             'Authorization': f'Bearer {token}',
-        #             'Content-Type': 'application/json'
-        #         }
-        # response = requests.request("POST", twoFA_url, headers=headers, data=payload)
-        # data = response.json()
+        twoFA_url = "https://api-uat.evident.capital/user/two-factor-authentication"
+        payload = json.dumps({
+                "code": "123456",
+                "ipAddress": "127.0.0.1"
+                })
+        headers = {
+                    'Authorization': f'Bearer {token}',
+                    'Content-Type': 'application/json'
+                }
+        response = requests.request("POST", twoFA_url, headers=headers, data=payload)
+        data = response.json()
         # if data['code']=='2FA_VERIFIED':
-            # Get User details
+        # Get User details
         url = "https://api-uat.evident.capital/user/me"
 
         payload = {
@@ -162,7 +162,8 @@ def token_validation(token):
             return None, None, None, None, None
         # else:
         #     return None, None, None, None, None
-    except:
+    except Exception as e:
+        logger.error(f"Failed to get user/me response due to - {str(e)}")
         return None, None, None, None, None
 
 
@@ -871,9 +872,9 @@ def evidAI_chat(request):
             token = auth_header.split(' ')[1]
             token_valid,user_id,user_name,user_role,onboarding_step = token_validation(token)
 
-            if token_valid is None:
-                logger.error(f"Invalid Token, Token: {token}")            
-                return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
+            # if token_valid is None:
+            #     logger.error(f"Invalid Token, Token: {token}")            
+            #     return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
             
             data = json.loads(request.body)
             current_question = data.get('question')
