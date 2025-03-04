@@ -123,45 +123,45 @@ def token_validation(token):
                 }
         response = requests.request("POST", twoFA_url, headers=headers, data=payload)
         data = response.json()
-        if data['code']=='2FA_VERIFIED':
+        # if data['code']=='2FA_VERIFIED':
             # Get User details
-            url = "https://api-uat.evident.capital/user/me"
+        url = "https://api-uat.evident.capital/user/me"
 
-            payload = {
-                        "code": "123456",
-                        "ipAddress":"127.0.0.1"
-                    }
-            headers = {
-                        'Authorization': f'Bearer {token}',
-                        'Content-Type': 'application/json'
-                    }
+        payload = {
+                    "code": "123456",
+                    "ipAddress":"127.0.0.1"
+                }
+        headers = {
+                    'Authorization': f'Bearer {token}',
+                    'Content-Type': 'application/json'
+                }
 
-            response = requests.request("GET", url, headers=headers, data=payload)
-            data = response.json()
-            validate = data["user"]["twoFactorAuthenticationSession"]
-            user_id = data["user"]["id"]
-            user_name = data['user']['kyc']['fullName'].split()[0]
-            user_role = 'Individual Investor'
-            if data['user']['isDistributor']==True:
-                user_role = 'Distributor'
-            elif data['user']['isOwner']==True:
-                user_role = 'Issuer'
-            elif data['user']['isDistributor']==False and data['user']['isOwner']==False and data['user']['profile']['isInstitutional']==True:
-                user_role = 'Corp Investor'
-            onboarding_details = data['user']['individualOnboarding']
-            onboarding_steps = []
-            for stp in onboarding_details:
-                temp_stp = {}
-                temp_stp['stepName'] = stp['stepName']
-                temp_stp['stepStatus'] = stp['stepStatus']     
-                onboarding_steps.append(temp_stp)       
-            
-            if validate:
-                return token, user_id, user_name, user_role, onboarding_steps
-            else:
-                return None, None, None, None, None
+        response = requests.request("GET", url, headers=headers, data=payload)
+        data = response.json()
+        validate = data["user"]["twoFactorAuthenticationSession"]
+        user_id = data["user"]["id"]
+        user_name = data['user']['kyc']['fullName'].split()[0]
+        user_role = 'Individual Investor'
+        if data['user']['isDistributor']==True:
+            user_role = 'Distributor'
+        elif data['user']['isOwner']==True:
+            user_role = 'Issuer'
+        elif data['user']['isDistributor']==False and data['user']['isOwner']==False and data['user']['profile']['isInstitutional']==True:
+            user_role = 'Corp Investor'
+        onboarding_details = data['user']['individualOnboarding']
+        onboarding_steps = []
+        for stp in onboarding_details:
+            temp_stp = {}
+            temp_stp['stepName'] = stp['stepName']
+            temp_stp['stepStatus'] = stp['stepStatus']     
+            onboarding_steps.append(temp_stp)       
+        
+        if validate:
+            return token, user_id, user_name, user_role, onboarding_steps
         else:
             return None, None, None, None, None
+        # else:
+        #     return None, None, None, None, None
     except:
         return None, None, None, None, None
 
