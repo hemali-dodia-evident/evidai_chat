@@ -41,7 +41,7 @@ def get_gemini_response(question,prompt):
         response_content = model.generate_content([prompt, question])
         return response_content.text.strip()
     except Exception as e:
-        logger.critical(f'Failed to get answer from gemini due to - {str(e)}')
+        logger.error(f'Failed to get answer from gemini due to - {str(e)}')
         response = "Sorry! I am not able to find answer for your question. \nRequest you to coordinate with our support team on - hello@evident.capital.\nThank You."
         return response
 
