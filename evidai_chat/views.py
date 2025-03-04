@@ -20,14 +20,17 @@ asset_verticals = {1:'Private Equity',2:'Venture Capital',3:'Private Credit',4:'
 # Configure the logging settings
 logger = logging.getLogger(__name__)
 
+# Model response restriction
+generation_config = {
+    "temperature": 0.1,  # Lower randomness
+    "top_p": 0.8  # Nucleus sampling
+}
+
 
 # Test API
 def hello_world(request):
     return JsonResponse({"message":"Request received successfully","data":[],"status":True},status=200)
 
-# model = genai.GenerativeModel("gemini-1.5-pro")
-# response_content = model.generate_content(["", "Hi, who are you?"])
-# print(response_content.text)
 
 # Get response from gemini
 @csrf_exempt 
@@ -41,9 +44,7 @@ def get_gemini_response(question,prompt):
         logger.critical(f'Failed to get answer from gemini due to - {str(e)}')
         response = "Sorry! I am not able to find answer for your question. \nRequest you to coordinate with our support team on - hello@evident.capital.\nThank You."
         return response
-    
-# res = get_gemini_response("Hi",'')
-# print(res)
+
 
 # Identify prompt category based on current and previous questions
 def get_prompt_category(current_question,user_role):
@@ -522,6 +523,7 @@ def users_assets(token):
             temp['assetMaker']=trd['maker']
             temp = json.dumps(temp)
             trade_details.append(temp, indent=4)
+        trade_details = ",".join(trade_details)
 
     commitments = data['commitments']
     commitment_details = None
@@ -537,6 +539,7 @@ def users_assets(token):
             temp['commitmentStatus']=commit['status']
             temp = json.dumps(temp, indent=4)
             commitment_details.append(temp)
+        commitment_details = ",".join(commitment_details)
     my_assets = [trade_details,commitment_details]
     return my_assets
 
@@ -606,19 +609,31 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                     
                     all_assets_names = get_asset_list()
                     # print(f"\n\n{all_assets_names}\n\n")
-                    prompt = f"""Follow below instructions strictly 
-                            - if question is about assets owned or personal or invested by user then return 1
-                            - If question is about any specific asset then STRICTLY ONLY return Name of that asset from below asset list, if there is more than one asset then separate them with coma(,).
-                            - If question is all assets in generic then return 2
-                            - Else return 0 
-                            NOTE - While answering strictly do not add any other information or words, and formating. Strictly Follow below examples to provide answer. Just reply as mentioned in examples.
-                            General Asset List - {all_assets_names}
-                            Examples:-
-                                1. If Question is like "what is commitment status of my assets?", then return 1.
-                                2. If Question is like "what is minimum investment amount for Keith Haring?", then return "Keith Haring - Untitled".
-                                3. If Question is like "what are highlights of mumbai", then return 0.
-                                4. If Question is like "what is minimum investment amount for openai and Keith Haring?", then return "Keith Haring - Untitled,OpenAI - Co-Investment".
-                                5. If Question is like "Provide me list of all asset", then return 2""" 
+                    prompt = f"""
+                                Follow these instructions **exactly**:
+                                - If the question is about assets owned, personal, or invested by the user, **return only `1`**.
+                                - If the question asks about a **specific asset**, return **only the asset name** from the list below (if multiple, separate with commas `,`).
+                                - If the question asks about **All assets in general**, **return only `2`**.
+                                - **For all other questions, return only `0`**.
+                                - **DO NOT add any extra words, explanations, or formatting**. Only return the specified response.
+
+                                General Asset List:
+                                {all_assets_names}
+
+                                **STRICT EXAMPLES:**  
+                                **Q:** "What is the commitment status of my assets?"  
+                                **A:** `1`  
+                                **Q:** "What is the minimum investment amount for Keith Haring?"  
+                                **A:** `Keith Haring - Untitled`  
+                                **Q:** "What are highlights of Mumbai?"  
+                                **A:** `0`  
+                                **Q:** "What is the minimum investment amount for OpenAI and Keith Haring?"  
+                                **A:** `Keith Haring - Untitled,OpenAI - Co-Investment`  
+                                **Q:** "Provide me list of all assets."  
+                                **A:** `2`  
+
+                                **DO NOT DEVIATE FROM THESE RULES. ONLY RESPOND AS SHOWN ABOVE.**  
+                                """
                     asset_response = get_gemini_response(current_question,prompt)
                     logger.info(f"asset_response - {asset_response}")
                     try:
@@ -629,13 +644,17 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                             assets_identified = all_assets_names[:3]
                         elif int(asset_response.strip())==0:
                             assets_identified = ''
-                    except:    
-                        assets_identified = asset_response.strip().split(",")
+                    except:
+                        assets_identified_new = []
+                        for asset in all_assets_names:
+                            if asset in asset_response:
+                                assets_identified_new.append(asset)
+                        assets_identified = assets_identified_new#asset_response.strip().split(",")
                 logger.info(f"assets_identified - {assets_identified}")
                 if len(assets_identified)>0 and personalAssets==False:
                     asset_found = ",".join(assets_identified)
                     response = get_asset_based_response(assets_identified,question,token)
-                    logger.info(f"Response generated for assets:{assets_identified} which are from marketplace - {response}")
+                    logger.info(f"get_asset_based_response - Response generated for assets:{assets_identified} which are from marketplace - {response}")
                     final_response = final_response + '\n' + response  
                 elif len(assets_identified)>0 or personalAssets==True:
                     asset_found = ",".join(assets_identified)
@@ -658,8 +677,10 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                 final_response = final_response + '\n' + response  
         if final_response == "":
             return "Sorry! I am unable understand the question. Can you provide more details so I can assist you better?", False
-        final_response = get_gemini_response(final_response,"""Remove all repeatative statements and make proper answer from this 
-                                                            while keeping all information as it is. Maintain readability of answer.""")
+        final_response = get_gemini_response(final_response,"""Remove all repetitive statements while keeping all information intact.  
+                                                    Maintain readability and ensure a proper structured response.  
+                                                    DO NOT add any introductory statements like "Here's a summarized version..." or similar.  
+                                                    Just return the cleaned-up text as the response.""")
         logger.info(f"Final Response - {final_response}")
     except Exception as e:
         logger.error(f"While generating answer from category based question following error occured - {str(e)}")
@@ -707,7 +728,7 @@ def get_asset_based_response(assets_identified,question,token):
                     Ask user to visit for more details - "https://uat.account.v2.evident.capital/" 
                     Note: The response should be clear, concise, and user-friendly, adhering to these guidelines. Encourage to ask more queries."""
             prompt = f"""Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about.
-                To get proper trade values, add all results of that perticular assets. 
+                To get proper trade values, add all results of that perticular assets. Do not provide paramters like id, and also create proper response it **SHOULD NOT** be in key value format.
                 e.g. if you want overall records of units then it will be sum of all units of respective column, to get final unit counts add all values of units.
                 NOTE - {note}
                 Asset Details: - {data}"""
@@ -761,7 +782,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
         promp_cat = [p.strip() for p in promp_cat if 'Greetings' not in p.strip()]
 
     response,asset_found,specific_category = category_based_question(current_question,previous_questions,promp_cat,token,user_id,onboarding_step,isRelated,isAssetRelated,last_asset, last_ques_cat)
-    logger.info(f"final response from handle_questios - {response}")
+    logger.info(f"final response from handle_questions - {response}")
     specific_category = ",".join(specific_category)
     # print("specific_category= ",specific_category)
     return response,asset_found,specific_category
@@ -938,4 +959,22 @@ def add_prompt_values(request):
         except Exception as e:
             return JsonResponse({"message":"Failed to add prompt","data":{"error":str(e)},"status":False},status=400)
 
-   
+
+def add_prompt_to_UAT():
+    data = models.BasicPrompts.objects.exclude(prompt_category='Existing Assets').all().values()
+    for d in data:
+        if d['prompt_category'] in ['Forget Password','Corp Investor Onboarding','Onboarding Investor']:
+            continue
+        # print(d['prompt_category'])
+        value = d['prompt']
+        category = d['prompt_category']
+        asset_name = d['asset_name'][0] if d['asset_name'] is not None else ""
+        asset_sub_cat = d['asset_sub_cat'][0] if d['asset_sub_cat'] is not None else ""
+        url = "https://chatbot-api.evident.capital/add_prompt_values"
+
+        payload = json.dumps({"value":value,"category":category,"asset_name":asset_name,"asset_sub_cat":asset_sub_cat})
+        headers = {}
+        # print(payload)
+        response = requests.request("POST", url, headers=headers, data=payload)
+
+        # print(response.content)
