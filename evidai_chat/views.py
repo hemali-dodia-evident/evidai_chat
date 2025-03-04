@@ -112,17 +112,17 @@ def get_prompt_category(current_question,user_role):
 def token_validation(token):    
     try:
         # Validate token 
-        twoFA_url = "https://api-uat.evident.capital/user/two-factor-authentication"
-        payload = json.dumps({
-                "code": "123456",
-                "ipAddress": "127.0.0.1"
-                })
-        headers = {
-                    'Authorization': f'Bearer {token}',
-                    'Content-Type': 'application/json'
-                }
-        response = requests.request("POST", twoFA_url, headers=headers, data=payload)
-        data = response.json()
+        # twoFA_url = "https://api-uat.evident.capital/user/two-factor-authentication"
+        # payload = json.dumps({
+        #         "code": "123456",
+        #         "ipAddress": "127.0.0.1"
+        #         })
+        # headers = {
+        #             'Authorization': f'Bearer {token}',
+        #             'Content-Type': 'application/json'
+        #         }
+        # response = requests.request("POST", twoFA_url, headers=headers, data=payload)
+        # data = response.json()
         # if data['code']=='2FA_VERIFIED':
             # Get User details
         url = "https://api-uat.evident.capital/user/me"
