@@ -48,7 +48,7 @@ def get_gemini_response(question,prompt):
 
 # Identify prompt category based on current and previous questions
 def get_prompt_category(current_question,user_role):
-    logger.info("Finding prompt from get_prompt_category")
+    # logger.info("Finding prompt from get_prompt_category")
     prompt = f"""Based on user's question identify the category of a question from below mentioned categories. STRICTLY PROVIDE ONLY NAME OF CATEGORIES NOTHING ELSE, IF NO CATEGORY MATCHES THEN RETURN "FAILED".
                  Note - While answering do not add any other information or words. Just reply as per specified way. ONLY PROVIDE ONLY NAME OF CATEGORIES. 
                  USER's QUESTION - {current_question}
@@ -103,7 +103,7 @@ def get_prompt_category(current_question,user_role):
                       Bot: Greetings
                  """
     response = get_gemini_response(current_question,prompt)
-    logger.info(f"prompt category - {response}")
+    # logger.info(f"prompt category - {response}")
     return response
 
 
@@ -607,55 +607,64 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                 final_response = final_response + '\n' + response   
             elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True:    
                 logger.info("Prompt Category is Personal Asset") 
-                personalAssets = False
-                if isRelated==True and isAssetRelated==True:
-                    # print(f"\n\nisRelated, isAssetRelated - {isRelated,isAssetRelated}")
-                    assets_identified = [last_asset]
-                else:
+                personalAssets = False          
+                all_assets_names = get_asset_list()
+                all_assets_names = list(all_assets_names)
+                all_assets_names.append("M&M")
+                prompt = f"""Follow these instructions exactly:
+
+                    If the question is about assets owned, personal, or invested by the user, return only 1.
+                    If the question asks about a specific asset, return only the asset name from the list below (if multiple, separate with commas ,).
+                    If the question is related to a previously mentioned asset, return only that asset name (or multiple if applicable).
+                    If the question asks about all assets in general, return only 2.
+                    For all other unrelated questions, return only 0.
+                    DO NOT add any extra words, explanations, or formatting. Only return the specified response.
+                    Contextual Asset Matching
+                    Asset Names: {all_assets_names}
+                    Previously Mentioned Assets: {last_asset}
+                    STRICT EXAMPLES:
+                    Q: "What is the commitment status of my assets?"
+                    A: 1
+
+                    Q: "What is the minimum investment amount for Keith Haring?"
+                    A: Keith Haring - Untitled
+
+                    Q: "What are highlights of Mumbai?"
+                    A: 0
+
+                    Q: "What is the minimum investment amount for OpenAI and Keith Haring?"
+                    A: Keith Haring - Untitled,OpenAI - Co-Investment
+
+                    Q: "Provide me list of all assets."
+                    A: 2
+
+                    Q: "What is the expected return for the asset I just asked about?" (Assuming the last asset was OpenAI - Co-Investment)
+                    A: OpenAI - Co-Investment
+
+                    Q: "Can you tell me more about it?" (If previous asset was Keith Haring - Untitled)
+                    A: Keith Haring - Untitled
+
+                    Case - If Previously Mentioned Assets is Keith Haring - Untitled
+                    Q: "Tell me minimum investment amount for this" 
+                    A: Keith Haring - Untitled
                     
-                    all_assets_names = get_asset_list()
-                    # print(f"\n\n{all_assets_names}\n\n")
-                    prompt = f"""
-                                Follow these instructions **exactly**:
-                                - If the question is about assets owned, personal, or invested by the user, **return only `1`**.
-                                - If the question asks about a **specific asset**, return **only the asset name** from the list below (if multiple, separate with commas `,`).
-                                - If the question asks about **All assets in general**, **return only `2`**.
-                                - **For all other questions, return only `0`**.
-                                - **DO NOT add any extra words, explanations, or formatting**. Only return the specified response.
-
-                                General Asset List:
-                                {all_assets_names}
-
-                                **STRICT EXAMPLES:**  
-                                **Q:** "What is the commitment status of my assets?"  
-                                **A:** `1`  
-                                **Q:** "What is the minimum investment amount for Keith Haring?"  
-                                **A:** `Keith Haring - Untitled`  
-                                **Q:** "What are highlights of Mumbai?"  
-                                **A:** `0`  
-                                **Q:** "What is the minimum investment amount for OpenAI and Keith Haring?"  
-                                **A:** `Keith Haring - Untitled,OpenAI - Co-Investment`  
-                                **Q:** "Provide me list of all assets."  
-                                **A:** `2`  
-
-                                **DO NOT DEVIATE FROM THESE RULES. ONLY RESPOND AS SHOWN ABOVE.**  
-                                """
-                    asset_response = get_gemini_response(current_question,prompt)
-                    logger.info(f"asset_response - {asset_response}")
-                    try:
-                        if int(asset_response.strip())==1:
-                            assets_identified = users_assets(token)
-                            personalAssets = True
-                        elif int(asset_response.strip())==2:
-                            assets_identified = all_assets_names[:3]
-                        elif int(asset_response.strip())==0:
-                            assets_identified = ''
-                    except:
-                        assets_identified_new = []
-                        for asset in all_assets_names:
-                            if asset in asset_response:
-                                assets_identified_new.append(asset)
-                        assets_identified = assets_identified_new#asset_response.strip().split(",")
+                    DO NOT DEVIATE FROM THESE RULES. ONLY RESPOND AS SHOWN ABOVE."""
+                asset_response = get_gemini_response(current_question,prompt)
+                logger.info(f"asset_response - {asset_response}")
+                try:
+                    if int(asset_response.strip())==1:
+                        assets_identified = users_assets(token)
+                        personalAssets = True
+                    elif int(asset_response.strip())==2:
+                        assets_identified = all_assets_names[:3]
+                    elif int(asset_response.strip())==0:
+                        assets_identified = ''
+                except:
+                    assets_identified_new = []
+                    for asset in all_assets_names:
+                        if asset in asset_response:
+                            assets_identified_new.append(asset)
+                    assets_identified = assets_identified_new#asset_response.strip().split(",")
                 logger.info(f"assets_identified - {assets_identified}")
                 if len(assets_identified)>0 and personalAssets==False:
                     asset_found = ",".join(assets_identified)
@@ -689,16 +698,27 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                 final_response = final_response + '\n' + response  
         if final_response == "":
             return "Sorry! I am unable understand the question. Can you provide more details so I can assist you better?", False
-        final_response = get_gemini_response(final_response,"""Remove all repetitive statements while keeping all information intact.  
-                                                    Maintain readability and ensure a proper structured response.  
-                                                    DO NOT add any introductory statements like "Here's a summarized version..." or similar.  
-                                                    Just return the cleaned-up text as the response.
-                                                    NOTE - Keep tone positive and polite while answering user's query.
-                    Avoid mentioning or implying that the user has not provided information.
-                    Do not greet the user in your response. If you are unable to find answer then just say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
-                    Use proper formatting such as line breaks to enhance readability. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
-                    Maintain a positive and polite tone throughout the response.
-                    The response should be clear, concise, and user-friendly, adhering to these guidelines.""")
+        prompt = """Follow these instructions exactly to ensure a structured, clear, and user-friendly response:
+                    Remove all repetitive statements while preserving essential information.
+                    Maintain readability by structuring the response with appropriate line breaks (\n).
+                    Use formatting correctly:
+                    Bold important words and headers.
+                    Avoid special characters like * for formatting.
+                    If the response contains steps, ensure each step starts on a new line for proper formatting.
+                    Keep a positive and polite tone while responding.
+                    Never imply that the user has not provided information.
+                    Do not greet the user.
+                    Response Guidelines:
+                    If an answer is available: Provide a clear, concise response with proper structure and formatting.
+                    If an answer is unavailable: Respond with:
+                    "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
+                    Ensure:
+                    The response is structured well with line breaks for readability.
+                    The tone remains friendly and professional.
+                    Steps are properly formatted, with each step appearing on a new line.
+                    No extra words, unnecessary greetings, or irrelevant details are added.
+                    Strictly follow these instructions to generate the best response."""
+        final_response = get_gemini_response(final_response,)
         logger.info(f"Final Response - {final_response}")
     except Exception as e:
         logger.error(f"While generating answer from category based question following error occured - {str(e)}")
@@ -760,36 +780,45 @@ def get_asset_based_response(assets_identified,question,token):
 
 # Question handling flow - IP Count:9, OP Count:3
 def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_role, previous_questions, current_question, onboarding_step):     
+    print("last_asset - ",last_asset)
     asset_found = ''
     response = ''
     isRelated = False
-    isAssetRelated = False
-
-    # Identify question's category
-    promp_cat = get_prompt_category(current_question,user_role)
-    promp_cat = promp_cat.split(",")
-    promp_cat = [p.strip() for p in promp_cat]
-    
+    isAssetRelated = False   
 
     asset_names  = get_asset_list()
-    prompt = f"""Identify if any of the following asset name is present in question or not.
-                If you identify asset name from list then return 1, else return 0.
-                **STRINCTLY REPLY IN ABOVE MENTIONED FORMAT. DO NOT ADD ANYTHING ELSE IN YOUR RESPONSE.**
-                Asset Names - {asset_names}"""
+    asset_names = list(asset_names)
+    asset_names.append("M&M")
+    asset_names = ", ".join(asset_names)
+    prompt = f"""Identify if any of the following asset names is present in the question or not.
+            If you identify an exact asset name from the list, return that exact value.
+            If you find a similar name that the user might be referring to (considering typos, misspellings, or approximate context), return that closest matching asset name from the list.
+            Treat & and and as equivalent when matching asset names.
+            If no relevant match is found, return 'None'.
+            STRICTLY REPLY IN THE ABOVE FORMAT. DO NOT ADD ANYTHING ELSE IN YOUR RESPONSE.
+            Asset Names - {asset_names}"""
     asset_identified_flag = get_gemini_response(current_question,prompt)
-    promp_cat_ans = ''
-    if int(asset_identified_flag)==1:
-        promp_cat_ans = 'Personal_Assets'
-        promp_cat.append(promp_cat_ans)
-        
+    print("asset_identified_flag - ",asset_identified_flag)
+    promp_cat = []
+    if asset_identified_flag in asset_names:
+        promp_cat=['Personal_Assets']        
+    else:
+        # Identify question's category
+        promp_cat = get_prompt_category(current_question,user_role)
+        promp_cat = promp_cat.split(",")
+        promp_cat = [p.strip() for p in promp_cat] 
+    print("promp_cat - ",promp_cat)
     # Check if question is in context of current question or not if this is not fresh conversation
     if len(previous_questions)>=1:        
-        prompt = f"""Identify if current question is related or is in context of previous questions.
-                    Asset Names - {last_asset}
-                    Previous Questions - {previous_questions}
-                    If current question is in context or related to previous question then RETURN 1.
-                    Else STRICTLY RETURN 0.
-                    Note - Strictly revert in way specified above. DO NOT add or create response in any other way or format."""
+        prompt = f"""Determine if the current question is related to or in the context of the previous questions.
+                Asset Names: {last_asset}
+                Previous Questions: {previous_questions}
+                Current Question: {current_question}
+                
+                Response Rules:
+                If the current question is related to or follows the context of any previous question, STRICTLY RETURN 1.
+                Otherwise, STRICTLY RETURN 0.
+                DO NOT add any extra text, explanations, or formatting beyond the specified response."""
         question_related = get_gemini_response(current_question,prompt)
         
         try:
@@ -892,9 +921,7 @@ def login(request):
 def evidAI_chat(request):
     try:
         if request.method == 'POST':
-            asset_names = get_asset_list()
-            for ass in asset_names:
-                logger.info(ass)
+            
             token = None
             # Extract the Bearer token from the Authorization header
             auth_header = request.headers.get('Authorization')
