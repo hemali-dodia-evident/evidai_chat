@@ -718,7 +718,7 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                     Steps are properly formatted, with each step appearing on a new line.
                     No extra words, unnecessary greetings, or irrelevant details are added.
                     Strictly follow these instructions to generate the best response."""
-        final_response = get_gemini_response(final_response,)
+        final_response = get_gemini_response(final_response,prompt)
         logger.info(f"Final Response - {final_response}")
     except Exception as e:
         logger.error(f"While generating answer from category based question following error occured - {str(e)}")
