@@ -831,7 +831,6 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
         except Exception as e:
             logger.error(f"Failed to check if question is related to previous question or not, following error occured - {str(e)}")
 
-    
     # If question is just a greeting nothing else is asked in that question
     if 'Greetings' in promp_cat[0] and len(promp_cat)==1:
         prompt = f"""User name is - {user_name}, reply to user in polite and positive way. Encourage for further communication. if user name is not present then skip using user's name."""
