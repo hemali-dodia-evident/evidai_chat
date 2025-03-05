@@ -49,13 +49,10 @@ def get_gemini_response(question,prompt):
 # Identify prompt category based on current and previous questions
 def get_prompt_category(current_question,user_role):
     logger.info("Finding prompt from get_prompt_category")
-    asset_names = get_asset_list()
     prompt = f"""Based on user's question identify the category of a question from below mentioned categories. STRICTLY PROVIDE ONLY NAME OF CATEGORIES NOTHING ELSE, IF NO CATEGORY MATCHES THEN RETURN "FAILED".
                  Note - While answering do not add any other information or words. Just reply as per specified way. ONLY PROVIDE ONLY NAME OF CATEGORIES. 
                  USER's QUESTION - {current_question}
                  USER's ROLE - {user_role}, If user's role is not specified then consider it as "Individual Investor".
-                 Assets avilable on Evident Platform - {asset_names}
-                 If User is asking about any asset present in above list then return 'Personal_Assets'.
                  Greetings: Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
                  Personal_Assets: Following details are present for variety of assets like openai, spacex and many more - These assets include various categories such as Private Equity, Venture Capital, 
                     Private Credit, Infrastructure, Hedge Funds, Digital Assets, Real Estate, Collectibles, 
@@ -768,6 +765,23 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
     isRelated = False
     isAssetRelated = False
 
+    # Identify question's category
+    promp_cat = get_prompt_category(current_question,user_role)
+    promp_cat = promp_cat.split(",")
+    promp_cat = [p.strip() for p in promp_cat]
+    
+
+    asset_names  = get_asset_list()
+    prompt = f"""Identify if any of the following asset name is present in question or not.
+                If you identify asset name from list then return 1, else return 0.
+                **STRINCTLY REPLY IN ABOVE MENTIONED FORMAT. DO NOT ADD ANYTHING ELSE IN YOUR RESPONSE.**
+                Asset Names - {asset_names}"""
+    asset_identified_flag = get_gemini_response(current_question,prompt)
+    promp_cat_ans = ''
+    if int(asset_identified_flag)==1:
+        promp_cat_ans = 'Personal_Assets'
+        promp_cat.append(promp_cat_ans)
+        
     # Check if question is in context of current question or not if this is not fresh conversation
     if len(previous_questions)>=1:        
         prompt = f"""Identify if current question is related or is in context of previous questions.
@@ -788,10 +802,6 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
         except Exception as e:
             logger.error(f"Failed to check if question is related to previous question or not, following error occured - {str(e)}")
 
-    # Identify question's category
-    promp_cat = get_prompt_category(current_question,user_role)
-    promp_cat = promp_cat.split(",")
-    promp_cat = [p.strip() for p in promp_cat]
     
     # If question is just a greeting nothing else is asked in that question
     if 'Greetings' in promp_cat[0] and len(promp_cat)==1:
