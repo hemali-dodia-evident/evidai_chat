@@ -808,7 +808,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
         promp_cat = promp_cat.split(",")
         promp_cat = [p.strip() for p in promp_cat] 
     
-    promp_cat = set(promp_cat)
+    promp_cat = list(set(promp_cat))
     print("promp_cat - ",promp_cat)
     
     # Check if question is in context of current question or not if this is not fresh conversation
