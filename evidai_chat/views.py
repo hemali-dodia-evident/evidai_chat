@@ -123,7 +123,8 @@ def token_validation(token):
                 }
         response = requests.request("POST", twoFA_url, headers=headers, data=payload)
         data = response.json()
-        # if data['code']=='2FA_VERIFIED':
+        if data['code']!='2FA_VERIFIED':
+            logger.info(f"User have not completed 2FA - token:{token}")
         # Get User details
         url = "https://api-uat.evident.capital/user/me"
 
@@ -159,12 +160,11 @@ def token_validation(token):
         if validate:
             return token, user_id, user_name, user_role, onboarding_steps
         else:
-            return None, None, None, None, None
-        # else:
-        #     return None, None, None, None, None
+            return token, None, None, None, None
+
     except Exception as e:
         logger.error(f"Failed to get user/me response due to - {str(e)}")
-        return None, None, None, None, None
+        return token, '', '', '', ''
 
 
 # Add conversation to DB
@@ -583,7 +583,12 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                     Provide answer in a way that you are chatting with customer. Do not use any kind of emojis. Do not greet user while answering. Guide and help user to finish their steps and complete onboarding. Use below information to get answer -
                     {prompt_data_list}
                     NOTE - If you are not able to find answer then say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
-                    Keep tone positive and polite while answering user's query. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'"""
+                    Keep tone positive and polite while answering user's query.
+                    Avoid mentioning or implying that the user has not provided information.
+                    Do not greet the user in your response. If you are unable to find answer then just say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
+                    Use proper formatting such as line breaks to enhance readability. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
+                    Maintain a positive and polite tone throughout the response.
+                    The response should be clear, concise, and user-friendly, adhering to these guidelines."""
                     response = get_gemini_response(question,prompt_data)
                     final_response = final_response + '\n' + response    
                 except Exception as e:
@@ -664,7 +669,13 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                     Answer should be clear, and in positive and polite tone. Make sure answer is readable. 
                     If you are unable to answer then ask user to visit - 'https://uat.investor.evident.capital/portfolio/assets'
                     User's Trade:-{assets_identified[0]}
-                    User's Commitments:-{assets_identified[1]}"""
+                    User's Commitments:-{assets_identified[1]}
+                    NOTE - Keep tone positive and polite while answering user's query.
+                    Avoid mentioning or implying that the user has not provided information.
+                    Do not greet the user in your response.
+                    Use proper formatting such as line breaks to enhance readability. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
+                    Maintain a positive and polite tone throughout the response.
+                    The response should be clear, concise, and user-friendly, adhering to these guidelines."""
                     response = get_gemini_response(question,prompt)
                     final_response = final_response + '\n' + response                    
                     logger.info(f"Response generated for assets:{assets_identified} in which user has invested - {response}")
@@ -681,7 +692,13 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
         final_response = get_gemini_response(final_response,"""Remove all repetitive statements while keeping all information intact.  
                                                     Maintain readability and ensure a proper structured response.  
                                                     DO NOT add any introductory statements like "Here's a summarized version..." or similar.  
-                                                    Just return the cleaned-up text as the response.""")
+                                                    Just return the cleaned-up text as the response.
+                                                    NOTE - Keep tone positive and polite while answering user's query.
+                    Avoid mentioning or implying that the user has not provided information.
+                    Do not greet the user in your response. If you are unable to find answer then just say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
+                    Use proper formatting such as line breaks to enhance readability. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
+                    Maintain a positive and polite tone throughout the response.
+                    The response should be clear, concise, and user-friendly, adhering to these guidelines.""")
         logger.info(f"Final Response - {final_response}")
     except Exception as e:
         logger.error(f"While generating answer from category based question following error occured - {str(e)}")
@@ -872,9 +889,9 @@ def evidAI_chat(request):
             token = auth_header.split(' ')[1]
             token_valid,user_id,user_name,user_role,onboarding_step = token_validation(token)
 
-            # if token_valid is None:
-            #     logger.error(f"Invalid Token, Token: {token}")            
-            #     return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
+            if token_valid is None:
+                logger.error(f"Invalid Token, Token: {token}")            
+                return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
             
             data = json.loads(request.body)
             current_question = data.get('question')
@@ -895,7 +912,7 @@ def evidAI_chat(request):
                 
             response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_role, previous_questions, current_question, onboarding_step)
             html_content = markdown.markdown(response)
-            response = html_content
+            response = html_content.replace("*","")
             # logger.info(f"After HTML markup from main function - {response}")
             # print("current_ques_cat- ",current_ques_cat)
             add_to_conversations(user_id, chat_session_id, current_question, response, current_asset, current_ques_cat)      
