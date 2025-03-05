@@ -738,7 +738,7 @@ def get_asset_based_response(assets_identified,question,token):
             data = get_specific_asset_details(ass,token)
             note = """Ensure the response keeps the provided information intact without altering or modifying any details.
                     If certain information is unavailable, state politelyjust say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
-                    Else, Keep information as it is.
+                    Else, Keep information as it is. Format answer properly, if some important information is there use proper line breaks and bold it.
                     Avoid mentioning or implying that the user has provided or not provided information or response in requested format.
                     Do not greet the user in your response.
                     Use proper formatting such as line breaks to enhance readability while keeping answer as it is. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
