@@ -141,7 +141,7 @@ def token_validation(token):
         data = response.json()
         validate = data["user"]["twoFactorAuthenticationSession"]
         user_id = data["user"]["id"]
-        user_name = data['user']['kyc']['fullName'].split()[0]
+        user_name = data['user']['kyc']['fullName'].split()[0] if data['user']['kyc']['fullName'] is not None else ''
         user_role = 'Individual Investor'
         if data['user']['isDistributor']==True:
             user_role = 'Distributor'
