@@ -877,11 +877,11 @@ def login(request):
 # Main flow
 @csrf_exempt
 def evidAI_chat(request):
-    asset_names = get_asset_list()
-    for ass in asset_names:
-        logger.info(ass)
     try:
         if request.method == 'POST':
+            asset_names = get_asset_list()
+            for ass in asset_names:
+                logger.info(ass)
             token = None
             # Extract the Bearer token from the Authorization header
             auth_header = request.headers.get('Authorization')
