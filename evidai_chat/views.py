@@ -49,10 +49,13 @@ def get_gemini_response(question,prompt):
 # Identify prompt category based on current and previous questions
 def get_prompt_category(current_question,user_role):
     logger.info("Finding prompt from get_prompt_category")
+    asset_names = get_asset_list()
     prompt = f"""Based on user's question identify the category of a question from below mentioned categories. STRICTLY PROVIDE ONLY NAME OF CATEGORIES NOTHING ELSE, IF NO CATEGORY MATCHES THEN RETURN "FAILED".
                  Note - While answering do not add any other information or words. Just reply as per specified way. ONLY PROVIDE ONLY NAME OF CATEGORIES. 
                  USER's QUESTION - {current_question}
                  USER's ROLE - {user_role}, If user's role is not specified then consider it as "Individual Investor".
+                 Assets avilable on Evident Platform - {asset_names}
+                 If User is asking about any asset present in above list then return 'Personal_Assets'.
                  Greetings: Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
                  Personal_Assets: Following details are present for variety of assets like openai, spacex and many more - These assets include various categories such as Private Equity, Venture Capital, 
                     Private Credit, Infrastructure, Hedge Funds, Digital Assets, Real Estate, Collectibles, 
@@ -84,7 +87,7 @@ def get_prompt_category(current_question,user_role):
                  Self_Custody:This category contains information about EVIDENT's support for users to self-custody their digital units in separate wallets, while ensuring compatibility with external systems, regulatory compliance, and investor protection.
                  SPV_Plan:Detailed step by step process to create SPV plan
                  SPV_Strurcture:Detailed step by step process to create SPV structure
-                 About_Company:All the details about evident platfor, company and founders, services.
+                 About_Company:Only the details about evident platform, company and founders, services.
                  Legal_And_Regulatory:This prompt provides a comprehensive rationale for why Evident does not require a VATP license or Type 4/7/9 licenses in Hong Kong. It emphasizes the legal and regulatory positioning of Evident's hybrid model, which combines blockchain technology with centralized record-keeping, ensuring compliance with existing securities laws and the enforceability of token holders' rights.
                  Custody:This prompt outlines where customer funds are held, how they are managed and reflected on the platform, the custody practices of EVIDENT regarding underlying shares/tokens, and the transferability and tradeability of tokens outside the platform, with conditions for off-platform asset holding.
                  Structuring:This prompt explains how legal titles and share certificates are handled within EVIDENT's SPV structure, emphasizing the streamlined process for transferring legal titles at the SPV level rather than with each investor transaction.
