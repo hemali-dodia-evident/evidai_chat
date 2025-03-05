@@ -807,7 +807,10 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
         promp_cat = get_prompt_category(current_question,user_role)
         promp_cat = promp_cat.split(",")
         promp_cat = [p.strip() for p in promp_cat] 
+    
+    promp_cat = set(promp_cat)
     print("promp_cat - ",promp_cat)
+    
     # Check if question is in context of current question or not if this is not fresh conversation
     if len(previous_questions)>=1:        
         prompt = f"""Determine if the current question is related to or in the context of the previous questions.
