@@ -123,7 +123,8 @@ def token_validation(token):
                 }
         response = requests.request("POST", twoFA_url, headers=headers, data=payload)
         data = response.json()
-        # if data['code']=='2FA_VERIFIED':
+        if data['code']!='2FA_VERIFIED':
+            logger.info(f"User have not completed 2FA - token:{token}")
         # Get User details
         url = "https://api-uat.evident.capital/user/me"
 
@@ -159,12 +160,11 @@ def token_validation(token):
         if validate:
             return token, user_id, user_name, user_role, onboarding_steps
         else:
-            return None, None, None, None, None
-        # else:
-        #     return None, None, None, None, None
+            return token, None, None, None, None
+
     except Exception as e:
         logger.error(f"Failed to get user/me response due to - {str(e)}")
-        return None, None, None, None, None
+        return token, None, None, None, None
 
 
 # Add conversation to DB
@@ -889,9 +889,9 @@ def evidAI_chat(request):
             token = auth_header.split(' ')[1]
             token_valid,user_id,user_name,user_role,onboarding_step = token_validation(token)
 
-            # if token_valid is None:
-            #     logger.error(f"Invalid Token, Token: {token}")            
-            #     return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
+            if token_valid is None:
+                logger.error(f"Invalid Token, Token: {token}")            
+                return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
             
             data = json.loads(request.body)
             current_question = data.get('question')
@@ -912,7 +912,7 @@ def evidAI_chat(request):
                 
             response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_role, previous_questions, current_question, onboarding_step)
             html_content = markdown.markdown(response)
-            response = html_content
+            response = html_content.replace("*","")
             # logger.info(f"After HTML markup from main function - {response}")
             # print("current_ques_cat- ",current_ques_cat)
             add_to_conversations(user_id, chat_session_id, current_question, response, current_asset, current_ques_cat)      
