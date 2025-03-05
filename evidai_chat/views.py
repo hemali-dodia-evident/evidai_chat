@@ -52,7 +52,7 @@ def get_prompt_category(current_question,user_role):
     prompt = f"""Based on user's question identify the category of a question from below mentioned categories. STRICTLY PROVIDE ONLY NAME OF CATEGORIES NOTHING ELSE, IF NO CATEGORY MATCHES THEN RETURN "FAILED".
                  Note - While answering do not add any other information or words. Just reply as per specified way. ONLY PROVIDE ONLY NAME OF CATEGORIES. 
                  USER's QUESTION - {current_question}
-                 USER's ROLE - {user_role}
+                 USER's ROLE - {user_role}, If user's role is not specified then consider it as "Individual Investor".
                  Greetings: Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
                  Personal_Assets: Following details are present for variety of assets like openai, spacex and many more - These assets include various categories such as Private Equity, Venture Capital, 
                     Private Credit, Infrastructure, Hedge Funds, Digital Assets, Real Estate, Collectibles, 
