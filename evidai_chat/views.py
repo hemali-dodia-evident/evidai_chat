@@ -709,14 +709,17 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                     Never imply that the user has not provided information.
                     Do not greet the user.
                     Response Guidelines:
-                    If an answer is available: Provide a clear, concise response with proper structure and formatting.
-                    If an answer is unavailable: Respond with:
+                    If an answer is fully available: Provide a clear, concise response with proper structure and formatting.
+                    If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable. If needed, suggest contacting support:
+                    "Certain details are unavailable, but our support team would be happy to assist you. Please reach out to hello@evident.capital with your query."
+                    If no relevant information is available: Respond with:
                     "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
                     Ensure:
                     The response is structured well with line breaks for readability.
                     The tone remains friendly and professional.
                     Steps are properly formatted, with each step appearing on a new line.
                     No extra words, unnecessary greetings, or irrelevant details are added.
+                    Do not include the full support message unless all information is unavailable.
                     Strictly follow these instructions to generate the best response."""
         final_response = get_gemini_response(final_response,prompt)
         logger.info(f"Final Response - {final_response}")
@@ -845,7 +848,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
         promp_cat = [p.strip() for p in promp_cat if 'Greetings' not in p.strip()]
 
     response,asset_found,specific_category = category_based_question(current_question,previous_questions,promp_cat,token,user_id,onboarding_step,isRelated,isAssetRelated,last_asset, last_ques_cat)
-    logger.info(f"final response from handle_questions - {response}")
+    # logger.info(f"final response from handle_questions - {response}")
     specific_category = ",".join(specific_category)
     # print("specific_category= ",specific_category)
     return response,asset_found,specific_category
