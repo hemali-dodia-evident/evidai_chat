@@ -9,6 +9,7 @@ import logging
 from django.shortcuts import render
 import markdown
 import requests
+import re
 
 
 key = os.environ["GOOGLE_API_KEY"]
@@ -922,6 +923,20 @@ def login(request):
     return JsonResponse({"token":token},status=200)
 
 
+def format_response(response):
+    # Ensure list formatting (handling "- " and "* " for Markdown lists)
+    response = re.sub(r'\n\s*-\s*', '\n- ', response)  # Fix list formatting
+    response = re.sub(r'\n\s*\*\s*', '\n* ', response)  # Handle * bullet lists
+
+    # Convert new lines to markdown-friendly format
+    response = response.replace("\n", "  \n")  # Markdown requires double space before \n for line breaks
+
+    # Convert formatted text to HTML
+    html_content = markdown.markdown(response)
+
+    return html_content
+
+
 # Main flow
 @csrf_exempt
 def evidAI_chat(request):
@@ -960,8 +975,8 @@ def evidAI_chat(request):
                 update_chat_title(current_question,chat_session_id)
                 
             response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_role, previous_questions, current_question, onboarding_step)
-            html_content = markdown.markdown(response)
-            response = html_content.replace("*","")#.replace('\n','<br>')
+            
+            response = format_response(response)
             # logger.info(f"After HTML markup from main function - {response}")
             # print("current_ques_cat- ",current_ques_cat)
             add_to_conversations(user_id, chat_session_id, current_question, response, current_asset, current_ques_cat)      
