@@ -72,7 +72,7 @@ def get_prompt_category(current_question,user_role):
                  Asset_Managers:This category contains information about due diligence process for asset managers, the structuring and tokenization of assets, and the various fundraising methods available on the platform, emphasizing efficiency, transparency, and investor protection.
                  Onboarding_Distributor:Detailed process for distributor onboarding process.
                  Onboarding_Issuer:Detailed process for issuer onboarding process.
-                 Corp_Investor_Onboarding:Detailed process for Corp investor onboarding process.
+                 Corp_Investor_Onboarding:Detailed process for Corp investor onboarding process. Can also be reffered as Corp Onboarding or in similar context.
                  Onboarding_Investor:Detailed process for investor onboarding process.
                  Licensing_Custody:This category contains information about EVIDENT's regulatory compliance, including multiple licenses such as TCSP and SFC, investor protection measures, and secure handling of user funds in segregated accounts using blockchain technology.
                  Account_Opening_Funding:This category contains information about EVIDENT's streamlined and digitalized account opening process, including automated KYC and AML checks for security and regulatory compliance, and the convenient and secure procedure for depositing funds via bank transfer.
@@ -300,7 +300,7 @@ def create_chat_session(request):
 def update_chat_title(question,chat_session_id):
     prompt = """Based on this question generate title for this conversation. 
     Title should be short, in context of question, and it should have 30 characters maximum. 
-    Use proper formatting to enhance readability."""
+    Use proper formatting to enhance readability. DO NOT MENTIONE ANYTHING LIKE 'Short & Sweet: ...', Only generate title in context of conversatoin"""
     # Get the current date and time in UTC
     current_datetime = datetime.now(timezone.utc)
 
