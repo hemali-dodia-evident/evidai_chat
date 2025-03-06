@@ -786,7 +786,7 @@ def get_asset_based_response(assets_identified,question,token):
 
 # Question handling flow - IP Count:9, OP Count:3
 def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_role, previous_questions, current_question, onboarding_step):     
-    print("last_asset - ",last_asset)
+    logger.info(f"last_asset - {last_asset}")
     asset_found = ''
     response = ''
     isRelated = False
@@ -804,7 +804,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
             STRICTLY REPLY IN THE ABOVE FORMAT. DO NOT ADD ANYTHING ELSE IN YOUR RESPONSE.
             Asset Names - {asset_names}"""
     asset_identified_flag = get_gemini_response(current_question,prompt)
-    print("asset_identified_flag - ",asset_identified_flag)
+    logger.info(f"asset_identified_flag - {asset_identified_flag}")
     promp_cat = []
     if asset_identified_flag in asset_names:
         promp_cat=['Personal_Assets']        
@@ -814,7 +814,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
         promp_cat = promp_cat.split(",")
         promp_cat = [p.strip() for p in promp_cat] 
 
-    print("promp_cat - ",promp_cat)
+    logger.info(f"promp_cat - {promp_cat}")
     
     # Check if question is in context of current question or not if this is not fresh conversation
     if len(previous_questions)>=1:        
@@ -847,6 +847,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
         return response,'','Greetings'
     # Remove greetings category from prompt categories
     else:
+        logger.info("IF-ELSE Greetings")
         promp_cat = [p.strip() for p in promp_cat if 'Greetings' not in p.strip()]
 
     response,asset_found,specific_category = category_based_question(current_question,previous_questions,promp_cat,token,user_id,onboarding_step,isRelated,isAssetRelated,last_asset, last_ques_cat)
