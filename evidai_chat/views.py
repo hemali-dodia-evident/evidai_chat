@@ -43,16 +43,18 @@ def get_gemini_response(question,prompt):
         return response_content.text.strip()
     except Exception as e:
         logger.error(f'Failed to get answer from gemini due to - {str(e)}')
-        response = "Sorry! I am not able to find answer for your question. \nRequest you to coordinate with our support team on - hello@evident.capital.\nThank You."
+        response = "Sorry! I am not able to find answer for your question. \nRequest you to coordinate with our support team on - support@evident.capital.\nThank You."
         return response
 
 
 # Identify prompt category based on current and previous questions
-def get_prompt_category(current_question,user_role):
+def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
     # logger.info("Finding prompt from get_prompt_category")
     prompt = f"""Based on user's question identify the category of a question from below mentioned categories. STRICTLY PROVIDE ONLY NAME OF CATEGORIES NOTHING ELSE, IF NO CATEGORY MATCHES THEN RETURN "FAILED".
                  Note - While answering do not add any other information or words. Just reply as per specified way. ONLY PROVIDE ONLY NAME OF CATEGORIES. 
                  USER's QUESTION - {current_question}
+                 Last Asset about which user asked - {last_asset}
+                 Last Question Category regarding which conversation was going on - {last_ques_cat}
                  USER's ROLE - {user_role}, If user's role is not specified then consider it as "Individual Investor".
                  Greetings: USER IS GREETING WITHOUT ANY OTHER INFORMATION, Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
                  Personal_Assets: Following details are present for variety of assets like openai, spacex and many more - These assets include various categories such as Private Equity, Venture Capital, 
@@ -66,34 +68,35 @@ def get_prompt_category(current_question,user_role):
                     Only professional investors are eligible to invest in these assets, ensuring that the investment 
                     opportunities are restricted to a specific investor class. 
                     Complete details of assets, current status, investment, trade, structure, tags, etc. related to 
-                    that asset, commitments. Here user asks about different things on asset. 
+                    that asset, commitments. Here user asks about different things on asset, About manager, company etc.
                     These are user specific assets. When user wants to know about his/her asset details.
-                 Forget_Password: Contains step by step process to change or update password.
+                    - Below are the key details present for each asset:  
+                    - **General Information:**  
+                    - Asset Name, Description, Location, Currency, Asset Code, Investment Mode, Structuring Type, Asset Vertical, Status, Status Tag, Visibility.  
+
+                    - **Investment Details:**  
+                    - Target Amount, Minimum Investment Amount, Raised Amount, Investment Start Date, Investment End Date, Open Offers, Number of Investors, Total Invested Amount.  
+
+                    - **Exit & Performance Details:**  
+                    - Rate of Return, Exit Strategy, Latest Ticker, Previous Ticker.  
+
+                    - **Manager Information:**  
+                    - Manager Name, Manager Email, Manager Nickname, Manager Avatar, Managing Company Name, Managing Company Logo, Managing Company Website.  
+                    **Example queries:** 
+                        - "Who is the manager of OpenAI?"
+                        - "Tell me about manager"
+                        - "Tell me about OpenAI."
+                        - "What is OpenAI’s investment mode?"
                  Assets_Creation: Detailed process only to create assets. 
                  Asset_Managers:This category contains information about due diligence process for asset managers, the structuring and tokenization of assets, and the various fundraising methods available on the platform, emphasizing efficiency, transparency, and investor protection.
                  Onboarding_Distributor:Detailed process for distributor onboarding process.
                  Onboarding_Issuer:Detailed process for issuer onboarding process.
+                 Forget_Password: Contains step by step process to change or update password.
                  Corp_Investor_Onboarding:Detailed process for Corp investor onboarding process. Can also be reffered as Corp Onboarding or in similar context.
-                 Onboarding_Investor:Detailed process for investor onboarding process.
-                 Licensing_Custody:This category contains information about EVIDENT's regulatory compliance, including multiple licenses such as TCSP and SFC, investor protection measures, and secure handling of user funds in segregated accounts using blockchain technology.
-                 Account_Opening_Funding:This category contains information about EVIDENT's streamlined and digitalized account opening process, including automated KYC and AML checks for security and regulatory compliance, and the convenient and secure procedure for depositing funds via bank transfer.
-                 Security:This category contains information about EVIDENT's hybrid approach to cyber security, combining centralized and decentralized elements, the use of advanced security protocols and Algorand blockchain, compliance with financial regulations, and additional features like transaction rollbacks and IP whitelisting to protect against potential threats.
-                 Product_Technology: A platform for tokenizing and investing in alternative assets using blockchain technology, with features like Commitment Campaigns to raise capital, buy and sell tokenized assets, and handle asset liquidation securely. It ensures regulatory compliance and investor protection through a hybrid setup, accepting multiple currencies with spot rate exchange for non-USD funds.
-                 Platform_Differentiation: A fully integrated, SFC-licensed platform in Hong Kong for alternative assets, using tokenization for efficient and cost-effective investment and management of Real-World Assets.
-                 Asset_Tokenization: A tokenizes a wide range of assets, using SPVs for tangible assets and digitalization for intangible ones, ensuring regulatory compliance through "Digital Securities."
-                 Digital_Transformation: A bridges conventional financial markets and digital technologies using web3, enhancing accessibility, transparency, and efficiency with a hybrid centralized-decentralized approach.
-                 Self_Custody:This category contains information about support for users to self-custody their digital units in separate wallets, while ensuring compatibility with external systems, regulatory compliance, and investor protection.
-                 SPV_Plan:Detailed step by step process to create SPV plan
-                 SPV_Strurcture:Detailed step by step process to create SPV structure
-                 About_Company:Only the details about evident platform, company and founders, services.
-                 Legal_And_Regulatory:This prompt provides a comprehensive rationale for why Evident does not require a VATP license or Type 4/7/9 licenses in Hong Kong. It emphasizes the legal and regulatory positioning of Evident's hybrid model, which combines blockchain technology with centralized record-keeping, ensuring compliance with existing securities laws and the enforceability of token holders' rights.
-                 Custody:This prompt outlines where customer funds are held, how they are managed and reflected on the platform, the custody practices of EVIDENT regarding underlying shares/tokens, and the transferability and tradeability of tokens outside the platform, with conditions for off-platform asset holding.
-                 Structuring:This prompt explains how legal titles and share certificates are handled, emphasizing the streamlined process for transferring legal titles at the SPV level rather than with each investor transaction.
-                 Commitment_Campaign:This prompt outlines the process and mechanics of a Commitment Campaign on the EVIDENT platform, detailing how investor funds are managed during the campaign, including the handling of commitments, escrow, and the issuance of tokens.
-                 buy_and_sell_tokenized_assets:This prompt describes how investors can buy and sell tokenized assets, covering the process of committing to investments and trading tokens within the platform's regulatory framework.
-                 asset_failure_handling:This prompt explains procedures for handling situations where the acquisition of target assets fails or when an asset needs to be liquidated, including the return of funds to investors and the involvement of asset managers.
-                 customer_service_dispute:This prompt details how to handle customer service and dispute resolution, highlighting the available support channels and the process for resolving disputes, including escalation if needed.
-                 NOTE - IF MORE THAN ONE CATEGORY MATCHES THEN RETURN THEIR NAME WITH "," SEPERATED.
+                 Onboarding_Investor:Detailed process for investor onboarding process. Which contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions,
+                                    
+                 NOTE - IF MORE THAN ONE CATEGORY MATCHES THEN RETURN THEIR NAME WITH "," SEPERATED. 
+                 - If user is talking or mentioning platform without specifying name of platform then it simply means Evident platform on which currently they are present. So refer all categories present above then provide answer.
                  E.g. Qestion: What are the steps for investor onboarding?
                       Bot: Onboarding_Investor, Corp_Investor_Onboarding
                       Question: can you give me details about buying tokenized assets?
@@ -112,20 +115,7 @@ def get_prompt_category(current_question,user_role):
 @csrf_exempt
 def token_validation(token):    
     try:
-        # Validate token 
-        twoFA_url = "https://api-uat.evident.capital/user/two-factor-authentication"
-        payload = json.dumps({
-                "code": "123456",
-                "ipAddress": "127.0.0.1"
-                })
-        headers = {
-                    'Authorization': f'Bearer {token}',
-                    'Content-Type': 'application/json'
-                }
-        response = requests.request("POST", twoFA_url, headers=headers, data=payload)
-        data = response.json()
-        if data['code']!='2FA_VERIFIED':
-            logger.info(f"User have not completed 2FA - token:{token}")
+        
         # Get User details
         url = "https://api-uat.evident.capital/user/me"
 
@@ -142,7 +132,7 @@ def token_validation(token):
         data = response.json()
         validate = data["user"]["twoFactorAuthenticationSession"]
         user_id = data["user"]["id"]
-        user_name = data['user']['kyc']['fullName'].split()[0] if data['user']['kyc']['fullName'] is not None else ''
+        user_name = data['user']['kyc']['fullName'].split()[0] if data['user']['kyc']['fullName'] != '' else ''
         user_role = 'Individual Investor'
         if data['user']['isDistributor']==True:
             user_role = 'Distributor'
@@ -325,11 +315,12 @@ def update_chat_title(question,chat_session_id):
 def get_conv_details(chat_session_id):
     all_convo = models.Conversation.objects.filter(chat_session_id=chat_session_id).order_by('-id')
     previous_questions = [q.question for q in all_convo]
-    last_asset = ''
-    last_ques_cat = ''
-    if len(previous_questions)>1:
+    if len(previous_questions)>0:
         last_asset = all_convo[0].is_asset
-        last_ques_cat = all_convo[0].last_ques_cat    
+        last_ques_cat = all_convo[0].last_ques_cat  
+    else:
+        last_ques_cat = ''
+        last_asset = '' 
     return previous_questions, last_asset, last_ques_cat
 
 
@@ -482,7 +473,7 @@ def search_on_internet(question):
                     If its greeting text then simply greet them and ask how you can help them. Keep asnwer to the point.
                     NOTE - Keep tone positive and polite while answering user's query.
                     Avoid mentioning or implying that the user has not provided information.
-                    Do not greet the user in your response. If you are unable to find answer then just say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
+                    Do not greet the user in your response. If you are unable to find answer then just say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
                     Use proper formatting such as line breaks to enhance readability. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
                     Maintain a positive and polite tone throughout the response.
                     The response should be clear, concise, and user-friendly, adhering to these guidelines.
@@ -583,10 +574,10 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                     prompt_data = f"""Customer is not providing you any information, all information is with you, DO NOT SAY TO CUSTOMER THAT THEY HAVE NOT PROVIDED INFORMATION,INSTEAD SAY YOU DONT HAVE INFORMATION CURRENTLY ON THIS. You are smart and intelligent chat-bot having good knowledge of finance sector considering this chat with user. 
                     Provide answer in a way that you are chatting with customer. Do not use any kind of emojis. Do not greet user while answering. Guide and help user to finish their steps and complete onboarding. Use below information to get answer -
                     {prompt_data_list}
-                    NOTE - If you are not able to find answer then say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
+                    NOTE - If you are not able to find answer then say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
                     Keep tone positive and polite while answering user's query.
                     Avoid mentioning or implying that the user has not provided information.
-                    Do not greet the user in your response. If you are unable to find answer then just say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
+                    Do not greet the user in your response. If you are unable to find answer then just say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
                     Use proper formatting such as line breaks to enhance readability. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
                     Maintain a positive and polite tone throughout the response.
                     The response should be clear, concise, and user-friendly, adhering to these guidelines."""
@@ -597,7 +588,7 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                     prm = """For this topic currently we don't have any information. 
                     Provide answer in a way that "I’m sorry I couldn’t assist you right now. 
                     However, our support team would be delighted to help! Please don’t hesitate to email 
-                    them at hello@evident.capital with the details of your query, and they’ll assist you promptly." 
+                    them at support@evident.capital with the details of your query, and they’ll assist you promptly." 
                     this will cover the part of question for which information is not available"""
                     final_response = get_gemini_response(question,prm)
                 asset_found = ''
@@ -611,44 +602,51 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                 personalAssets = False          
                 all_assets_names = get_asset_list()
                 all_assets_names = list(all_assets_names)
-                all_assets_names.append("M&M")
+                print("all_assets_names - ",all_assets_names)
                 prompt = f"""Follow these instructions exactly:
-
                     If the question is about assets owned, personal, or invested by the user, return only 1.
                     If the question asks about a specific asset, return only the asset name from the list below (if multiple, separate with commas ,).
                     If the question is related to a previously mentioned asset, return only that asset name (or multiple if applicable).
                     If the question asks about all assets in general, return only 2.
                     For all other unrelated questions, return only 0.
-                    DO NOT add any extra words, explanations, or formatting. Only return the specified response.
-                    Contextual Asset Matching
+                    If you identify an exact asset name from the list, return that exact value.
+                    If you find a similar name that the user might be referring to (considering typos, misspellings, or approximate context), return that closest matching asset name from the list.
+                    Treat & and and as equivalent when matching asset names.Contextual Asset Matching
                     Asset Names: {all_assets_names}
                     Previously Mentioned Assets: {last_asset}
+                    If user have not mentioned asset name, then return '{last_asset}' as your response by following below example.
+                    - Below are the key details that can be retrieved:  
+                        - **General Information:**  
+                        - Asset Name, Description, Location, Currency, Asset Code, Investment Mode, Structuring Type, Asset Vertical, Status, Status Tag, Visibility.  
+
+                        - **Investment Details:**  
+                        - Target Amount, Minimum Investment Amount, Raised Amount, Investment Start Date, Investment End Date, Open Offers, Number of Investors, Total Invested Amount.  
+
+                        - **Exit & Performance Details:**  
+                        - Rate of Return, Exit Strategy, Latest Ticker, Previous Ticker.  
+
+                        - **Manager Information:**  
+                        - Manager Name, Manager Email, Manager Nickname, Manager Avatar, Managing Company Name, Managing Company Logo, Managing Company Website.  
                     STRICT EXAMPLES:
                     Q: "What is the commitment status of my assets?"
                     A: 1
-
                     Q: "What is the minimum investment amount for Keith Haring?"
                     A: Keith Haring - Untitled
-
                     Q: "What are highlights of Mumbai?"
                     A: 0
-
                     Q: "What is the minimum investment amount for OpenAI and Keith Haring?"
                     A: Keith Haring - Untitled,OpenAI - Co-Investment
-
                     Q: "Provide me list of all assets."
                     A: 2
-
                     Q: "What is the expected return for the asset I just asked about?" (Assuming the last asset was OpenAI - Co-Investment)
                     A: OpenAI - Co-Investment
-
                     Q: "Can you tell me more about it?" (If previous asset was Keith Haring - Untitled)
                     A: Keith Haring - Untitled
-
                     Case - If Previously Mentioned Assets is Keith Haring - Untitled
                     Q: "Tell me minimum investment amount for this" 
-                    A: Keith Haring - Untitled
-                    
+                    A: Keith Haring - Untitled    
+                    Q: "Who is manager"
+                    A: Keith Haring - Untitled              
                     DO NOT DEVIATE FROM THESE RULES. ONLY RESPOND AS SHOWN ABOVE."""
                 asset_response = get_gemini_response(current_question,prompt)
                 logger.info(f"asset_response - {asset_response}")
@@ -660,6 +658,11 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                         assets_identified = all_assets_names[:3]
                     elif int(asset_response.strip())==0:
                         assets_identified = ''
+                        assets_identified_new = []
+                        for asset in all_assets_names:
+                            if asset in asset_response:
+                                assets_identified_new.append(asset)
+                        assets_identified = assets_identified_new
                 except:
                     assets_identified_new = []
                     for asset in all_assets_names:
@@ -712,9 +715,9 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                     Response Guidelines:
                     If an answer is fully available: Provide a clear, concise response with proper structure and formatting.
                     If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable. If needed, suggest contacting support:
-                    "Certain details are unavailable, but our support team would be happy to assist you. Please reach out to hello@evident.capital with your query."
+                    "Certain details are unavailable, but our support team would be happy to assist you. Please reach out to support@evident.capital with your query."
                     If no relevant information is available: Respond with:
-                    "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
+                    "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
                     If ONLY GREETING is present: Reply with positve and polite greetings and ask user how you can help.
                     Ensure:
                     The response is structured well with line breaks for readability.
@@ -727,7 +730,7 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
         logger.info(f"Final Response - {final_response}")
     except Exception as e:
         logger.error(f"While generating answer from category based question following error occured - {str(e)}")
-        final_response = "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
+        final_response = "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
         asset_found = ''
     return final_response, asset_found, specific_category
 
@@ -763,7 +766,7 @@ def get_asset_based_response(assets_identified,question,token):
         for ass in assets_identified:
             data = get_specific_asset_details(ass,token)
             note = """Ensure the response keeps the provided information intact without altering or modifying any details.
-                    If certain information is unavailable, state politelyjust say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
+                    If certain information is unavailable, state politelyjust say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
                     Else, Keep information as it is. Format answer properly, if some important information is there use proper line breaks and bold it.
                     Avoid mentioning or implying that the user has provided or not provided information or response in requested format.
                     Do not greet the user in your response.
@@ -794,7 +797,6 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
 
     asset_names  = get_asset_list()
     asset_names = list(asset_names)
-    asset_names.append("M&M")
     asset_names = ", ".join(asset_names)
     prompt = f"""Identify if any of the following asset names is present in the question or not.
             If you identify an exact asset name from the list, return that exact value.
@@ -804,41 +806,47 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
             STRICTLY REPLY IN THE ABOVE FORMAT. DO NOT ADD ANYTHING ELSE IN YOUR RESPONSE.
             Asset Names - {asset_names}"""
     asset_identified_flag = get_gemini_response(current_question,prompt)
-    logger.info(f"asset_identified_flag - {asset_identified_flag}")
+    
     promp_cat = []
     if asset_identified_flag in asset_names:
-        promp_cat=['Personal_Assets']        
+        promp_cat.append('Personal_Assets')     
     else:
         # Identify question's category
-        promp_cat = get_prompt_category(current_question,user_role)
+        promp_cat = get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
         promp_cat = promp_cat.split(",")
         promp_cat = [p.strip() for p in promp_cat] 
-
-    logger.info(f"promp_cat - {promp_cat}")
     
     # Check if question is in context of current question or not if this is not fresh conversation
     if len(previous_questions)>=1:        
-        prompt = f"""Determine if the current question is related to or in the context of the previous questions.
-                Asset Names: {last_asset}
-                Previous Questions: {previous_questions}
-                Current Question: {current_question}
-                
-                Response Rules:
-                If the current question is related to or follows the context of any previous question, STRICTLY RETURN 1.
-                Otherwise, STRICTLY RETURN 0.
-                DO NOT add any extra text, explanations, or formatting beyond the specified response."""
+        prompt = f"""Determine if the current question is related to or in the context of the previous questions.  
+                    Asset Names: {last_asset}  
+                    Question Category: {last_ques_cat}  
+                    Previous Questions: {previous_questions}  
+                    Current Question: {current_question}  
+                    Response Rules:  
+                    1. If the current question is related to any asset in the provided asset list, STRICTLY RETURN 1.  
+                    2. If the current question is related to the previous question category, STRICTLY RETURN 2.  
+                    3. Otherwise, STRICTLY RETURN 0.  
+                    DO NOT add any extra text, explanations, or formatting beyond the specified response.
+                    """
         question_related = get_gemini_response(current_question,prompt)
-        
+        temp_last_ques_cat = last_ques_cat.split(",")
         try:
             if int(question_related.strip())==1 and last_asset=='':
                 isRelated = True
             elif int(question_related.strip())==1 and last_asset!='':
                 isRelated = True
                 isAssetRelated = True     
+            elif int(question_related.strip())==2:
+                for cat in temp_last_ques_cat:
+                    if 'onboarding' in cat:
+                        promp_cat.append(cat)
+                        break
+
             logger.info(f"Question is related to previous question status is - {isRelated}")                   
         except Exception as e:
             logger.error(f"Failed to check if question is related to previous question or not, following error occured - {str(e)}")
-
+    print("Prompt Category - ",promp_cat)
     # If question is just a greeting nothing else is asked in that question
     if 'Greetings' in promp_cat[0] and len(promp_cat)==1:
         prompt = f"""User name is - {user_name}, reply to user in polite and positive way. Encourage for further communication. if user name is not present then skip using user's name."""
@@ -864,7 +872,7 @@ def login(request):
     payload = json.dumps({
     # "email": "shweta+indinvuat03@evident.capital",
     # "password": "Evident@2024",
-    "email": "sai.mansanpally+0402cpi@evident.capital",
+    "email": "hemali@evident.capital",
     "password": "Evident@2025",
     "ipInfo": {
         "asn": "asn",
@@ -893,34 +901,34 @@ def login(request):
     data = response.json()
     # print(response, data)
     token = data['token']
-    # 2FA
-    twoFA_url = "https://api-uat.evident.capital/user/two-factor-authentication"
-    payload = json.dumps({
-            "code": "123456",
-            "ipAddress": "127.0.0.1"
-            })
-    headers = {
-                'Authorization': f'Bearer {token}',
-                'Content-Type': 'application/json'
-            }
-    response = requests.request("POST", twoFA_url, headers=headers, data=payload)
-    data = response.json()
-    # print(data)
-    if data['code']=='2FA_VERIFIED':
-        # Get User details
-        url = "https://api-uat.evident.capital/user/me"
+    # # 2FA
+    # twoFA_url = "https://api-uat.evident.capital/user/two-factor-authentication"
+    # payload = json.dumps({
+    #         "code": "123456",
+    #         "ipAddress": "127.0.0.1"
+    #         })
+    # headers = {
+    #             'Authorization': f'Bearer {token}',
+    #             'Content-Type': 'application/json'
+    #         }
+    # response = requests.request("POST", twoFA_url, headers=headers, data=payload)
+    # data = response.json()
+    # # print(data)
+    # if data['code']=='2FA_VERIFIED':
+    #     # Get User details
+    #     url = "https://api-uat.evident.capital/user/me"
 
-        payload = {
-                    "code": "123456",
-                    "ipAddress":"127.0.0.1"
-                }
-        headers = {
-                    'Authorization': f'Bearer {token}',
-                    'Content-Type': 'application/json'
-                }
+    #     payload = {
+    #                 "code": "123456",
+    #                 "ipAddress":"127.0.0.1"
+    #             }
+    #     headers = {
+    #                 'Authorization': f'Bearer {token}',
+    #                 'Content-Type': 'application/json'
+    #             }
 
-        response = requests.request("GET", url, headers=headers, data=payload)
-        data = response.json()
+    #     response = requests.request("GET", url, headers=headers, data=payload)
+    #     data = response.json()
         # print(data)
     return JsonResponse({"token":token},status=200)
 
@@ -932,6 +940,10 @@ def format_response(response):
 
     # Convert new lines to markdown-friendly format
     response = response.replace("\n", "  \n")  # Markdown requires double space before \n for line breaks
+
+    # Replace italic formatting (_text_ or *text*) with bold (**text**)
+    response = re.sub(r'(?<!\*)\*(\S.*?)\*(?!\*)', r'**\1**', response)  # Replace *italic* → **bold**
+    response = re.sub(r'_(\S.*?)_', r'**\1**', response)  # Replace _italic_ → **bold**
 
     # Convert formatted text to HTML
     html_content = markdown.markdown(response)
