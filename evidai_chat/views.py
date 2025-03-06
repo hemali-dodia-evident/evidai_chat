@@ -54,7 +54,7 @@ def get_prompt_category(current_question,user_role):
                  Note - While answering do not add any other information or words. Just reply as per specified way. ONLY PROVIDE ONLY NAME OF CATEGORIES. 
                  USER's QUESTION - {current_question}
                  USER's ROLE - {user_role}, If user's role is not specified then consider it as "Individual Investor".
-                 Greetings: HERE USER IS GREETING WITHOUT ANY OTHER INFORMATION, Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
+                 Greetings: USER IS GREETING WITHOUT ANY OTHER INFORMATION, Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
                  Personal_Assets: Following details are present for variety of assets like openai, spacex and many more - These assets include various categories such as Private Equity, Venture Capital, 
                     Private Credit, Infrastructure, Hedge Funds, Digital Assets, Real Estate, Collectibles, 
                     Structuring, Private Company Debenture, Note, Bond, Fund, and Equity. 
@@ -715,6 +715,7 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
                     "Certain details are unavailable, but our support team would be happy to assist you. Please reach out to hello@evident.capital with your query."
                     If no relevant information is available: Respond with:
                     "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at hello@evident.capital with the details of your query, and they’ll assist you promptly."
+                    If ONLY GREETING is present: Reply with positve and polite greetings and ask user how you can help.
                     Ensure:
                     The response is structured well with line breaks for readability.
                     The tone remains friendly and professional.
