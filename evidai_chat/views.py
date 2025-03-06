@@ -961,7 +961,7 @@ def evidAI_chat(request):
                 
             response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_role, previous_questions, current_question, onboarding_step)
             html_content = markdown.markdown(response)
-            response = html_content.replace("*","").replace('\n','<br>')
+            response = html_content.replace("*","")#.replace('\n','<br>')
             # logger.info(f"After HTML markup from main function - {response}")
             # print("current_ques_cat- ",current_ques_cat)
             add_to_conversations(user_id, chat_session_id, current_question, response, current_asset, current_ques_cat)      
