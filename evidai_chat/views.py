@@ -466,9 +466,9 @@ def delete_chat_session(request):
 
 # @csrf_exempt
 # def chat_page(request):
-    if request.method == 'GET':
-        # Render the HTML page for GET requests
-        return render(request, 'evidentchatbot.html') 
+    # if request.method == 'GET':
+    #     # Render the HTML page for GET requests
+    #     return render(request, 'evidentchatbot.html') 
     
 
 # Generate answer from internet
@@ -730,10 +730,11 @@ def category_based_question(current_question,previous_questions,promp_cat,token,
 # Get details of individual asset details
 def get_specific_asset_details(asset_name,token): 
     try:
+        print("asset_name - ",asset_name)
         all_asset_details = None
         # Investor assets
         url = "https://api-uat.evident.capital/asset/investor/list?page=1"
-        payload = json.dumps({"name":f"{asset_name}"})
+        payload = json.dumps({"name":f"{asset_name.strip()}"})
 
         headers = {
                     'Authorization': f'Bearer {token}',
@@ -807,8 +808,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_
         promp_cat = get_prompt_category(current_question,user_role)
         promp_cat = promp_cat.split(",")
         promp_cat = [p.strip() for p in promp_cat] 
-    
-    promp_cat = list(set(promp_cat))
+
     print("promp_cat - ",promp_cat)
     
     # Check if question is in context of current question or not if this is not fresh conversation
