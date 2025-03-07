@@ -837,20 +837,22 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     User's Trade:-{assets_identified[0]}
                     User's Commitments:-{assets_identified[1]}
 
-                    RESPONSE GUIDELINES:-
-                    - FOR TRADES, FOLLOW BELOW FORMAT TO GENERATE RESPONSE:
+                    RESPONSE GUIDELINES(STRICT FORMAT):-
+                    - FOR TRADES, STRICTLY FOLLOW THIS:
                         Trade Details:- 
                          Trade Asset ID: XYZ,\nPrice: 123,\nTotal Units: 123456,\nAvailable Units: 0,\nTrade Units: 10,\nTrade Status: Complete,\nNumber of Clients: 2,\nAsset Maker:  Jon 
-                    - FOR COMMITMENTS, FOLLOW BELOW FORMAT TO GENERATE RESPONSE:
+                    - FOR COMMITMENTS, STRICTLY FOLLOW THIS:
                         Commitment Details:-
                          Asset Name: asjhs oosidos,\nCommitment Amount: 2000,\nAllotted Units: 10,\nCommitment Status: Completed 
-                    NOTE - STRICTLY FOLLOW RESPONSE GUIDELINE TO GENERATE ANSWER
-                    Keep tone positive and polite while answering user's query.
-                    Avoid mentioning or implying that the user has not provided information.
-                    Do not greet the user in your response.
-                    Use proper formatting such as line breaks to enhance readability. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
-                    Maintain a positive and polite tone throughout the response.
-                    The response should be clear, concise, and user-friendly, adhering to these guidelines."""
+                    ### **IMPORTANT RULES:**  
+                     **STRICTLY FOLLOW the RESPONSE GUIDELINES EXACTLY AS PROVIDED.**  
+                     **DO NOT APPLY any additional formatting (e.g., *, _, or markdown styling).**  
+                     **DO NOT GREET the user in the response.**  
+                     **KEEP the tone positive, polite, and user-friendly.**  
+                     **DO NOT mention or imply that the user has not provided information.**  
+                     **Ensure line breaks (`\n`) are included as per the format.**  
+
+                    FAILURE TO FOLLOW THIS RESPONSE FORMAT IS NOT ACCEPTABLE. STRICTLY ADHERE TO THE GUIDELINES."""
                     response = get_gemini_response(question,prompt)
                     final_response = final_response + '\n' + response                    
                     logger.info(f"Response generated for assets:{assets_identified} in which user has invested - {response}")
