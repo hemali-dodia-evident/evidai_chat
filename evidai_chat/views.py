@@ -471,8 +471,9 @@ def users_assets(token):
             }
     response = requests.request("GET", url, headers=headers, data=payload)
     data = response.json() 
-
+    # print(data)
     trades = data['trades']
+    # print(trades)
     trade_details = None
     if trades == []:
         trade_details = "No trade available"
@@ -480,7 +481,7 @@ def users_assets(token):
         trade_details = ""
         for trd in trades:
             assetMaker=trd['maker']['kyc']['firstName']+' '+trd['maker']['kyc']['lastName']
-            temp = f"""Trade ID:{trd['uniqueTradeId']}\nPrice:{trd["price"]}\nTTotal Units:{trd["totalUnits"]}\nAvailable Units:{trd["availableUnits"]}\nTrade Units:{trd['tradedUnits']}\nTrade Status:{trd['status']}\nNumber of Clients:{trd["numberOfClients"]}\nAsset Maker:{assetMaker}"""
+            temp = f"""Trade Asset ID:{trd['assetId']}\nPrice:{trd["price"]}\nTotal Units:{trd["totalUnits"]}\nAvailable Units:{trd["availableUnits"]}\nTrade Units:{trd['tradedUnits']}\nTrade Status:{trd['status']}\nNumber of Clients:{trd["numberOfClients"]}\nAsset Maker:{assetMaker}"""
             trade_details=trade_details+'\n'+temp
 
     commitments = data['commitments']
@@ -490,7 +491,7 @@ def users_assets(token):
     else:
         commitment_details = ""
         for commit in commitments:
-            temp = f"""Commitment Detail:{commit['commitmentDetails']}\nCommitment Amount:{commit['commitmentAmount']}\nAlloted Units:{commit['allotedUnits']}\nCommitment Status:{commit['status']}"""
+            temp = f"""Description:{commit['commitmentDetails']}\nCommitment Amount:{commit['commitmentAmount']}\nAlloted Units:{commit['allotedUnits']}\nCommitment Status:{commit['status']}"""
             commitment_details = commitment_details +'\n'+temp
     my_assets = [trade_details,commitment_details]
 
@@ -835,6 +836,24 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     If you are unable to answer then ask user to visit - 'https://uat.investor.evident.capital/portfolio/assets'
                     User's Trade:-{assets_identified[0]}
                     User's Commitments:-{assets_identified[1]}
+
+                    RESPONSE GUIDELINES:-
+                    - FOR TRADES, FOLLOW BELOW FORMAT TO GENERATE RESPONSE:
+                        Trade Details:- 
+                         Trade Asset ID : XYZ,
+                         Price : 123,
+                         Total Units : 123456,
+                         Available Units : 0,
+                         Trade Units : 10,
+                         Trade Status : Complete ,
+                         Number of Clients : 2,
+                         Asset Maker :  Jon 
+                    - FOR COMMITMENTS, FOLLOW BELOW FORMAT TO GENERATE RESPONSE:
+                        Commitment Details:-
+                         Description : asjhs oosidos ,
+                         Commitment Amount : 2000,
+                         Allotted Units : 10,
+                         Commitment Status : Completed 
                     NOTE - Keep tone positive and polite while answering user's query.
                     Avoid mentioning or implying that the user has not provided information.
                     Do not greet the user in your response.
