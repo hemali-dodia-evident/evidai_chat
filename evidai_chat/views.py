@@ -471,6 +471,7 @@ def users_assets(token):
             }
     response = requests.request("GET", url, headers=headers, data=payload)
     data = response.json() 
+    # print(data)
     trades = data['trades']
     trade_details = None
     if trades == []:
@@ -487,11 +488,12 @@ def users_assets(token):
             temp['status']=trd['status']
             temp["numberOfClients"]=trd["numberOfClients"]
             temp["assetCurrency"]=trd["asset"]["currency"]
-            temp['assetMaker']=trd['maker']
-            temp = json.dumps(temp)
-            trade_details.append(temp, indent=4)
-        trade_details = ",".join(trade_details)
+            temp['assetMaker']=trd['maker']['kyc']['firstName']+' '+trd['maker']['kyc']['lastName']
+            temp = json.dumps(temp,indent=4)          
+            trade_details.append(temp)
 
+        trade_details = ",".join(trade_details)
+    # print(trade_details)
     commitments = data['commitments']
     commitment_details = None
     if commitments == []:
@@ -508,8 +510,10 @@ def users_assets(token):
             commitment_details.append(temp)
         commitment_details = ",".join(commitment_details)
     my_assets = [trade_details,commitment_details]
+    # print(my_assets)
     return my_assets
 
+# users_assets('NTI4MQ.wbnperxdK-xQYElV3jXyoes4LOgjoUYTS4Yz-siI4-V44GNfgeMFzVxhVv7_')
 
 # Get list of all assets from DB
 def get_asset_list():
@@ -1104,7 +1108,7 @@ def login(request):
     payload = json.dumps({
     # "email": "shweta+indinvuat03@evident.capital",
     # "password": "Evident@2024",
-    "email": "hemali@evident.capital",
+    "email": "sai+0303ind@gmail.com",
     "password": "Evident@2025",
     "ipInfo": {
         "asn": "asn",
