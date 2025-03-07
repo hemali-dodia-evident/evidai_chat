@@ -847,13 +847,37 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                          Trade Units: 10,
                          Trade Status: Complete,
                          Number of Clients: 2,
+                         Asset Maker: Jon
+
+                         Trade Asset ID: ABC,
+                         Price: 456,
+                         Total Units: 126,
+                         Available Units: 0,
+                         Trade Units: 10,
+                         Trade Status: Pending,
+                         Number of Clients: 2,
+                         Asset Maker: Jon
+
+                         Trade Asset ID: qwe,
+                         Price: 123,
+                         Total Units: 123456,
+                         Available Units: 0,
+                         Trade Units: 10,
+                         Trade Status: Failed,
+                         Number of Clients: 2,
                          Asset Maker: Jon 
+
                     - FOR COMMITMENTS, STRICTLY FOLLOW THIS:
                         Commitment Details:-
                          Asset Name: asjhs oosidos,
                          Commitment Amount: 2000,
                          Allotted Units: 10,
                          Commitment Status: Completed 
+
+                         Asset Name: asjhs,
+                         Commitment Amount: 500,
+                         Allotted Units: 330,
+                         Commitment Status: Completed
 
                     ### **IMPORTANT RULES:**  
                      **STRICTLY FOLLOW the RESPONSE GUIDELINES EXACTLY AS PROVIDED.**  
