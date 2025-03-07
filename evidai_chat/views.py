@@ -56,8 +56,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                  Last Asset about which user asked - {last_asset}
                  Last Question Category regarding which conversation was going on - {last_ques_cat}
                  USER's ROLE - {user_role}.
-                 IF QUESTION IS ABOUT USER'S ONBOARDING THEN REFER "USER's ROLE" AND SELECT CATEGORY ACCORDINGLY.
-                 IF QUESTION IS ABOUT ONBOARDING AND NOT SPECIFY EXPLICTLY ABOUT WHICH ONBOARDING USER IS LOOKING FOR THEN BASED ON USER'S ROLL SELECT THE ONBOARDING CATEGORY.
+                 IF QUESTION IS ABOUT USER'S ONBOARDING OR PENDING STEPS THEN REFER "USER's ROLE" AND SELECT CATEGORY ACCORDINGLY.
                  Greetings: USER IS GREETING WITHOUT ANY OTHER INFORMATION, Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
                  Personal_Assets: Following details are present for variety of assets like openai, spacex and many more - These assets include various categories such as Private Equity, Venture Capital, 
                     Private Credit, Infrastructure, Hedge Funds, Digital Assets, Real Estate, Collectibles, 
