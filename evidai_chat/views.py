@@ -1058,7 +1058,7 @@ def get_asset_based_response(assets_identified,question,token):
 
 
 # Question handling flow - IP Count:9, OP Count:3
-def handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_role, previous_questions, current_question, onboarding_step):     
+def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, previous_questions, current_question, onboarding_step):     
     logger.info(f"last_asset - {last_asset}\nuser_role - {user_role}\nlast_ques_cat - {last_ques_cat}")
     asset_found = ''
     response = ''
@@ -1187,10 +1187,13 @@ def format_response(response):
 
     # Convert new lines for Markdown-friendly format
     response = response.replace("\n", "  \n")  
+    # Fix unwanted line breaks between labels and values (Price - X, Trade Units - Y)
+    response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units)\s*-\s*)\n', r'\1 ', response)
 
     # Convert Markdown to HTML
     html_content = markdown.markdown(response)
     html_content = html_content.replace("*","").replace("<em>","").replace("</em>","")
+    
     return html_content
 
 # Main flow
@@ -1230,7 +1233,7 @@ def evidAI_chat(request):
             if len(previous_questions)==1:
                 update_chat_title(current_question,chat_session_id)
                 
-            response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_id, user_name, user_role, previous_questions, current_question, onboarding_step)
+            response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_name, user_role, previous_questions, current_question, onboarding_step)
             
             response = format_response(response)
             # logger.info(f"After HTML markup from main function - {response}")
