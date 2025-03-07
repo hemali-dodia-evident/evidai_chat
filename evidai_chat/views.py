@@ -684,7 +684,6 @@ def get_asset_details(asset_name):
                 Title: {prompt_data['updates']['title']}
                 Description: {prompt_data['updates']['description']}
         """
-        
     else:
         prompt = "FAILED"
     return prompt
@@ -841,10 +840,21 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     RESPONSE GUIDELINES(STRICT FORMAT):-
                     - FOR TRADES, STRICTLY FOLLOW THIS:
                         Trade Details:- 
-                         Trade Asset ID: XYZ,\nPrice: 123,\nTotal Units: 123456,\nAvailable Units: 0,\nTrade Units: 10,\nTrade Status: Complete,\nNumber of Clients: 2,\nAsset Maker:  Jon 
+                         Trade Asset ID: XYZ,
+                         Price: 123,
+                         Total Units: 123456,
+                         Available Units: 0,
+                         Trade Units: 10,
+                         Trade Status: Complete,
+                         Number of Clients: 2,
+                         Asset Maker: Jon 
                     - FOR COMMITMENTS, STRICTLY FOLLOW THIS:
                         Commitment Details:-
-                         Asset Name: asjhs oosidos,\nCommitment Amount: 2000,\nAllotted Units: 10,\nCommitment Status: Completed 
+                         Asset Name: asjhs oosidos,
+                         Commitment Amount: 2000,
+                         Allotted Units: 10,
+                         Commitment Status: Completed 
+
                     ### **IMPORTANT RULES:**  
                      **STRICTLY FOLLOW the RESPONSE GUIDELINES EXACTLY AS PROVIDED.**  
                      **DO NOT APPLY any additional formatting (e.g., *, _, or markdown styling).**  
