@@ -877,6 +877,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     Never imply that the user has not provided information.
                     Do not greet the user.
                     Response Guidelines:
+                    IF RESPONSE IS ALREADY WELL FORMED KEEP IT AS IT IS, DO NOT CHANGE ITS STRUCTURE IF NOT REQUIRED.
+                    IF RESPONSE CONTAINS TRADE, OR COMMITMENT DETAILS: DO NOT CHANGE ITS STRUCTURE IT IS PROHIBITED.
                     If an answer is fully available: Provide a clear, concise response with proper structure and formatting.
                     If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable. If needed, suggest contacting support:
                     "Certain details are unavailable, but our support team would be happy to assist you. Please reach out to support@evident.capital with your query."
@@ -887,7 +889,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     The response is structured well with line breaks for readability.
                     The tone remains friendly and professional.
                     REMOVE ANY ITALIC AND BOLD EFFECT IF GIVEN IN FORMATTING.
-                    Format the steps in a clear, structured, and readable Markdown format. Ensure that headings are bold, lists are properly formatted (numbered and bulleted where appropriate).
+                    Format the steps in a clear, structured, and readable format. Ensure that headings are bold, lists are properly formatted (numbered and bulleted where appropriate).
                     Steps are properly formatted, with each step appearing on a new line.
                     No extra words, unnecessary greetings, or irrelevant details are added.
                     Do not include the full support message unless all information is unavailable.
