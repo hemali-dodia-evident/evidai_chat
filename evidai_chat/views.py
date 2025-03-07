@@ -1150,7 +1150,7 @@ def format_response(response):
 
     # Convert formatted text to HTML
     html_content = markdown.markdown(response)
-    html_content = html_content.replace("*","")
+    html_content = html_content.replace("*","").replace("<em>","").replace("</em>","")
     return html_content
 
 
