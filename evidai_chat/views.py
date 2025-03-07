@@ -838,7 +838,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     User's Commitments:-{assets_identified[1]}
 
                     RESPONSE GUIDELINES(STRICT FORMAT):-
-                    - FOR TRADES, STRICTLY FOLLOW THIS:
+                    - FOR TRADES, STRICTLY FOLLOW THIS: DO NOT APPLY LINE BREAK BETWEEN "Price:" and its value, and "Trade Unit:" and its value.
                         Trade Details:- 
                          Trade Asset ID - XYZ
                          Price - 123.0
