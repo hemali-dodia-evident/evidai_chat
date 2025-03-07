@@ -841,28 +841,28 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     - FOR TRADES, STRICTLY FOLLOW THIS:
                         Trade Details:- 
                          Trade Asset ID - XYZ
-                         Price - 123
+                         Price - 123.0
                          Total Units - 123456
                          Available Units - 0
-                         Trade Units - 10
+                         Trade Units - 10.0
                          Trade Status - Complete
                          Number of Clients - 2
                          Asset Maker - Jon
 
                          Trade Asset ID - ABC
-                         Price - 456
+                         Price - 456.0
                          Total Units - 126
                          Available Units - 0
-                         Trade Units - 10
+                         Trade Units - 10.0
                          Trade Status - Pending
                          Number of Clients - 2
                          Asset Maker - Don
 
                          Trade Asset ID - qwe
-                         Price - 123
+                         Price - 123.0
                          Total Units - 123456
                          Available Units- 0
-                         Trade Units - 10
+                         Trade Units - 10.0
                          Trade Status - Failed
                          Number of Clients - 2
                          Asset Maker - Jon
@@ -880,12 +880,13 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                          Commitment Status: Completed
 
                     ### **IMPORTANT RULES:**  
-                     **STRICTLY FOLLOW the RESPONSE GUIDELINES EXACTLY AS PROVIDED.**  
+                     **STRICTLY FOLLOW the RESPONSE GUIDELINES EXACTLY AS PROVIDED.** 
+                     **DO NOT APPLY LINE BREAKS IF THERE IS NUMERIC VALUE IN STATEMENT 
                      **DO NOT APPLY any additional formatting (e.g., *, _, or markdown styling).**  
                      **DO NOT GREET the user in the response.**  
                      **KEEP the tone positive, polite, and user-friendly.**  
                      **DO NOT mention or imply that the user has not provided information.**  
-                     **Ensure line breaks (`\n`) are included as per the format.**  
+                     **Ensure line breaks (`\n`) are only applied between different attributes, NOT within values.**  
 
                     FAILURE TO FOLLOW THIS RESPONSE FORMAT IS NOT ACCEPTABLE. STRICTLY ADHERE TO THE GUIDELINES."""
                     response = get_gemini_response(question,prompt)
@@ -912,8 +913,6 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     Never imply that the user has not provided information.
                     Do not greet the user.
                     Response Guidelines:
-                    IF RESPONSE IS ALREADY WELL FORMED KEEP IT AS IT IS, DO NOT CHANGE ITS STRUCTURE IF NOT REQUIRED.
-                    IF RESPONSE CONTAINS TRADE, OR COMMITMENT DETAILS: DO NOT CHANGE ITS STRUCTURE IT IS PROHIBITED.
                     If an answer is fully available: Provide a clear, concise response with proper structure and formatting.
                     If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable. If needed, suggest contacting support:
                     "Certain details are unavailable, but our support team would be happy to assist you. Please reach out to support@evident.capital with your query."
@@ -922,6 +921,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     If ONLY GREETING is present: Reply with positve and polite greetings and ask user how you can help.
                     Ensure:
                     The response is structured well with line breaks for readability.
+                    Ensure line breaks (`\n`) are only applied between different attributes, or point, NOT within values.
                     The tone remains friendly and professional.
                     REMOVE ANY ITALIC AND BOLD EFFECT IF GIVEN IN FORMATTING.
                     Format the steps in a clear, structured, and readable format. Ensure that headings are bold, lists are properly formatted (numbered and bulleted where appropriate).
