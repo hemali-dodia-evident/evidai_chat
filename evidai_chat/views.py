@@ -471,46 +471,29 @@ def users_assets(token):
             }
     response = requests.request("GET", url, headers=headers, data=payload)
     data = response.json() 
-    # print(data)
+
     trades = data['trades']
     trade_details = None
     if trades == []:
         trade_details = "No trade available"
     else:
-        trade_details = []
+        trade_details = ""
         for trd in trades:
-            temp = {}
-            temp['uniqueTradeId']=trd['uniqueTradeId']
-            temp["price"]=trd["price"]
-            temp["totalUnits"]=trd["totalUnits"]
-            temp["availableUnits"]=trd["availableUnits"]
-            temp["tradedUnits"]=trd['tradedUnits']
-            temp['status']=trd['status']
-            temp["numberOfClients"]=trd["numberOfClients"]
-            temp["assetCurrency"]=trd["asset"]["currency"]
-            temp['assetMaker']=trd['maker']['kyc']['firstName']+' '+trd['maker']['kyc']['lastName']
-            temp = json.dumps(temp,indent=4)          
-            trade_details.append(temp)
+            assetMaker=trd['maker']['kyc']['firstName']+' '+trd['maker']['kyc']['lastName']
+            temp = f"""Trade ID:{trd['uniqueTradeId']}\nPrice:{trd["price"]}\nTTotal Units:{trd["totalUnits"]}\nAvailable Units:{trd["availableUnits"]}\nTrade Units:{trd['tradedUnits']}\nTrade Status:{trd['status']}\nNumber of Clients:{trd["numberOfClients"]}\nAsset Maker:{assetMaker}"""
+            trade_details=trade_details+'\n'+temp
 
-        trade_details = ",".join(trade_details)
-    # print(trade_details)
     commitments = data['commitments']
     commitment_details = None
     if commitments == []:
         commitment_details = "No commitments available"
     else:
-        commitment_details = []
+        commitment_details = ""
         for commit in commitments:
-            temp = {}
-            temp['commitmentDetails']=commit['commitmentDetails']
-            temp['commitmentAmount']=commit['commitmentAmount']
-            temp['allotedUnits']=commit['allotedUnits']
-            temp['commitmentStatus']=commit['status']
-            temp = json.dumps(temp, indent=4)
-            commitment_details.append(temp)
-        commitment_details = ",".join(commitment_details)
+            temp = f"""Commitment Detail:{commit['commitmentDetails']}\nCommitment Amount:{commit['commitmentAmount']}\nAlloted Units:{commit['allotedUnits']}\nCommitment Status:{commit['status']}"""
+            commitment_details = commitment_details +'\n'+temp
     my_assets = [trade_details,commitment_details]
-    # print(my_assets)
+
     return my_assets
 
 # users_assets('NTI4MQ.wbnperxdK-xQYElV3jXyoes4LOgjoUYTS4Yz-siI4-V44GNfgeMFzVxhVv7_')
@@ -769,7 +752,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                 all_assets_names = list(all_assets_names)
                 # print("all_assets_names - ",all_assets_names)
                 prompt = f"""Follow these instructions exactly:  
-                            - If the question is about assets owned, personal, or invested by the user, committed by the user, or if the user asks about holdings, return only 1 .  
+                            - If the question is about assets owned, personal, or invested by the user, committed by the user, or if the user asks about his holdings, commitments, or trades, return only 1 .  
                             - If the question asks about a  specific asset, return  only  the asset name from the list below (if multiple, separate with commas ",").  
                             - If the question is related to a  previously mentioned asset, return only that asset name (or multiple if applicable).  
                             - If the question asks about  all assets  in general, return only 2 .                             
@@ -797,7 +780,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                             Strict Response Examples:   
                             Q: "What is the commitment status of my assets?"  
                             A: 1  
-                            Q: "What are my holdings?"  
+                            Q: "What are my holdings?" 
                             A: 1
                             Q: "What is the minimum investment amount for Keith Haring?"  
                             A: Keith Haring - Untitled
