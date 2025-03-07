@@ -703,6 +703,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
         specific_category = promp_cat_new.replace("_",' ').split(',')
         logger.info(f"Categories identified by bot - {specific_category}")
         assets_identified = ""
+        personalAssets = False 
         for promp_cat in specific_category:   
             logger.info(f"Getting answer for category - {promp_cat}")    
             if (promp_cat!='FAILED' and promp_cat !='Personal Assets'): #or (isRelated==True and (isAssetRelated==False and last_asset=='')):
@@ -748,7 +749,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                 final_response = final_response + '\n' + response   
             elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True:    
                 logger.info("Prompt Category is Personal Asset") 
-                personalAssets = False          
+                         
                 all_assets_names = get_asset_list()
                 all_assets_names = list(all_assets_names)
                 # print("all_assets_names - ",all_assets_names)
@@ -894,7 +895,9 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     No extra words, unnecessary greetings, or irrelevant details are added.
                     Do not include the full support message unless all information is unavailable.
                     Strictly follow these instructions to generate the best response."""
-        final_response = get_gemini_response(final_response,prompt)
+        if personalAssets==False:
+            final_response = get_gemini_response(final_response,prompt)
+
         logger.info(f"Final Response - {final_response}")
     except Exception as e:
         logger.error(f"While generating answer from category based question following error occured - {str(e)}")
