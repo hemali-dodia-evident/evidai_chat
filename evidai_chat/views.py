@@ -491,7 +491,7 @@ def users_assets(token):
     else:
         commitment_details = ""
         for commit in commitments:
-            temp = f"""Description:{commit['commitmentDetails']}\nCommitment Amount:{commit['commitmentAmount']}\nAlloted Units:{commit['allotedUnits']}\nCommitment Status:{commit['status']}"""
+            temp = f"""Asset Name:{commit['commitmentDetails']['asset']['name']}\nCommitment Amount:{commit['commitmentAmount']}\nAlloted Units:{commit['allotedUnits']}\nCommitment Status:{commit['status']}"""
             commitment_details = commitment_details +'\n'+temp
     my_assets = [trade_details,commitment_details]
 
@@ -843,7 +843,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                          Trade Asset ID: XYZ,\nPrice: 123,\nTotal Units: 123456,\nAvailable Units: 0,\nTrade Units: 10,\nTrade Status: Complete,\nNumber of Clients: 2,\nAsset Maker:  Jon 
                     - FOR COMMITMENTS, FOLLOW BELOW FORMAT TO GENERATE RESPONSE:
                         Commitment Details:-
-                         Description: asjhs oosidos,\nCommitment Amount: 2000,\nAllotted Units: 10,\nCommitment Status: Completed 
+                         Asset Name: asjhs oosidos,\nCommitment Amount: 2000,\nAllotted Units: 10,\nCommitment Status: Completed 
                     NOTE - STRICTLY FOLLOW RESPONSE GUIDELINE TO GENERATE ANSWER
                     Keep tone positive and polite while answering user's query.
                     Avoid mentioning or implying that the user has not provided information.
