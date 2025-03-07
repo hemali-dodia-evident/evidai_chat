@@ -889,7 +889,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     The response is structured well with line breaks for readability.
                     The tone remains friendly and professional.
                     REMOVE ANY ITALIC AND BOLD EFFECT IF GIVEN IN FORMATTING.
-                    MAKE SURE BULLET POINTS ARE IN PROPER SEQUESNCE.
+                    Format the steps in a clear, structured, and readable Markdown format. Ensure that headings are bold, lists are properly formatted (numbered and bulleted where appropriate).
                     Steps are properly formatted, with each step appearing on a new line.
                     No extra words, unnecessary greetings, or irrelevant details are added.
                     Do not include the full support message unless all information is unavailable.
@@ -1137,22 +1137,24 @@ def login(request):
 
 
 def format_response(response):
-    # Ensure list formatting (handling "- " and "* " for Markdown lists)
-    response = re.sub(r'\n\s*-\s*', '\n- ', response)  # Fix list formatting
-    response = re.sub(r'\n\s*\*\s*', '\n* ', response)  # Handle * bullet lists
+    # Normalize list formatting
+    response = re.sub(r'\n\s*-\s*', '\n- ', response)  # Fix unordered lists
+    response = re.sub(r'\n\s*\*\s*', '\n- ', response)  # Convert * to -
 
-    # Convert new lines to markdown-friendly format
-    response = response.replace("\n", "  \n")  # Markdown requires double space before \n for line breaks
+    # Ensure proper numbered list spacing
+    response = re.sub(r'(\d+)\.\s*', r'\n\1. ', response)  
 
-    # Replace italic formatting (_text_ or *text*) with bold (**text**)
-    response = re.sub(r'(?<!\*)\*(\S.*?)\*(?!\*)', r'**\1**', response)  # Replace *italic* → **bold**
-    response = re.sub(r'_(\S.*?)_', r'**\1**', response)  # Replace _italic_ → **bold**
+    # Convert italic formatting (_text_ or *text*) to bold (**text**)
+    response = re.sub(r'(?<!\*)\*(\S.*?)\*(?!\*)', r'**\1**', response)  
+    response = re.sub(r'_(\S.*?)_', r'**\1**', response)  
 
-    # Convert formatted text to HTML
+    # Convert new lines for Markdown-friendly format
+    response = response.replace("\n", "  \n")  
+
+    # Convert Markdown to HTML
     html_content = markdown.markdown(response)
-    html_content = html_content.replace("*","").replace("<em>","").replace("</em>","")
-    return html_content
 
+    return html_content
 
 # Main flow
 @csrf_exempt
