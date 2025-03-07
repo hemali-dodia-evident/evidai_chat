@@ -840,21 +840,12 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     RESPONSE GUIDELINES:-
                     - FOR TRADES, FOLLOW BELOW FORMAT TO GENERATE RESPONSE:
                         Trade Details:- 
-                         Trade Asset ID : XYZ,
-                         Price : 123,
-                         Total Units : 123456,
-                         Available Units : 0,
-                         Trade Units : 10,
-                         Trade Status : Complete ,
-                         Number of Clients : 2,
-                         Asset Maker :  Jon 
+                         Trade Asset ID: XYZ,\nPrice: 123,\nTotal Units: 123456,\nAvailable Units: 0,\nTrade Units: 10,\nTrade Status: Complete,\nNumber of Clients: 2,\nAsset Maker:  Jon 
                     - FOR COMMITMENTS, FOLLOW BELOW FORMAT TO GENERATE RESPONSE:
                         Commitment Details:-
-                         Description : asjhs oosidos ,
-                         Commitment Amount : 2000,
-                         Allotted Units : 10,
-                         Commitment Status : Completed 
-                    NOTE - Keep tone positive and polite while answering user's query.
+                         Description: asjhs oosidos,\nCommitment Amount: 2000,\nAllotted Units: 10,\nCommitment Status: Completed 
+                    NOTE - STRICTLY FOLLOW RESPONSE GUIDELINE TO GENERATE ANSWER
+                    Keep tone positive and polite while answering user's query.
                     Avoid mentioning or implying that the user has not provided information.
                     Do not greet the user in your response.
                     Use proper formatting such as line breaks to enhance readability. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
