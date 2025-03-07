@@ -841,8 +841,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     - FOR TRADES, STRICTLY FOLLOW THIS:
                         Trade Details:- 
                          Trade Asset ID: XYZ,
-                         Price: 123,
-                         Total Units: 123456,
+                         Price:123,
+                         Total Units:123456,
                          Available Units: 0,
                          Trade Units: 10,
                          Trade Status: Complete,
@@ -850,8 +850,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                          Asset Maker: Jon
 
                          Trade Asset ID: ABC,
-                         Price: 456,
-                         Total Units: 126,
+                         Price:456,
+                         Total Units:126,
                          Available Units: 0,
                          Trade Units: 10,
                          Trade Status: Pending,
@@ -859,8 +859,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                          Asset Maker: Jon
 
                          Trade Asset ID: qwe,
-                         Price: 123,
-                         Total Units: 123456,
+                         Price:123,
+                         Total Units:123456,
                          Available Units: 0,
                          Trade Units: 10,
                          Trade Status: Failed,
