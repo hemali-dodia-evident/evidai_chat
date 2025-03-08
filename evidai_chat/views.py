@@ -56,7 +56,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                  Last Asset about which user asked - {last_asset}
                  Last Question Category regarding which conversation was going on - {last_ques_cat}
                  USER's ROLE - {user_role}.
-                 IF QUESTION IS ABOUT USER'S ONBOARDING OR PENDING STEPS THEN REFER "USER's ROLE" AND SELECT CATEGORY ACCORDINGLY.
+                 IF QUESTION IS ABOUT USER'S ONBOARDING OR PENDING STEPS OR QUERY ABOUT ANY STEP RELATED TO ONBOARDING THEN REFER "USER's ROLE" AND SELECT CATEGORY ACCORDINGLY, ALSO IF LAST QUESTION CATEGORY WAS RELATED TO "ONBOARDING" THEN SELECT PROPER ONBOARDING CATEGORY.
                  Greetings: USER IS GREETING WITHOUT ANY OTHER INFORMATION, Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
                  Personal_Assets: Following details are present for variety of assets like openai, spacex and many more - These assets include various categories such as Private Equity, Venture Capital, 
                     Private Credit, Infrastructure, Hedge Funds, Digital Assets, Real Estate, Collectibles, 
@@ -667,7 +667,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
 
                     RESPONSE GUIDELINES(STRICT FORMAT):-
                     - FOR TRADES, STRICTLY FOLLOW THIS: DO NOT APPLY LINE BREAK BETWEEN "Price:" and its value, and "Trade Unit:" and its value.
-                        Trade Details:- 
+                        **Trade Details:-** 
                          Trade Asset - XYZ
                          Price - 123.0
                          Total Units - 123456
@@ -676,7 +676,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                          Trade Status - Complete
                          Number of Clients - 2
                          Asset Maker - Jon
-                         =========================================
+                         ==========================
                          Trade Asset - ABC
                          Price - 456.0
                          Total Units - 126
@@ -685,7 +685,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                          Trade Status - Pending
                          Number of Clients - 2
                          Asset Maker - Don
-                         =========================================
+                         ==========================
                          Trade Asset - qwe
                          Price - 123.0
                          Total Units - 123456
@@ -694,14 +694,14 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                          Trade Status - Failed
                          Number of Clients - 2
                          Asset Maker - Jon
-
+                         ==========================
                     - FOR COMMITMENTS, STRICTLY FOLLOW THIS:
-                        Commitment Details:-
+                        **Commitment Details:-**
                          Asset Name: asjhs oosidos,
                          Commitment Amount: 2000,
                          Allotted Units: 10,
                          Commitment Status: Completed 
-                         =========================================
+                         ==========================
                          Asset Name: asjhs,
                          Commitment Amount: 500,
                          Allotted Units: 330,
