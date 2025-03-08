@@ -798,10 +798,10 @@ def get_specific_asset_details(asset_name,token):
             startDate = commitmentDetails['startAt'].split("T")[0] if commitmentDetails['startAt'] is not None or commitmentDetails['startAt'] !='' else ''
             endDate = commitmentDetails['endAt'].split("T")[0] if commitmentDetails['endAt'] is not None or commitmentDetails['endAt'] !='' else ''
             investment_details = f"""Commitment Status: {commitmentStatus}\n
-                                    Target Amount:{commitmentDetails['targetAmount']}\n
-                                    Minimum Investment Amount:{commitmentDetails['minimumAmount']}\n
-                                    Maximum Investment Amounr:{commitmentDetails['maximumAmount']}\n
-                                    Raised Amount:{commitmentDetails['raisedAmount']}\n
+                                    Target Amount:{str(commitmentDetails['targetAmount'])}\n
+                                    Minimum Investment Amount:{str(commitmentDetails['minimumAmount'])}\n
+                                    Maximum Investment Amounr:{str(commitmentDetails['maximumAmount'])}\n
+                                    Raised Amount:{str(commitmentDetails['raisedAmount'])}\n
                                     Start On:{startDate}\n
                                     End On:{endDate}
                                     """
@@ -877,7 +877,8 @@ def get_asset_based_response(assets_identified,question,token):
                 Asset Details: - {data}
                 RESPONSE GUIDELINES: STRICTLY FOLLOW THIS GUIDELINE WHILE PROVIDING RESPONSE. 
                 **DO NOT APPLY BULLETS, OR NUMBERING.**
-                **Ensure line breaks (`\n`) are only applied between different attributes, NOT within values.**
+                **Ensure line breaks (`\n`) are ONLY applied between different attributes, NOT within values.**
+                **DO NOT APPLY LINE BREAKS BETWEEN ATTRIBUTE AND VALUE. FOLLOW :- "Attribute:Value" FORMAT**
                 **STRUCTURE TEMPLATE TO CREATE ANSWER: STRICTLY FOLLOW THIS TEMPLATE TO ARRANGE AASSET DETAILS, IF ANY DETAILS IS UNAVAILABLE SKIP THAT TITLE IN CASE OF "Investment Details" AND "Events": **
                 Asset Name: Abc
                 Asset Description: this is asset's description
@@ -899,8 +900,8 @@ def get_asset_based_response(assets_identified,question,token):
                 IRR(Internal Rate of Return/Rate of Return): 10%
                 Exit Strategy: Not available
                 Key Highlights:
-                        1. asset works good
-                        2. progress happend with 10%
+                        -> asset works good
+                        -> progress happend with 10%
                 Asset vertical: Venture
                 Asset Manager: Thomas
                 Events:
@@ -1049,13 +1050,13 @@ def format_response(response):
     # Convert new lines for Markdown-friendly format
     response = response.replace("\n", "  \n")  
     # Fix unwanted line breaks between labels and values (Price - X, Trade Units - Y)
-    response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units)\s*-\s*)\n', r'\1 ', response)
+    response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units|Raised Amount)\s*-\s*)\n', r'\1 ', response)
     # Remove **unstructured** numbering (standalone numbers at the start of a line)
     response = re.sub(r'^\d+\.\s*', '', response, flags=re.MULTILINE)
 
     # Convert Markdown to HTML
     html_content = markdown.markdown(response)
-    html_content = html_content.replace("*","").replace("<em>","").replace("</em>","")
+    html_content = html_content.replace("*","").replace("<em>","").replace("</em>","").replace("<strong>","").replace("</strong>","")
     
     return html_content
 
