@@ -480,8 +480,15 @@ def users_assets(token):
     else:
         trade_details = ""
         for trd in trades:
+            id = int(trd['assetId'])
+            try:
+                asset = models.Asset.objects.get(id=id)
+                name = asset.name
+            except:
+                name = 'Not Available'
+            
             assetMaker=trd['maker']['kyc']['firstName']+' '+trd['maker']['kyc']['lastName']
-            temp = f"""Trade Asset ID:{trd['assetId']}\nPrice:{trd["price"]}\nTotal Units:{trd["totalUnits"]}\nAvailable Units:{trd["availableUnits"]}\nTrade Units:{trd['tradedUnits']}\nTrade Status:{trd['status']}\nNumber of Clients:{trd["numberOfClients"]}\nAsset Maker:{assetMaker}"""
+            temp = f"""Trade Asset:{name}\nPrice:{trd["price"]}\nTotal Units:{trd["totalUnits"]}\nAvailable Units:{trd["availableUnits"]}\nTrade Units:{trd['tradedUnits']}\nTrade Status:{trd['status']}\nNumber of Clients:{trd["numberOfClients"]}\nAsset Maker:{assetMaker}"""
             trade_details=trade_details+'\n'+temp
 
     commitments = data['commitments']
@@ -497,7 +504,8 @@ def users_assets(token):
 
     return my_assets
 
-# users_assets('NTI4MQ.wbnperxdK-xQYElV3jXyoes4LOgjoUYTS4Yz-siI4-V44GNfgeMFzVxhVv7_')
+
+# users_assets('NTI4OQ.8mSh9ge4S6xpHA2a8k3RMsxo9-8otyPQMsg6bzqCq2K01BCp1VpbzEEi8ndw')
 
 # Get list of all assets from DB
 def get_asset_list():
@@ -507,186 +515,6 @@ def get_asset_list():
 
 def safe_value(value):
     return value if value is not None else ""
-
-def get_asset_details(asset_name):
-    asset = models.Asset.objects.get(name=asset_name)
-    if asset:
-        asset_id = asset.id
-        asset_key_highlight = models.Asset_Key_Highlights.objects.filter(asset_id=asset_id).order_by('-id').first()
-        commitment_details = models.CommitmentDetails.objects.filter(asset_id=asset_id).order_by('-id').first()
-        pitches = models.Pitch.objects.filter(asset_id=asset_id).order_by('-id').first()
-        pitch_highlights = models.PitchHighlight.objects.filter(asset_id=asset_id).order_by('-id').first()
-        trades = models.Trades.objects.filter(asset_id=asset_id).order_by('-expires_at').first()
-        updates = models.Updates.objects.filter(asset_id=asset_id).order_by('-notified_at').first()
-        
-        asset_vertical_type = None
-        for id,value in asset_verticals.items():
-            if int(id)==int(asset.asset_vertical_id):
-                asset_vertical_type = value
-                break
-        #         1. consider all trades records for each asset
-        # 2. questions for filteration
-        prompt_data = {
-                "asset details": {
-                    "name": safe_value(asset.name),
-                    "description": safe_value(asset.description),
-                    "asset vertical type": safe_value(asset_vertical_type),
-                    "location": safe_value(asset.location),
-                    "highlights": safe_value(asset_key_highlight.text if asset_key_highlight is not None else ""),
-                    "currency": safe_value(asset.currency),
-                    "traded volume": safe_value(asset.traded_volume),
-                    "status": safe_value(asset.status),
-                    "asset code": safe_value(asset.asset_code),
-                    "poll status": safe_value(asset.poll_status),
-                    "retirement eligible": safe_value(asset.retirement_eligible),
-                    "investment mode": safe_value(asset.investment_mode),
-                    "invite link": safe_value(asset.invite_link),
-                    "is nda created": safe_value(asset.is_nda_created),
-                    "is water testing": safe_value(asset.is_water_testing),
-                    "net asset value": safe_value(asset.net_asset_value),
-                    "total valuation": safe_value(asset.total_valuation),
-                    "status tag": safe_value(asset.status_tag),
-                    "published at": safe_value(asset.published_at),
-                    "visibility": safe_value(asset.visibility),
-                    "private short url": safe_value(asset.private_short_url),
-                    "trade fees": safe_value(asset.trade_fees),
-                    "multisig address": safe_value(asset.multisig_address),
-                    "structure model": safe_value(asset.structure_model),
-                    "structuring": safe_value(asset.structuring),
-                    "rate of return": safe_value(asset.rate_of_return),
-                    "exit strategy": safe_value(asset.exit_strategy),
-                },
-                "commitment details": {
-                    "title": safe_value(commitment_details.title if commitment_details is not None else ""),
-                    "status": safe_value(commitment_details.status if commitment_details is not None else ""),
-                    "minimum target": safe_value(commitment_details.minimum_target if commitment_details is not None else ""),
-                    "target not achieved": safe_value(commitment_details.target_not_achieved if commitment_details is not None else ""),
-                    "target amount": safe_value(commitment_details.target_amount if commitment_details is not None else ""),
-                    "minimum amount": safe_value(commitment_details.minimum_amount if commitment_details is not None else ""),
-                    "raised amount": safe_value(commitment_details.raised_amount if commitment_details is not None else ""),
-                    "number of investors": safe_value(commitment_details.no_of_investors if commitment_details is not None else ""),
-                    "starts at": safe_value(commitment_details.start_at if commitment_details is not None else ""),
-                    "ends at": safe_value(commitment_details.end_at if commitment_details is not None else ""),
-                    "maximum amount": safe_value(commitment_details.maximum_amount if commitment_details is not None else ""),
-                    "new digital units issued": safe_value(commitment_details.new_digital_units_issued if commitment_details is not None else ""),
-                    "use of proceeds": safe_value(commitment_details.use_of_proceeds if commitment_details is not None else ""),
-                    "new funds issued anchor": safe_value(commitment_details.new_funds_issued_anchor if commitment_details is not None else ""),
-                    "funds moved escrow": safe_value(commitment_details.funds_moved_escrow if commitment_details is not None else ""),
-                    "new digital units from reserve": safe_value(commitment_details.new_digital_units_from_reserve if commitment_details is not None else ""),
-                    "initial raised amount": safe_value(commitment_details.initial_raised_amount if commitment_details is not None else ""),
-                    "number of commitments": safe_value(commitment_details.no_of_commitments if commitment_details is not None else ""),
-                    "committer fees": safe_value(commitment_details.committer_fees if commitment_details is not None else ""),
-                    "introducer fees": safe_value(commitment_details.introducer_fees if commitment_details is not None else "")
-                },
-                "pitches": {
-                    "title": safe_value(pitches.title if pitches is not None else ""),
-                    "content": safe_value(pitches.content if pitches is not None else ""),
-                },
-                "pitch highlights": {
-                    "title": safe_value(pitch_highlights.title if pitch_highlights is not None else ""),
-                    "description": safe_value(pitch_highlights.description if pitch_highlights is not None else ""),
-                },
-                "trades": 
-                    {
-                        "unique trade id": safe_value(trades.unique_trade_id if trades is not None else ""),
-                        "price": safe_value(trades.price if trades is not None else ""),
-                        "total units": safe_value(trades.total_units if trades is not None else ""),
-                        "available units": safe_value(trades.available_units if trades is not None else ""),
-                        "traded units": safe_value(trades.traded_units if trades is not None else ""),
-                        "type": safe_value(trades.type if trades is not None else ""),
-                        "offer type":safe_value(trades.offer_type if trades is not None else ""),
-                        "status":safe_value(trades.status if trades is not None else ""),
-                        "expires at": safe_value(trades.expires_at if trades is not None else ""),
-                        "number of clients": safe_value(trades.number_of_clients if trades is not None else ""),
-                        "fees": safe_value(trades.fees if trades is not None else "")
-                    } ,
-                "updates": {
-                    "title": safe_value(updates.title if updates is not None else ""),
-                    "description": safe_value(updates.description if updates is not None else ""),
-                },
-            }
-        
-        prompt = f"""Customer is not providing you any information, all information is with you, DO NOT SAY TO CUSTOMER THAT THEY HAVE NOT PROVIDED INFORMATION. You are smart and intelligent chat-bot having good knowledge of finance sector considering this chat with user. 
-            Provide answer in a way that you are chatting with customer. Do not use any kind of emojis. Do not greet user while answering.
-        Asset Details:
-                Name: {prompt_data['asset details']['name']}
-                Description: {prompt_data['asset details']['description']}
-                Asset Vertical Type: {prompt_data['asset details']['asset vertical type']}
-                Location: {prompt_data['asset details']['location']}
-                Highlights: {prompt_data['asset details']['highlights']}
-                Currency: {prompt_data['asset details']['currency']}
-                Traded Volume: {prompt_data['asset details']['traded volume']}
-                Status: {prompt_data['asset details']['status']}
-                Asset Code: {prompt_data['asset details']['asset code']}
-                Poll Status: {prompt_data['asset details']['poll status']}
-                Retirement Eligible: {prompt_data['asset details']['retirement eligible']}
-                Investment Mode: {prompt_data['asset details']['investment mode']}
-                Invite Link: {prompt_data['asset details']['invite link']}
-                NDA Created: {prompt_data['asset details']['is nda created']}
-                Water Testing: {prompt_data['asset details']['is water testing']}
-                Net Asset Value: {prompt_data['asset details']['net asset value']}
-                Total Valuation: {prompt_data['asset details']['total valuation']}
-                Status Tag: {prompt_data['asset details']['status tag']}
-                Published At: {prompt_data['asset details']['published at']}
-                Visibility: {prompt_data['asset details']['visibility']}
-                Private Short URL: {prompt_data['asset details']['private short url']}
-                Trade Fees: {prompt_data['asset details']['trade fees']}
-                Multisig Address: {prompt_data['asset details']['multisig address']}
-                Structure Model: {prompt_data['asset details']['structure model']}
-                Structuring: {prompt_data['asset details']['structuring']}
-                Rate of Return: {prompt_data['asset details']['rate of return']}
-                Exit Strategy: {prompt_data['asset details']['exit strategy']}
-
-                Commitment Details:
-                Title: {prompt_data['commitment details']['title']}
-                Status: {prompt_data['commitment details']['status']}
-                Minimum Target: {prompt_data['commitment details']['minimum target']}
-                Target Not Achieved: {prompt_data['commitment details']['target not achieved']}
-                Target Amount: {prompt_data['commitment details']['target amount']}
-                Minimum Amount: {prompt_data['commitment details']['minimum amount']}
-                Raised Amount: {prompt_data['commitment details']['raised amount']}
-                Number of Investors: {prompt_data['commitment details']['number of investors']}
-                Start At: {prompt_data['commitment details']['starts at']}
-                End At: {prompt_data['commitment details']['ends at']}
-                Maximum Amount: {prompt_data['commitment details']['maximum amount']}
-                New Digital Units Issued: {prompt_data['commitment details']['new digital units issued']}
-                Use of Proceeds: {prompt_data['commitment details']['use of proceeds']}
-                New Funds Issued to Anchor: {prompt_data['commitment details']['new funds issued anchor']}
-                Funds Moved to Escrow: {prompt_data['commitment details']['funds moved escrow']}
-                New Digital Units from Reserve: {prompt_data['commitment details']['new digital units from reserve']}
-                Initial Raised Amount: {prompt_data['commitment details']['initial raised amount']}
-                Number of Commitments: {prompt_data['commitment details']['number of commitments']}
-                Committer Fees: {prompt_data['commitment details']['committer fees']}
-                Introducer Fees: {prompt_data['commitment details']['introducer fees']}
-
-                Pitches:
-                Title: {prompt_data['pitches']['title']}
-                Content: {prompt_data['pitches']['content']}
-
-                Pitch Highlights:
-                Title: {prompt_data['pitch highlights']['title']}
-                Description: {prompt_data['pitch highlights']['description']}
-
-                Trades:
-                Trade ID: {prompt_data['trades']['unique trade id']}
-                Price: {prompt_data['trades']['price']}, 
-                Total Units: {prompt_data['trades']['total units']}, 
-                Available Units: {prompt_data['trades']['available units']}, 
-                Traded Units: {prompt_data['trades']['traded units']}, 
-                Type: {prompt_data['trades']['type']}, 
-                Offer Type: {prompt_data['trades']['offer type']}, 
-                Status: {prompt_data['trades']['status']}, 
-                Expires At: {prompt_data['trades']['expires at']}, 
-                Number of Clients: {prompt_data['trades']['number of clients']}, 
-                Fees: {prompt_data['trades']['fees']}
-
-                Updates:
-                Title: {prompt_data['updates']['title']}
-                Description: {prompt_data['updates']['description']}
-        """
-    else:
-        prompt = "FAILED"
-    return prompt
 
 
 # Check category of question and then based on category generate response
@@ -840,7 +668,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     RESPONSE GUIDELINES(STRICT FORMAT):-
                     - FOR TRADES, STRICTLY FOLLOW THIS: DO NOT APPLY LINE BREAK BETWEEN "Price:" and its value, and "Trade Unit:" and its value.
                         Trade Details:- 
-                         Trade Asset ID - XYZ
+                         Trade Asset - XYZ
                          Price - 123.0
                          Total Units - 123456
                          Available Units - 0
@@ -848,8 +676,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                          Trade Status - Complete
                          Number of Clients - 2
                          Asset Maker - Jon
-
-                         Trade Asset ID - ABC
+                         =========================================
+                         Trade Asset - ABC
                          Price - 456.0
                          Total Units - 126
                          Available Units - 0
@@ -857,8 +685,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                          Trade Status - Pending
                          Number of Clients - 2
                          Asset Maker - Don
-
-                         Trade Asset ID - qwe
+                         =========================================
+                         Trade Asset - qwe
                          Price - 123.0
                          Total Units - 123456
                          Available Units- 0
@@ -873,7 +701,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                          Commitment Amount: 2000,
                          Allotted Units: 10,
                          Commitment Status: Completed 
-
+                         =========================================
                          Asset Name: asjhs,
                          Commitment Amount: 500,
                          Allotted Units: 330,
