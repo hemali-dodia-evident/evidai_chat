@@ -880,6 +880,8 @@ def get_asset_based_response(assets_identified,question,token):
                 **Ensure line breaks (`\n`) are ONLY applied between different attributes, NOT within values.**
                 **DO NOT APPLY LINE BREAKS BETWEEN ATTRIBUTE AND VALUE. FOLLOW :- "Attribute:Value" FORMAT**
                 **STRUCTURE TEMPLATE TO CREATE ANSWER: STRICTLY FOLLOW THIS TEMPLATE TO ARRANGE AASSET DETAILS, IF ANY DETAILS IS UNAVAILABLE SKIP THAT TITLE IN CASE OF "Investment Details" AND "Events": **
+                **"Events:","Investment Details:" AND "Key Highlights:" HAVE SUB POINTS. MAKE SURE MAIN POINTS AND SUB POINTS ARE IN PROPER DIFFERENTIATE MANNER. DO NOT TREAT MAIN POINTS AS SUBPOINTS WHILE APPLYING ANY KIND OF LISTING OR BULLETING.**
+                
                 Asset Name: Abc
                 Asset Description: this is asset's description
                 Asset Location in Country: IND
@@ -900,8 +902,8 @@ def get_asset_based_response(assets_identified,question,token):
                 IRR(Internal Rate of Return/Rate of Return): 10%
                 Exit Strategy: Not available
                 Key Highlights:
-                    asset works good
-                    progress happend with 10%
+                        asset works good
+                        progress happend with 10%
                 Asset vertical: Venture
                 Asset Manager: Thomas
                 Events:
