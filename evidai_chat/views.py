@@ -829,7 +829,6 @@ def get_specific_asset_details(asset_name,token):
         data = response.json()
         data = data['data']
         event_details = 'No events are present'
-        print(data)
         if data !=[]:
             evnNum = 1
             for evn in data:
@@ -840,12 +839,11 @@ def get_specific_asset_details(asset_name,token):
                       'Asset Description:':all_asset_details['description'],
                       'Asset Location in Country:':all_asset_details['location'],
                       'Asset Status:':all_asset_details['currency'],
-                      'Asset Code:':all_asset_details['assetCode'],
                       'Retirement Elgibility:':retirementEligible,
                       'Investment Mode:':all_asset_details['investmentMode'],
-                      'Investment Details':investment_details,
-                      'IRR(Internal Rate of Return/Rate of Return)':all_asset_details['rateOfReturn'] if all_asset_details['rateOfReturn'] is not None else 'Unavailable',
-                      'Exit Strategy':all_asset_details['exitStrategy'] if all_asset_details['exitStrategy'] is not None else 'Unavailable',
+                      'Investment Details:':investment_details,
+                      'IRR(Internal Rate of Return/Rate of Return):':all_asset_details['rateOfReturn'] if all_asset_details['rateOfReturn'] is not None else 'Unavailable',
+                      'Exit Strategy:':all_asset_details['exitStrategy'] if all_asset_details['exitStrategy'] is not None else 'Unavailable',
                       'Key Highlights:':keyHighlights,
                       'Asset vertical:':all_asset_details['assetVertical'],
                       'Asset Manager:':all_asset_details['manager']['kyc']['firstName']+' '+all_asset_details['manager']['kyc']['lastName'],
@@ -880,6 +878,37 @@ def get_asset_based_response(assets_identified,question,token):
                 RESPONSE GUIDELINES: STRICTLY FOLLOW THIS GUIDELINE WHILE PROVIDING RESPONSE. 
                 **DO NOT APPLY BULLETS, OR NUMBERING.**
                 **Ensure line breaks (`\n`) are only applied between different attributes, NOT within values.**
+                **STRUCTURE TEMPLATE TO CREATE ANSWER: STRICTLY FOLLOW THIS TEMPLATE TO ARRANGE AASSET DETAILS, IF ANY DETAILS IS UNAVAILABLE SKIP THAT TITLE IN CASE OF "Investment Details" AND "Events": **
+                Asset Name: Abc
+                Asset Description: this is asset's description
+                Asset Location in Country: IND
+                Asset Status: Completed
+                Retirement Elgibility: Yes
+                Investment Mode: Trade
+                Investment Details:
+                        Open Offers: 2
+                        Number of Investors: 10
+                        Total invested amount: 50000
+                        Commitment Status: Completed
+                        Target Amount: 5000
+                        Minimum Investment Amount:10
+                        Maximum Investment Amount:500
+                        Raised Amount:2000
+                        Start On:10-2-2025
+                        End On:10-3-2025
+                IRR(Internal Rate of Return/Rate of Return): 10%
+                Exit Strategy: Not available
+                Key Highlights:
+                        1. asset works good
+                        2. progress happend with 10%
+                Asset vertical: Venture
+                Asset Manager: Thomas
+                Events:
+                        Event Title: Onboarding Introduction
+                        Content: hello how are you
+                        Link to Join Event: https://samplelink.com
+                        Start Date: 03-03-2025
+                        End Date: 05-03-2025
                 """
             response = get_gemini_response(question,prompt)      
             final_response = final_response + '\n'+ response  
@@ -1023,7 +1052,7 @@ def format_response(response):
     response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units)\s*-\s*)\n', r'\1 ', response)
     # Remove **unstructured** numbering (standalone numbers at the start of a line)
     response = re.sub(r'^\d+\.\s*', '', response, flags=re.MULTILINE)
-    
+
     # Convert Markdown to HTML
     html_content = markdown.markdown(response)
     html_content = html_content.replace("*","").replace("<em>","").replace("</em>","")
