@@ -900,8 +900,8 @@ def get_asset_based_response(assets_identified,question,token):
                 IRR(Internal Rate of Return/Rate of Return): 10%
                 Exit Strategy: Not available
                 Key Highlights:
-                        -> asset works good
-                        -> progress happend with 10%
+                    asset works good
+                    progress happend with 10%
                 Asset vertical: Venture
                 Asset Manager: Thomas
                 Events:
@@ -1053,6 +1053,7 @@ def format_response(response):
     response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units|Raised Amount)\s*-\s*)\n', r'\1 ', response)
     # Remove **unstructured** numbering (standalone numbers at the start of a line)
     response = re.sub(r'^\d+\.\s*', '', response, flags=re.MULTILINE)
+    response = re.sub(r'^-\s*', '', response, flags=re.MULTILINE)
 
     # Convert Markdown to HTML
     html_content = markdown.markdown(response)
