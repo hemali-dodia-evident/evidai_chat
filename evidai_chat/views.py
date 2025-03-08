@@ -732,7 +732,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
             return "Sorry! I am unable understand the question. Can you provide more details so I can assist you better?", False
         prompt = """Follow these instructions exactly to ensure a structured, clear, and user-friendly response:
                     Remove all repetitive statements while preserving essential information.
-                    Maintain readability by structuring the response with appropriate line breaks (\n).
+                    Maintain readability by structuring the response with appropriate line breaks (\n).                    
                     Use formatting correctly:
                     Bold important words and headers.
                     Avoid special characters like * for formatting.
@@ -876,7 +876,11 @@ def get_asset_based_response(assets_identified,question,token):
                 To get proper trade values, add all results of that perticular assets. Do not provide paramters like id, and also create proper response it **SHOULD NOT** be in key value format.
                 PROVIDE ALL INFORMATION TO USER, DO NOT SKIP ANY INFORMATION. IN CASE IF USER IS ASKING ABOUT ANY SPECIFIC DETAIL THEN PROVIDE ONLY THAT SPECIFIC DETAIL.
                 NOTE - {note}
-                Asset Details: - {data}"""
+                Asset Details: - {data}
+                RESPONSE GUIDELINES: STRICTLY FOLLOW THIS GUIDELINE WHILE PROVIDING RESPONSE. 
+                **DO NOT APPLY BULLETS, OR NUMBERING.**
+                **Ensure line breaks (`\n`) are only applied between different attributes, NOT within values.**
+                """
             response = get_gemini_response(question,prompt)      
             final_response = final_response + '\n'+ response  
         logger.info(f"asset based response - {final_response}")
@@ -1017,7 +1021,9 @@ def format_response(response):
     response = response.replace("\n", "  \n")  
     # Fix unwanted line breaks between labels and values (Price - X, Trade Units - Y)
     response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units)\s*-\s*)\n', r'\1 ', response)
-
+    # Remove **unstructured** numbering (standalone numbers at the start of a line)
+    response = re.sub(r'^\d+\.\s*', '', response, flags=re.MULTILINE)
+    
     # Convert Markdown to HTML
     html_content = markdown.markdown(response)
     html_content = html_content.replace("*","").replace("<em>","").replace("</em>","")
