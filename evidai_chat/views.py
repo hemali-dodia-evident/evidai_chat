@@ -568,11 +568,11 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     them at support@evident.capital with the details of your query, and they’ll assist you promptly." 
                     this will cover the part of question for which information is not available"""
                     final_response = get_gemini_response(question,prm)
-                asset_found = ''
+                asset_found = last_asset
             elif promp_cat=='FAILED':
                 logger.info("Prompt Category is 'FAILED'")
                 response = search_on_internet(question)
-                asset_found = ''
+                asset_found = last_asset
                 final_response = final_response + '\n' + response   
             elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True:    
                 logger.info("Prompt Category is Personal Asset") 
@@ -726,7 +726,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     asset_found = ''
             else:
                 response = search_on_internet(question)
-                asset_found = ''
+                asset_found = last_asset
                 final_response = final_response + '\n' + response  
         if final_response == "":
             return "Sorry! I am unable understand the question. Can you provide more details so I can assist you better?", False
@@ -760,7 +760,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
     except Exception as e:
         logger.error(f"While generating answer from category based question following error occured - {str(e)}")
         final_response = "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
-        asset_found = ''
+        asset_found = last_asset
     return final_response, asset_found, specific_category
 
 
@@ -966,7 +966,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, pre
             STRICTLY REPLY IN THE ABOVE FORMAT. DO NOT ADD ANYTHING ELSE IN YOUR RESPONSE.
             Asset Names - {asset_names}"""
     asset_identified_flag = get_gemini_response(current_question,prompt)
-    print(asset_identified_flag)
+    # print(asset_identified_flag)
     promp_cat = []
     if asset_identified_flag in asset_names:
         promp_cat.append('Personal_Assets')   
@@ -984,8 +984,9 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, pre
                     Question Category: {last_ques_cat}  
                     Previous Questions: {previous_questions}  
                     Current Question: {current_question}  
+                    Relevant Topics: Name, Description, Location, Currency, Status, Structuring, Vertical/Type, Updates, Retirement Eligibility, Investment Mode, IRR (Internal Rate of Return/Rate of Return), Impacts, Manager, Company, Investment Details, Open Offers, Number of Investors, Total Invested Amount, Exit Strategy, Key Highlights, Events.  
                     Response Rules:  
-                    1. If the current question is related to any asset in the provided asset list, STRICTLY RETURN 1.  
+                    1. If the current question is related to any relevant topic in the provided list, STRICTLY RETURN 1.  
                     2. If the current question is related to the previous question category, STRICTLY RETURN 2.  
                     3. Otherwise, STRICTLY RETURN 0.  
                     DO NOT add any extra text, explanations, or formatting beyond the specified response.
@@ -993,9 +994,10 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, pre
         question_related = get_gemini_response(current_question,prompt)
         temp_last_ques_cat = last_ques_cat.split(",")
         try:
-            if int(question_related.strip())==1 and last_asset=='':
-                isRelated = True
-            elif int(question_related.strip())==1 and last_asset!='':
+            # if int(question_related.strip())==1 and last_asset=='':
+            #     isRelated = True
+            # el
+            if int(question_related.strip())==1 and last_asset!='':
                 isRelated = True
                 isAssetRelated = True     
             elif int(question_related.strip())==2:
