@@ -898,6 +898,7 @@ def get_asset_based_response(assets_identified,question,token):
                 **COMPANY DOCUMENT IS AVAILABLE: Go to 'Company Document' -> 'NDA' pop-up will appear -> Click on 'I have read and agree to the terms of this NDA.' -> Click on 'Sign'**
                 **TO DOWNLOAD COMPANY DOCUMENT: Go to 'Company Document' -> 'NDA' pop-up will appear -> Click on 'I have read and agree to the terms of this NDA.' -> Click on 'Sign' -> Click on 'Download all'
                 **ASSET "TYPE" IS EQUAL TO ASSET "VERTICAL"**
+                **MAKE SURE YOU DO NOT SHOW ANY MAIN POINT AS SUB POINT OF ANYOTHER MAIN POINT.**
                 Asset Name - Abc
                 Asset Description - this is asset's description
                 Asset Location in Country - IND
