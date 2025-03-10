@@ -981,7 +981,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, pre
             logger.error(f"Failed to check if question is related to previous question or not, following error occured - {str(e)}")
     # If question is just a greeting nothing else is asked in that question
     if 'Greetings' in promp_cat[0] and len(promp_cat)==1:
-        prompt = f"""User name is - {user_name}, reply to user in polite and positive way. Encourage for further communication. if user name is not present then skip using user's name. 'Please let me know if you have any other questions...' DO NOT FRAME ANSWER IN THIS WAY, INSTEAD ASK HOW YOU CAN HELP USER."""
+        prompt = f"""User name is - {user_name}, reply to user in polite and positive way. Encourage for further communication. if user name is not present then skip using user's name. 'Please let me know if you have any other questions...' or 'Is there anything else...' As it can be user's 1st message. DO NOT FRAME ANSWER IN THIS WAY, INSTEAD ASK HOW YOU CAN HELP USER."""
         response = get_gemini_response(current_question,prompt)
         logger.info(f"response from greetings - {response}")
         return response,'','Greetings'
