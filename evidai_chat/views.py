@@ -732,7 +732,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
             return "Sorry! I am unable understand the question. Can you provide more details so I can assist you better?", False
         prompt = """Follow these instructions exactly to ensure a structured, clear, and user-friendly response:
                     Remove all repetitive statements while preserving essential information.
-                    Maintain readability by structuring the response with appropriate line breaks (\n).                    
+                    Maintain readability by structuring the response with appropriate line breaks.                    
                     Use formatting correctly:
                     If the response contains steps, ensure each step starts on a new line for proper formatting.
                     Keep a positive and polite tone while responding.
@@ -747,6 +747,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     The response is structured well with line breaks for readability.
                     Ensure line breaks are only applied between different attributes, or point, NOT within values.
                     The tone remains friendly and professional.
+                    APPLY BOLD ONLY FOR HEADINGS, AND KEYS WHERE KEY-VALUE PAIR IS PRESENT.
                     Format the steps in a clear, structured, and readable format. 
                     Steps are properly formatted, with each step appearing on a new line.
                     No extra words, unnecessary greetings, or irrelevant details are added.
@@ -832,7 +833,7 @@ def get_specific_asset_details(asset_name,token):
         rateOfReturn = all_asset_details['rateOfReturn'] if all_asset_details['rateOfReturn'] is not None else 'Unavailable'
         exitStrategy = all_asset_details['exitStrategy'] if all_asset_details['exitStrategy'] is not None else 'Unavailable'
         try:
-            manager = all_asset_details['manager']['kyc']['firstName']+' '+all_asset_details['manager']['kyc']['lastName']
+            manager = all_asset_details['manager']['kyc']['firstName'][0]+all_asset_details['manager']['kyc']['firstName'][1:].lower()+' '+all_asset_details['manager']['kyc']['lastName'][0]+all_asset_details['manager']['kyc']['lastName'][1:].lower()
         except:
             manager = 'Not Available'
         try:
@@ -844,11 +845,12 @@ def get_specific_asset_details(asset_name,token):
         for imp in impact_details:
             impacts.append(imp['name'])
         impacts = ", ".join(impacts)
+        status = all_asset_details['status'][0].upper()+all_asset_details['status'][1:].lower()
         asset_info = f"""Asset Name - {all_asset_details['name']}
                       Asset Description - {all_asset_details['description']}
-                      Asset Location in Country - {all_asset_details['location']}
+                      Asset Location - {all_asset_details['location']}
                       Asset Currency - {all_asset_details['currency']}
-                      Asset Status - {all_asset_details['status']}
+                      Asset Status - {status}
                       Structuring - {all_asset_details['structuring']}                      
                       Asset vertical - {all_asset_details['assetVertical']}
                       Updates - Apologies, currently I am unable to provide you updates for this asset.
@@ -901,6 +903,7 @@ def get_asset_based_response(assets_identified,question,token):
                 **ASSET "TYPE" IS EQUAL TO ASSET "VERTICAL"**
                 **MAKE SURE YOU DO NOT SHOW ANY MAIN POINT AS SUB POINT OF ANYOTHER MAIN POINT.**
                 **DO NOT WRITE ANY VALUE AS "None", INSTEAD KEEP IT AS "Unavailable"**
+                **MAKE SURE IF SPECIFIC DETAILS ARE ASKED THEN SHARE ONLY AND ONLY SPECIFIC DETAILS**
                 Asset Name - Abc
                 Asset Description - this is asset's description
                 Asset Location in Country - IND
@@ -1082,10 +1085,10 @@ def format_response(response):
     response = re.sub(r'^-\s*', '', response, flags=re.MULTILINE)
 
     # Convert Markdown to HTML
-    html_content = markdown.markdown(response)
-    html_content = html_content.replace("*","").replace("<em>","").replace("</em>","").replace("","").replace("","")
+    # html_content = markdown.markdown(response)
+    # html_content = html_content.replace("*","").replace("<em>","").replace("</em>","").replace("","").replace("","")
     
-    return html_content
+    return response
 
 # Main flow
 @csrf_exempt
@@ -1125,8 +1128,8 @@ def evidAI_chat(request):
                 update_chat_title(current_question,chat_session_id)
                 
             response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_name, user_role, previous_questions, current_question, onboarding_step)
-            
-            response = format_response(response)
+            response = response.replace("\n", "  \n")  
+            # response = format_response(response)
             logger.info(f"After HTML markup from main function - {response}")
             # print("current_ques_cat- ",current_ques_cat)
             add_to_conversations(user_id, chat_session_id, current_question, response, current_asset, current_ques_cat)      
