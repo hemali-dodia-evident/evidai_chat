@@ -734,25 +734,20 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     Remove all repetitive statements while preserving essential information.
                     Maintain readability by structuring the response with appropriate line breaks (\n).                    
                     Use formatting correctly:
-                    Bold important words and headers.
-                    Avoid special characters like * for formatting.
                     If the response contains steps, ensure each step starts on a new line for proper formatting.
                     Keep a positive and polite tone while responding.
                     Never imply that the user has not provided information.
-                    Do not greet the user.
                     Response Guidelines:
                     If an answer is fully available: Provide a clear, concise response with proper structure and formatting.
                     If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable. If needed, suggest contacting support:
                     "Certain details are unavailable, but our support team would be happy to assist you. Please reach out to support@evident.capital with your query."
                     If no relevant information is available: Respond with:
                     "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
-                    If ONLY GREETING is present: Reply with positve and polite greetings and ask user how you can help.
                     Ensure:
                     The response is structured well with line breaks for readability.
-                    Ensure line breaks (`\n`) are only applied between different attributes, or point, NOT within values.
+                    Ensure line breaks are only applied between different attributes, or point, NOT within values.
                     The tone remains friendly and professional.
-                    REMOVE ANY ITALIC AND BOLD EFFECT IF GIVEN IN FORMATTING.
-                    Format the steps in a clear, structured, and readable format. Ensure that headings are bold, lists are properly formatted (numbered and bulleted where appropriate).
+                    Format the steps in a clear, structured, and readable format. 
                     Steps are properly formatted, with each step appearing on a new line.
                     No extra words, unnecessary greetings, or irrelevant details are added.
                     Do not include the full support message unless all information is unavailable.
@@ -862,13 +857,12 @@ def get_asset_based_response(assets_identified,question,token):
     try:
         for ass in assets_identified:
             data = get_specific_asset_details(ass,token)
-            note = """Ensure the response keeps the provided information intact without altering or modifying any details.
-                    If certain information is unavailable, state politelyjust say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
-                    Else, Keep information as it is. Format answer properly, if some important information is there use proper line breaks and bold it.
-                    Avoid mentioning or implying that the user has provided or not provided information or response in requested format.
-                    Do not greet the user in your response.
-                    Use proper formatting such as line breaks to enhance readability while keeping answer as it is. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
-                    Maintain a positive and polite tone throughout the response.
+            note = """Response Guidelines:
+                    If an answer is fully available: Provide a clear, concise response with proper structure and formatting.
+                    If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable. If needed, suggest contacting support:
+                    "Certain details are unavailable, but our support team would be happy to assist you. Please reach out to support@evident.capital with your query."
+                    If no relevant information is available: Respond with:
+                    "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
                     Ask user to visit for more details - "https://uat.account.v2.evident.capital/" 
                     Note: The response should be clear, concise, and user-friendly, adhering to these guidelines. Encourage to ask more queries."""
             prompt = f"""Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about.
@@ -876,9 +870,9 @@ def get_asset_based_response(assets_identified,question,token):
                 PROVIDE ALL INFORMATION TO USER, DO NOT SKIP ANY INFORMATION. IN CASE IF USER IS ASKING ABOUT ANY SPECIFIC DETAIL THEN PROVIDE ONLY THAT SPECIFIC DETAIL.
                 NOTE - {note}
                 Asset Details: - {data}
-                RESPONSE GUIDELINES: STRICTLY FOLLOW THIS GUIDELINE WHILE PROVIDING RESPONSE. 
+                RESPONSE GUIDELINES: STRICTLY FOLLOW THIS GUIDELINE WHILE PROVIDING RESPONSE. FOLLOW HTML FORMATTING AS SHOWN IN TEMPLATE ONLY.
                 **DO NOT APPLY BULLETS, OR NUMBERING.**
-                **Ensure line breaks (`\n`) are ONLY applied between different attributes, NOT within values.**
+                **Ensure line breaks are ONLY applied between different attributes, NOT within values.**
                 **DO NOT APPLY LINE BREAKS BETWEEN ATTRIBUTE AND VALUE. FOLLOW :- "Attribute:Value" FORMAT**
                 **STRUCTURE TEMPLATE TO CREATE ANSWER: STRICTLY FOLLOW THIS TEMPLATE TO ARRANGE AASSET DETAILS, IF ANY DETAILS IS UNAVAILABLE SKIP THAT TITLE IN CASE OF "Investment Details" AND "Events": **
                 **"Events:","Investment Details:" AND "Key Highlights:" HAVE SUB POINTS. MAKE SURE MAIN POINTS AND SUB POINTS ARE IN PROPER DIFFERENTIATE MANNER. DO NOT TREAT MAIN POINTS AS SUBPOINTS WHILE APPLYING ANY KIND OF LISTING OR BULLETING.**
@@ -890,6 +884,10 @@ def get_asset_based_response(assets_identified,question,token):
                 Retirement Elgibility: Yes
                 Investment Mode: Trade
                 Structuring: Note
+                Asset vertical: Venture
+                Asset Manager: Thomas
+                IRR(Internal Rate of Return/Rate of Return): 10%
+                Exit Strategy: Not available
                 Investment Details:
                         Open Offers: 2
                         Number of Investors: 10
@@ -900,14 +898,10 @@ def get_asset_based_response(assets_identified,question,token):
                         Maximum Investment Amount:500
                         Raised Amount:2000
                         Start On:10-2-2025
-                        End On:10-3-2025
-                IRR(Internal Rate of Return/Rate of Return): 10%
-                Exit Strategy: Not available
+                        End On:10-3-2025                
                 Key Highlights:
                         asset works good
-                        progress happend with 10%
-                Asset vertical: Venture
-                Asset Manager: Thomas
+                        progress happend with 10%                
                 Events:
                         Event Title: Onboarding Introduction
                         Content: hello how are you
@@ -1061,7 +1055,7 @@ def format_response(response):
 
     # Convert Markdown to HTML
     html_content = markdown.markdown(response)
-    html_content = html_content.replace("*","").replace("<em>","").replace("</em>","").replace("<strong>","").replace("</strong>","")
+    html_content = html_content.replace("*","").replace("<em>","").replace("</em>","").replace("","").replace("","")
     
     return html_content
 
@@ -1104,8 +1098,8 @@ def evidAI_chat(request):
                 
             response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_name, user_role, previous_questions, current_question, onboarding_step)
             
-            # response = format_response(response)
-            # logger.info(f"After HTML markup from main function - {response}")
+            response = format_response(response)
+            logger.info(f"After HTML markup from main function - {response}")
             # print("current_ques_cat- ",current_ques_cat)
             add_to_conversations(user_id, chat_session_id, current_question, response, current_asset, current_ques_cat)      
             
