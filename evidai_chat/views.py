@@ -839,6 +839,7 @@ def get_specific_asset_details(asset_name,token):
                       'Asset Description:':all_asset_details['description'],
                       'Asset Location in Country:':all_asset_details['location'],
                       'Asset Status:':all_asset_details['currency'],
+                      'Structuring:':all_asset_details['structuring'],
                       'Retirement Elgibility:':retirementEligible,
                       'Investment Mode:':all_asset_details['investmentMode'],
                       'Investment Details:':investment_details,
@@ -888,6 +889,7 @@ def get_asset_based_response(assets_identified,question,token):
                 Asset Status: Completed
                 Retirement Elgibility: Yes
                 Investment Mode: Trade
+                Structuring: Note
                 Investment Details:
                         Open Offers: 2
                         Number of Investors: 10
