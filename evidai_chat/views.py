@@ -808,7 +808,7 @@ def get_specific_asset_details(asset_name,token):
             
         elif all_asset_details['investmentMode']=='Trading':
             tardeDetails = all_asset_details['investmentDetails']
-            investment_details = f"""Open offers:{tardeDetails['openOffers']}\nNumber of Investors:{tardeDetails['numberOfInvestors']}\nTotal invested amount:{tardeDetails['totalInvested']}\n"""
+            investment_details = f"""Open Offers:{tardeDetails['openOffers']}\nNumber of Investors:{tardeDetails['numberOfInvestors']}\nTotal invested amount:{tardeDetails['totalInvested']}\n"""
             
         keyHighlights = ""
         knum = 1
@@ -1052,9 +1052,9 @@ def format_response(response):
     # Convert new lines for Markdown-friendly format
     response = response.replace("\n", "  \n")  
     # Fix unwanted line breaks between labels and values (Price - X, Trade Units - Y)
-    response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units|Raised Amount)\s*-\s*)\n', r'\1 ', response)
+    response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units|Raised Amount|Number of Investors|Open Offers|Total invested amount|IRR)\s*-\s*)\n', r'\1 ', response)
     # Remove **unstructured** numbering (standalone numbers at the start of a line)
-    response = re.sub(r'^\d+\.\s*', '', response, flags=re.MULTILINE)
+    # response = re.sub(r'^\d+\.\s*', '', response, flags=re.MULTILINE)
     response = re.sub(r'^-\s*', '', response, flags=re.MULTILINE)
 
     # Convert Markdown to HTML
