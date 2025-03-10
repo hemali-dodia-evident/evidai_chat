@@ -697,15 +697,15 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                          ==========================
                     - FOR COMMITMENTS, STRICTLY FOLLOW THIS:
                         **Commitment Details:-**
-                         Asset Name: asjhs oosidos,
-                         Commitment Amount: 2000,
-                         Allotted Units: 10,
-                         Commitment Status: Completed 
+                         Asset Name - asjhs oosidos,
+                         Commitment Amount - 2000,
+                         Allotted Units - 10,
+                         Commitment Status - Completed 
                          ==========================
-                         Asset Name: asjhs,
-                         Commitment Amount: 500,
-                         Allotted Units: 330,
-                         Commitment Status: Completed
+                         Asset Name - asjhs,
+                         Commitment Amount - 500,
+                         Allotted Units - 330,
+                         Commitment Status - Completed
 
                     ### **IMPORTANT RULES:**  
                      **STRICTLY FOLLOW the RESPONSE GUIDELINES EXACTLY AS PROVIDED.** 
@@ -714,7 +714,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                      **DO NOT GREET the user in the response.**  
                      **KEEP the tone positive, polite, and user-friendly.**  
                      **DO NOT mention or imply that the user has not provided information.**  
-                     **Ensure line breaks (`\n`) are only applied between different attributes, NOT within values.**  
+                     **Ensure line breaks are only applied between different attributes, NOT within values.**  
 
                     FAILURE TO FOLLOW THIS RESPONSE FORMAT IS NOT ACCEPTABLE. STRICTLY ADHERE TO THE GUIDELINES."""
                     response = get_gemini_response(question,prompt)
@@ -876,38 +876,39 @@ def get_asset_based_response(assets_identified,question,token):
                 **DO NOT APPLY LINE BREAKS BETWEEN ATTRIBUTE AND VALUE. FOLLOW :- "Attribute:Value" FORMAT**
                 **STRUCTURE TEMPLATE TO CREATE ANSWER: STRICTLY FOLLOW THIS TEMPLATE TO ARRANGE AASSET DETAILS, IF ANY DETAILS IS UNAVAILABLE SKIP THAT TITLE IN CASE OF "Investment Details" AND "Events": **
                 **"Events:","Investment Details:" AND "Key Highlights:" HAVE SUB POINTS. MAKE SURE MAIN POINTS AND SUB POINTS ARE IN PROPER DIFFERENTIATE MANNER. DO NOT TREAT MAIN POINTS AS SUBPOINTS WHILE APPLYING ANY KIND OF LISTING OR BULLETING.**
+                **IF USER IS ASKING ABOUT ANY SPECIFIC DETAILS LIKE "MANAGER NAME", "EVENTS", "IRR", ETC. THEN PROVIDE ONLY THAT SPECIFIC INFORMATION. DO NOT PROVIDE ALL INFORMATION.
                 
-                Asset Name: Abc
-                Asset Description: this is asset's description
-                Asset Location in Country: IND
-                Asset Status: Completed
-                Retirement Elgibility: Yes
-                Investment Mode: Trade
-                Structuring: Note
-                Asset vertical: Venture
-                Asset Manager: Thomas
-                IRR(Internal Rate of Return/Rate of Return): 10%
-                Exit Strategy: Not available
+                Asset Name - Abc
+                Asset Description - this is asset's description
+                Asset Location in Country - IND
+                Asset Status - Completed
+                Retirement Elgibility - Yes
+                Investment Mode - Trade
+                Structuring - Note
+                Asset vertical - Venture
+                Asset Manager - Thomas
+                IRR(Internal Rate of Return/Rate of Return) - 10%
+                Exit Strategy - Not available
                 Investment Details:
-                        Open Offers: 2
-                        Number of Investors: 10
-                        Total invested amount: 50000
-                        Commitment Status: Completed
-                        Target Amount: 5000
-                        Minimum Investment Amount:10
-                        Maximum Investment Amount:500
-                        Raised Amount:2000
-                        Start On:10-2-2025
-                        End On:10-3-2025                
+                        Open Offers - 2
+                        Number of Investors - 10
+                        Total invested amount - 50000
+                        Commitment Status - Completed
+                        Target Amount - 5000
+                        Minimum Investment Amount - 10
+                        Maximum Investment Amount - 500
+                        Raised Amount - 2000
+                        Start On - 10-2-2025
+                        End On - 10-3-2025                
                 Key Highlights:
                         asset works good
                         progress happend with 10%                
                 Events:
-                        Event Title: Onboarding Introduction
-                        Content: hello how are you
-                        Link to Join Event: https://samplelink.com
-                        Start Date: 03-03-2025
-                        End Date: 05-03-2025
+                        Event Title - Onboarding Introduction
+                        Content - hello how are you
+                        Link to Join Event - https://samplelink.com
+                        Start Date - 03-03-2025
+                        End Date - 05-03-2025
                 """
             response = get_gemini_response(question,prompt)      
             final_response = final_response + '\n'+ response  
