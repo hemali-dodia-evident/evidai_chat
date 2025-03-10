@@ -792,18 +792,18 @@ def get_specific_asset_details(asset_name,token):
             commitmentStatus = commitmentDetails['status'].replace("_"," ") 
             startDate = commitmentDetails['startAt'].split("T")[0] if commitmentDetails['startAt'] is not None or commitmentDetails['startAt'] !='' else ''
             endDate = commitmentDetails['endAt'].split("T")[0] if commitmentDetails['endAt'] is not None or commitmentDetails['endAt'] !='' else ''
-            investment_details = f"""Commitment Status: {commitmentStatus}\n
-                                    Target Amount:{str(commitmentDetails['targetAmount'])}\n
-                                    Minimum Investment Amount:{str(commitmentDetails['minimumAmount'])}\n
-                                    Maximum Investment Amounr:{str(commitmentDetails['maximumAmount'])}\n
-                                    Raised Amount:{str(commitmentDetails['raisedAmount'])}\n
-                                    Start On:{startDate}\n
-                                    End On:{endDate}
+            investment_details = f"""Commitment Status - {commitmentStatus}\n
+                                    Target Amount - {str(commitmentDetails['targetAmount'])}\n
+                                    Minimum Investment Amount - {str(commitmentDetails['minimumAmount'])}\n
+                                    Maximum Investment Amounr - {str(commitmentDetails['maximumAmount'])}\n
+                                    Raised Amount - {str(commitmentDetails['raisedAmount'])}\n
+                                    Start On - {startDate}\n
+                                    End On - {endDate}
                                     """
             
         elif all_asset_details['investmentMode']=='Trading':
             tardeDetails = all_asset_details['investmentDetails']
-            investment_details = f"""Open Offers:{tardeDetails['openOffers']}\nNumber of Investors:{tardeDetails['numberOfInvestors']}\nTotal invested amount:{tardeDetails['totalInvested']}\n"""
+            investment_details = f"""Open Offers - {tardeDetails['openOffers']}\nNumber of Investors - {tardeDetails['numberOfInvestors']}\nTotal invested amount - {tardeDetails['totalInvested']}\n"""
             
         keyHighlights = ""
         knum = 1
@@ -827,24 +827,26 @@ def get_specific_asset_details(asset_name,token):
         if data !=[]:
             evnNum = 1
             for evn in data:
-                event_details = event_details+f"""{evnNum}. Event Title:{evn['title']}\nContent:{evn['content']}\nLink to Join Event:{evn['zoomLink']}\nStart Date:{evn['startDate']}\nEnd Date:{evn['endDate']}"""
+                event_details = event_details+f"""{evnNum}. Event Title - {evn['title']}\nContent - {evn['content']}\nLink to Join Event - {evn['zoomLink']}\nStart Date - {evn['startDate']}\nEnd Date - {evn['endDate']}"""
         
-
-        asset_info = {'Asset Name:':all_asset_details['name'],
-                      'Asset Description:':all_asset_details['description'],
-                      'Asset Location in Country:':all_asset_details['location'],
-                      'Asset Status:':all_asset_details['currency'],
-                      'Structuring:':all_asset_details['structuring'],
-                      'Retirement Elgibility:':retirementEligible,
-                      'Investment Mode:':all_asset_details['investmentMode'],
-                      'Investment Details:':investment_details,
-                      'IRR(Internal Rate of Return/Rate of Return):':all_asset_details['rateOfReturn'] if all_asset_details['rateOfReturn'] is not None else 'Unavailable',
-                      'Exit Strategy:':all_asset_details['exitStrategy'] if all_asset_details['exitStrategy'] is not None else 'Unavailable',
-                      'Key Highlights:':keyHighlights,
-                      'Asset vertical:':all_asset_details['assetVertical'],
-                      'Asset Manager:':all_asset_details['manager']['kyc']['firstName']+' '+all_asset_details['manager']['kyc']['lastName'],
-                      'Events:':event_details
-                      }
+        rateOfReturn = all_asset_details['rateOfReturn'] if all_asset_details['rateOfReturn'] is not None else 'Unavailable'
+        exitStrategy = all_asset_details['exitStrategy'] if all_asset_details['exitStrategy'] is not None else 'Unavailable'
+        manager = all_asset_details['manager']['kyc']['firstName']+' '+all_asset_details['manager']['kyc']['lastName']
+        asset_info = f"""Asset Name - {all_asset_details['name']}
+                      Asset Description - {all_asset_details['description']}
+                      Asset Location in Country - {all_asset_details['location']}
+                      Asset Status - {all_asset_details['currency']}
+                      Structuring - {all_asset_details['structuring']}                      
+                      Asset vertical - {all_asset_details['assetVertical']}
+                      Retirement Elgibility - {retirementEligible}
+                      Investment Mode - {all_asset_details['investmentMode']}                      
+                      IRR(Internal Rate of Return/Rate of Return) - {rateOfReturn}
+                      Asset Manager - {manager}
+                      Investment Details - {investment_details}
+                      Exit Strategy - {exitStrategy}
+                      Key Highlights - {keyHighlights}                      
+                      Events - {event_details}
+                      """
         return asset_info
     except Exception as e:
         logger.error(f"failed to get asset details - {str(e)}")
