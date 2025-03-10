@@ -823,7 +823,7 @@ def get_specific_asset_details(asset_name,token):
         response = requests.request("POST", url, headers=headers, data=payload)
         data = response.json()
         data = data['data']
-        event_details = 'No events are present'
+        event_details = 'No ongoing events.'
         if data !=[]:
             evnNum = 1
             for evn in data:
@@ -847,7 +847,8 @@ def get_specific_asset_details(asset_name,token):
         asset_info = f"""Asset Name - {all_asset_details['name']}
                       Asset Description - {all_asset_details['description']}
                       Asset Location in Country - {all_asset_details['location']}
-                      Asset Status - {all_asset_details['currency']}
+                      Asset Currency - {all_asset_details['currency']}
+                      Asset Status - {all_asset_details['status']}
                       Structuring - {all_asset_details['structuring']}                      
                       Asset vertical - {all_asset_details['assetVertical']}
                       Updates - Apologies, currently I am unable to provide you updates for this asset.
