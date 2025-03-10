@@ -831,8 +831,14 @@ def get_specific_asset_details(asset_name,token):
         
         rateOfReturn = all_asset_details['rateOfReturn'] if all_asset_details['rateOfReturn'] is not None else 'Unavailable'
         exitStrategy = all_asset_details['exitStrategy'] if all_asset_details['exitStrategy'] is not None else 'Unavailable'
-        manager = all_asset_details['manager']['kyc']['firstName']+' '+all_asset_details['manager']['kyc']['lastName']
-        company = all_asset_details['manager']['company']['companyName']
+        try:
+            manager = all_asset_details['manager']['kyc']['firstName']+' '+all_asset_details['manager']['kyc']['lastName']
+        except:
+            manager = 'Not Available'
+        try:
+            company = all_asset_details['manager']['company']['companyName']
+        except:
+            company = "Not Available"
         impacts = []
         impact_details = all_asset_details['impacts']
         for imp in impact_details:
