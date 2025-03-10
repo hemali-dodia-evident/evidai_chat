@@ -1129,6 +1129,9 @@ def evidAI_chat(request):
                 
             response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_name, user_role, previous_questions, current_question, onboarding_step)
             response = response.replace("\n", "  \n")  
+            # response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units|Raised Amount|Number of Investors|Open Offers|Total Invested Amount|IRR)\s*-\s*)\n', r'\1 ', response)
+            # response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units|Raised Amount|Number of Investors|Open Offers|Total Invested Amount|IRR)\s*:\s*)\n', r'\1 ', response)
+    
             # response = format_response(response)
             logger.info(f"After HTML markup from main function - {response}")
             # print("current_ques_cat- ",current_ques_cat)
