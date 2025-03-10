@@ -1065,8 +1065,8 @@ def format_response(response):
     # Convert new lines for Markdown-friendly format
     response = response.replace("\n", "  \n")  
     # Fix unwanted line breaks between labels and values (Price - X, Trade Units - Y)
-    response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units|Raised Amount|Number of Investors|Open Offers|Total invested amount|IRR)\s*-\s*)\n', r'\1 ', response)
-    response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units|Raised Amount|Number of Investors|Open Offers|Total invested amount|IRR)\s*:\s*)\n', r'\1 ', response)
+    response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units|Raised Amount|Number of Investors|Open Offers|Total Invested Amount|IRR)\s*-\s*)\n', r'\1 ', response)
+    response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units|Raised Amount|Number of Investors|Open Offers|Total Invested Amount|IRR)\s*:\s*)\n', r'\1 ', response)
     
     # Remove **unstructured** numbering (standalone numbers at the start of a line)
     # response = re.sub(r'^\d+\.\s*', '', response, flags=re.MULTILINE)
