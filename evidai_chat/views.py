@@ -832,16 +832,25 @@ def get_specific_asset_details(asset_name,token):
         rateOfReturn = all_asset_details['rateOfReturn'] if all_asset_details['rateOfReturn'] is not None else 'Unavailable'
         exitStrategy = all_asset_details['exitStrategy'] if all_asset_details['exitStrategy'] is not None else 'Unavailable'
         manager = all_asset_details['manager']['kyc']['firstName']+' '+all_asset_details['manager']['kyc']['lastName']
+        company = all_asset_details['manager']['company']['companyName']
+        impacts = []
+        impact_details = all_asset_details['impacts']
+        for imp in impact_details:
+            impacts.append(imp['name'])
+        impacts = ", ".join(impacts)
         asset_info = f"""Asset Name - {all_asset_details['name']}
                       Asset Description - {all_asset_details['description']}
                       Asset Location in Country - {all_asset_details['location']}
                       Asset Status - {all_asset_details['currency']}
                       Structuring - {all_asset_details['structuring']}                      
                       Asset vertical - {all_asset_details['assetVertical']}
+                      Updates - Apologies, currently I am unable to provide you updates for this asset.
                       Retirement Elgibility - {retirementEligible}
                       Investment Mode - {all_asset_details['investmentMode']}                      
                       IRR(Internal Rate of Return/Rate of Return) - {rateOfReturn}
+                      Impacts - {impacts}
                       Asset Manager - {manager}
+                      Comapny Name - {company}
                       Investment Details - {investment_details}
                       Exit Strategy - {exitStrategy}
                       Key Highlights - {keyHighlights}                      
@@ -878,8 +887,8 @@ def get_asset_based_response(assets_identified,question,token):
                 **DO NOT APPLY LINE BREAKS BETWEEN ATTRIBUTE AND VALUE. FOLLOW :- "Attribute:Value" FORMAT**
                 **STRUCTURE TEMPLATE TO CREATE ANSWER: STRICTLY FOLLOW THIS TEMPLATE TO ARRANGE AASSET DETAILS, IF ANY DETAILS IS UNAVAILABLE SKIP THAT TITLE IN CASE OF "Investment Details" AND "Events": **
                 **"Events:","Investment Details:" AND "Key Highlights:" HAVE SUB POINTS. MAKE SURE MAIN POINTS AND SUB POINTS ARE IN PROPER DIFFERENTIATE MANNER. DO NOT TREAT MAIN POINTS AS SUBPOINTS WHILE APPLYING ANY KIND OF LISTING OR BULLETING.**
-                **IF USER IS ASKING ABOUT ANY SPECIFIC DETAILS LIKE "MANAGER NAME", "EVENTS", "IRR", ETC. THEN PROVIDE ONLY THAT SPECIFIC INFORMATION. DO NOT PROVIDE ALL INFORMATION.
-                
+                **IF USER IS ASKING ABOUT ANY SPECIFIC DETAILS LIKE "MANAGER NAME", "EVENTS", "IRR", OR ANY OTHER KEY DETAILS PRESENT IN STRUCTURE. THEN PROVIDE ONLY THAT SPECIFIC INFORMATION. DO NOT PROVIDE ALL INFORMATION.
+                **IF USER IS ASKING ABOUT INVESTMENT, COMMITMENT PROCESS OR STEPS IN ASSET THEN RETURN ONLY 'Apologies, currently I am not able to assit you with step by step details but You can start investment by clicking on "Invest" tab.'
                 Asset Name - Abc
                 Asset Description - this is asset's description
                 Asset Location in Country - IND
@@ -889,8 +898,10 @@ def get_asset_based_response(assets_identified,question,token):
                 Structuring - Note
                 Asset vertical - Venture
                 Asset Manager - Thomas
+                Comapny Name - Evident LLP
                 IRR(Internal Rate of Return/Rate of Return) - 10%
                 Exit Strategy - Not available
+                Impacts: Social, Planet saving
                 Investment Details:
                         Open Offers - 2
                         Number of Investors - 10
