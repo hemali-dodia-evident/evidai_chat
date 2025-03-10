@@ -889,6 +889,9 @@ def get_asset_based_response(assets_identified,question,token):
                 **"Events:","Investment Details:" AND "Key Highlights:" HAVE SUB POINTS. MAKE SURE MAIN POINTS AND SUB POINTS ARE IN PROPER DIFFERENTIATE MANNER. DO NOT TREAT MAIN POINTS AS SUBPOINTS WHILE APPLYING ANY KIND OF LISTING OR BULLETING.**
                 **IF USER IS ASKING ABOUT ANY SPECIFIC DETAILS LIKE "MANAGER NAME", "EVENTS", "IRR", OR ANY OTHER KEY DETAILS PRESENT IN STRUCTURE. THEN PROVIDE ONLY THAT SPECIFIC INFORMATION. DO NOT PROVIDE ALL INFORMATION.
                 **IF USER IS ASKING ABOUT INVESTMENT, COMMITMENT PROCESS OR STEPS IN ASSET THEN RETURN ONLY 'Apologies, currently I am not able to assit you with step by step details but You can start investment by clicking on "Invest" tab.'
+                **COMPANY DOCUMENT IS AVAILABLE: Go to 'Company Document' -> 'NDA' pop-up will appear -> Click on 'I have read and agree to the terms of this NDA.' -> Click on 'Sign'**
+                **TO DOWNLOAD COMPANY DOCUMENT: Go to 'Company Document' -> 'NDA' pop-up will appear -> Click on 'I have read and agree to the terms of this NDA.' -> Click on 'Sign' -> Click on 'Download all'
+                **ASSET "TYPE" IS EQUAL TO ASSET "VERTICAL"**
                 Asset Name - Abc
                 Asset Description - this is asset's description
                 Asset Location in Country - IND
@@ -896,7 +899,7 @@ def get_asset_based_response(assets_identified,question,token):
                 Retirement Elgibility - Yes
                 Investment Mode - Trade
                 Structuring - Note
-                Asset vertical - Venture
+                Asset vertical/Type - Venture
                 Asset Manager - Thomas
                 Comapny Name - Evident LLP
                 IRR(Internal Rate of Return/Rate of Return) - 10%
