@@ -520,12 +520,10 @@ def safe_value(value):
 # Check category of question and then based on category generate response
 # IP Count:10, OP Count:3
 def category_based_question(current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_asset,last_ques_cat,current_asset):
-    # logger.info(f"In general cat based area data - {(current_question,previous_questions,promp_cat,token,user_id,onboarding_step,isRelated,isAssetRelated)}")
-    print("current_asset - ",current_asset)
-    try:
-        question = current_question
-        final_response = ""
-        asset_found = ''
+    question = current_question
+    final_response = ""
+    asset_found = current_asset
+    try:        
         promp_cat_new = ",".join(promp_cat)
         specific_category = promp_cat_new.replace("_",' ').split(',')
         logger.info(f"Categories identified by bot - {specific_category}")
@@ -568,11 +566,11 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     them at support@evident.capital with the details of your query, and they’ll assist you promptly." 
                     this will cover the part of question for which information is not available"""
                     final_response = get_gemini_response(question,prm)
-                asset_found = last_asset
+                # asset_found = last_asset
             elif promp_cat=='FAILED':
                 logger.info("Prompt Category is 'FAILED'")
                 response = search_on_internet(question)
-                asset_found = last_asset
+                # asset_found = last_asset
                 final_response = final_response + '\n' + response   
             elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True:    
                 logger.info("Prompt Category is Personal Asset") 
@@ -649,12 +647,11 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     for asset in all_assets_names:
                         if asset in asset_response:
                             assets_identified_new.append(asset)
-                    assets_identified = assets_identified_new#asset_response.strip().split(",")
+                    assets_identified = assets_identified_new
                 logger.info(f"assets_identified - {assets_identified}")
                 if len(assets_identified)>0 and personalAssets==False:
                     asset_found = ",".join(assets_identified)
                     response = get_asset_based_response(assets_identified,question,token)
-                    # logger.info(f"get_asset_based_response - Response generated for assets:{assets_identified} which are from marketplace - {response}")
                     final_response = final_response + '\n' + response  
                 elif len(assets_identified)>0 or personalAssets==True:
                     asset_found = ",".join(assets_identified)
@@ -723,10 +720,10 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                 else:
                     response = search_on_internet(question)
                     final_response = final_response + '\n' + response  
-                    asset_found = ''
+                    # asset_found = current_asset
             else:
                 response = search_on_internet(question)
-                asset_found = last_asset
+                # asset_found = last_asset
                 final_response = final_response + '\n' + response  
         if final_response == "":
             return "Sorry! I am unable understand the question. Can you provide more details so I can assist you better?", False
@@ -756,11 +753,11 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
         if personalAssets==False:
             final_response = get_gemini_response(final_response,prompt)
 
-        logger.info(f"Final Response - {final_response}")
+        # logger.info(f"Final Response - {final_response}")
     except Exception as e:
         logger.error(f"While generating answer from category based question following error occured - {str(e)}")
         final_response = "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
-        asset_found = last_asset
+        
     return final_response, asset_found, specific_category
 
 
@@ -780,6 +777,7 @@ def get_specific_asset_details(asset_name,token):
         response = requests.request("POST", url, headers=headers, data=payload)
         data = response.json()
         all_asset_details = data['data'][0]
+        # print(data)
         
         retirementEligible = 'Not Available'
         if all_asset_details['retirementEligible'] == False:
@@ -824,6 +822,7 @@ def get_specific_asset_details(asset_name,token):
         response = requests.request("POST", url, headers=headers, data=payload)
         data = response.json()
         data = data['data']
+        # print(data)
         event_details = 'No ongoing events.'
         if data !=[]:
             evnNum = 1
@@ -870,6 +869,7 @@ def get_specific_asset_details(asset_name,token):
         logger.error(f"failed to get asset details - {str(e)}")
         return "No information found"
 
+# get_specific_asset_details('openai','NTMxNA.0J8PafBUHnv1XpcNroCgskuRflkB_dqjBLzokolgxYSwvIJ9Un8iOgnKm4dB')
 
 # Generate response based on provided asset specific detail
 def get_asset_based_response(assets_identified,question,token):
@@ -976,6 +976,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, pre
         promp_cat = get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
         promp_cat = promp_cat.split(",")
         promp_cat = [p.strip() for p in promp_cat] 
+        current_asset = last_asset
     
     # Check if question is in context of current question or not if this is not fresh conversation
     if len(previous_questions)>=1:        
@@ -984,7 +985,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, pre
                     Question Category: {last_ques_cat}  
                     Previous Questions: {previous_questions}  
                     Current Question: {current_question}  
-                    Relevant Topics: Name, Description, Location, Currency, Status, Structuring, Vertical/Type, Updates, Retirement Eligibility, Investment Mode, IRR (Internal Rate of Return/Rate of Return), Impacts, Manager, Company, Investment Details, Open Offers, Number of Investors, Total Invested Amount, Exit Strategy, Key Highlights, Events.  
+                    Relevant Topics to Asset: Name, Description, Location, Currency, Status, Structuring, Vertical/Type, Updates, Retirement Eligibility, Investment Mode, IRR (Internal Rate of Return/Rate of Return), Impacts, Manager, Company, Investment Details, Open Offers, Number of Investors, Total Invested Amount, Exit Strategy, Key Highlights, Events.  
                     Response Rules:  
                     1. If the current question is related to any relevant topic in the provided list, STRICTLY RETURN 1.  
                     2. If the current question is related to the previous question category, STRICTLY RETURN 2.  
@@ -994,10 +995,9 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, pre
         question_related = get_gemini_response(current_question,prompt)
         temp_last_ques_cat = last_ques_cat.split(",")
         try:
-            # if int(question_related.strip())==1 and last_asset=='':
-            #     isRelated = True
-            # el
-            if int(question_related.strip())==1 and last_asset!='':
+            if int(question_related.strip())==1 and last_asset=='':
+                isRelated = True
+            elif int(question_related.strip())==1 and last_asset!='':
                 isRelated = True
                 isAssetRelated = True     
             elif int(question_related.strip())==2:
