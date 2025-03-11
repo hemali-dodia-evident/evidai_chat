@@ -987,7 +987,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, pre
                     Current Question: {current_question}  
                     Relevant Topics to Asset: Name, Description, Location, Currency, Status, Structuring, Vertical/Type, Updates, Retirement Eligibility, Investment Mode, IRR (Internal Rate of Return/Rate of Return), Impacts, Manager, Company, Investment Details, Open Offers, Number of Investors, Total Invested Amount, Exit Strategy, Key Highlights, Events.  
                     Response Rules:  
-                    1. If the current question is related to any relevant topic in the provided list, STRICTLY RETURN 1.  
+                    1. If the current question is related to any relevant topic in the provided list(CONSIDER ALL KIND OF SYNONYMS CAN BE USED FOR ABOVE TOPICS OR CAN ASKED IN VARIOUS FORM: E.g. Number of Investors is equivalent to Total Investors or Count of Inverstors), STRICTLY RETURN 1.  
                     2. If the current question is related to the previous question category, STRICTLY RETURN 2.  
                     3. Otherwise, STRICTLY RETURN 0.  
                     DO NOT add any extra text, explanations, or formatting beyond the specified response.
