@@ -519,20 +519,18 @@ def safe_value(value):
 
 # Check category of question and then based on category generate response
 # IP Count:10, OP Count:3
-def category_based_question(current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_asset,last_ques_cat,current_asset):
+def category_based_question(current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset):
     question = current_question
     final_response = ""
     asset_found = current_asset
     try:        
         promp_cat_new = ",".join(promp_cat)
         specific_category = promp_cat_new.replace("_",' ').split(',')
-        logger.info(f"Categories identified by bot - {specific_category}")
         assets_identified = ""
-        personalAssets = False 
+        personalAssets = isPersonalAsset 
         for promp_cat in specific_category:   
             logger.info(f"Getting answer for category - {promp_cat}")    
-            if (promp_cat!='FAILED' and promp_cat !='Personal Assets'): #or (isRelated==True and (isAssetRelated==False and last_asset=='')):
-                # logger.info("General category based question")
+            if (promp_cat!='FAILED' and promp_cat !='Personal Assets'): 
                 try:
                     categories = last_ques_cat.split(",")
                     categories.append(promp_cat)
@@ -566,95 +564,16 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     them at support@evident.capital with the details of your query, and they’ll assist you promptly." 
                     this will cover the part of question for which information is not available"""
                     final_response = get_gemini_response(question,prm)
-                # asset_found = last_asset
             elif promp_cat=='FAILED':
                 logger.info("Prompt Category is 'FAILED'")
                 response = search_on_internet(question)
-                # asset_found = last_asset
                 final_response = final_response + '\n' + response   
-            elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True:    
+            elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True or personalAssets==True:    
                 logger.info("Prompt Category is Personal Asset") 
-                         
-                all_assets_names = get_asset_list()
-                all_assets_names = list(all_assets_names)
-                # print("all_assets_names - ",all_assets_names)
-                prompt = f"""Follow these instructions exactly:  
-                            - If the question is about assets owned, personal, or invested by the user, committed by the user, or if the user asks about his holdings, commitments, or trades, return only 1 .  
-                            - If the question asks about a  specific asset, return  only  the asset name from the list below (if multiple, separate with commas ",").  
-                            - If the question is related to a  previously mentioned asset, return only that asset name (or multiple if applicable).  
-                            - If the question asks about  all assets  in general, return only 2 .                             
-
-                            Asset Name Matching Priority:   
-                            - If you  identify an exact asset name  from the list, return that exact value.  
-                            - If you find a  similar  asset name that the user might be referring to (considering typos, misspellings, or approximate context), return the closest matching asset name from the list.  
-                            - Treat  "&" and "and"  as equivalent when matching asset names.  
-                            -  If the user has not explicitly mentioned an asset name but is referring to a previously mentioned one, return `{last_asset}`.   
-                            -  If the question explicitly asks about an asset (like "Who is the manager of XYZ?"), RETURN only the ASSET NAME and do not classify this as a general investment query.   
-
-                            Contextual Asset Matching:   
-                             Asset Names: {all_assets_names} 
-                             Previously Mentioned Assets: {last_asset}
-
-                            Key Details That Can Be Retrieved:   
-                            If the user asks about  any  of the following details for an asset, return  only  the asset name:  
-                            -  General Information : Asset Name, Description, Location, Currency, Asset Code, Investment Mode, Structuring Type, Asset Vertical, Status, Status Tag, Visibility.  
-                            -  Investment Details : Target Amount, Minimum Investment Amount, Raised Amount, Investment Start Date, Investment End Date, Open Offers, Number of Investors, Total Invested Amount.  
-                            -  Exit & Performance Details : Rate of Return, Exit Strategy, Latest Ticker, Previous Ticker.  
-                            -  Manager Information : Manager Name, Manager Email, Manager Nickname, Manager Avatar, Managing Company Name, Managing Company Logo, Managing Company Website.  
-
-                            - For all  other unrelated questions , return only  0 .  
-                            
-                            Strict Response Examples:   
-                            Q: "What is the commitment status of my assets?"  
-                            A: 1  
-                            Q: "What are my holdings?" 
-                            A: 1
-                            Q: "What is the minimum investment amount for Keith Haring?"  
-                            A: Keith Haring - Untitled
-                            Q: "What are highlights of Mumbai?"  
-                            A: 0
-                            Q: "What is the minimum investment amount for OpenAI and Keith Haring?"  
-                            A: Keith Haring - Untitled, OpenAI - Co-Investment
-                            Q: "Provide me list of all assets."  
-                            A: 2
-                            Q: "What is the expected return for the asset I just asked about?" (Assuming the last asset was OpenAI - Co-Investment)  
-                            A: OpenAI - Co-Investment
-                            Q: "Who is the manager for Keith Haring - Untitled?"  
-                            A: Keith Haring - Untitled
-                            Q: "Tell me the minimum investment amount for this" (If Previously Mentioned Asset is Keith Haring - Untitled)  
-                            A: Keith Haring - Untitled
-                            Q: "Who is the manager of dnd small cap funds?"  
-                            A: DND Small Cap Funds
-                        """
-
-                asset_response = get_gemini_response(current_question,prompt)
-                logger.info(f"asset_response - {asset_response}")
-                try:
-                    if int(asset_response.strip())==1:
-                        assets_identified = users_assets(token)
-                        personalAssets = True
-                    elif int(asset_response.strip())==2:
-                        assets_identified = all_assets_names[:3]
-                    elif int(asset_response.strip())==0:
-                        assets_identified = ''
-                        assets_identified_new = []
-                        for asset in all_assets_names:
-                            if asset in asset_response:
-                                assets_identified_new.append(asset)
-                        assets_identified = assets_identified_new
-                except:
-                    assets_identified_new = []
-                    for asset in all_assets_names:
-                        if asset in asset_response:
-                            assets_identified_new.append(asset)
-                    assets_identified = assets_identified_new
-                logger.info(f"assets_identified - {assets_identified}")
-                if len(assets_identified)>0 and personalAssets==False:
-                    asset_found = ",".join(assets_identified)
-                    response = get_asset_based_response(assets_identified,question,token)
-                    final_response = final_response + '\n' + response  
-                elif len(assets_identified)>0 or personalAssets==True:
-                    asset_found = ",".join(assets_identified)
+                if personalAssets==True:
+                    idx = specific_category.index(promp_cat)
+                    specific_category[idx] = 'Owned Assets'
+                    assets_identified = users_assets(token)                    
                     prompt = f"""Below are asset details in which user has invested. 
                     Understand user's question carefully and provide answer using below mentioned details. 
                     Answer should be clear, and in positive and polite tone. Make sure answer is readable. 
@@ -715,18 +634,19 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
 
                     FAILURE TO FOLLOW THIS RESPONSE FORMAT IS NOT ACCEPTABLE. STRICTLY ADHERE TO THE GUIDELINES."""
                     response = get_gemini_response(question,prompt)
-                    final_response = final_response + '\n' + response                    
-                    logger.info(f"Response generated for assets:{assets_identified} in which user has invested - {response}")
+                    final_response = final_response + '\n' + response   
+                    personalAssets = False                
                 else:
-                    response = search_on_internet(question)
+                    assets_identified = current_asset.split(",")
+                    response = get_asset_based_response(assets_identified,question,token)
                     final_response = final_response + '\n' + response  
-                    # asset_found = current_asset
+
+                asset_found = ",".join(assets_identified)                 
             else:
                 response = search_on_internet(question)
-                # asset_found = last_asset
                 final_response = final_response + '\n' + response  
         if final_response == "":
-            return "Sorry! I am unable understand the question. Can you provide more details so I can assist you better?", False
+            final_response = "Sorry! I am unable understand the question. Can you provide more details so I can assist you better?"
         prompt = """Follow these instructions exactly to ensure a structured, clear, and user-friendly response:
                     Remove all repetitive statements while preserving essential information.
                     Maintain readability by structuring the response with appropriate line breaks.                    
@@ -752,8 +672,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     Strictly follow these instructions to generate the best response."""
         if personalAssets==False:
             final_response = get_gemini_response(final_response,prompt)
-
-        # logger.info(f"Final Response - {final_response}")
+        
+        logger.info(f"Categories final - {specific_category}")
     except Exception as e:
         logger.error(f"While generating answer from category based question following error occured - {str(e)}")
         final_response = "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
@@ -869,7 +789,6 @@ def get_specific_asset_details(asset_name,token):
         logger.error(f"failed to get asset details - {str(e)}")
         return "No information found"
 
-# get_specific_asset_details('openai','NTMxNA.0J8PafBUHnv1XpcNroCgskuRflkB_dqjBLzokolgxYSwvIJ9Un8iOgnKm4dB')
 
 # Generate response based on provided asset specific detail
 def get_asset_based_response(assets_identified,question,token):
@@ -880,7 +799,7 @@ def get_asset_based_response(assets_identified,question,token):
             note = """Response Guidelines:
                     If an answer is fully available: Provide a clear, concise response with proper structure and formatting.
                     If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable. If needed, suggest contacting support:
-                    "Certain details are unavailable, but our support team would be happy to assist you. Please reach out to support@evident.capital with your query."
+                    "Certain details are unavailable for this asset, but our support team would be happy to assist you. Please reach out to support@evident.capital with your query."
                     If no relevant information is available: Respond with:
                     "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
                     Ask user to visit for more details - "https://uat.account.v2.evident.capital/" 
@@ -947,68 +866,112 @@ def get_asset_based_response(assets_identified,question,token):
 
 
 # Question handling flow - IP Count:9, OP Count:3
-def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, previous_questions, current_question, onboarding_step):     
+def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step):     
     logger.info(f"last_asset - {last_asset}\nuser_role - {user_role}\nlast_ques_cat - {last_ques_cat}")
     asset_found = ''
     response = ''
-    current_asset = ''
+    current_asset = last_asset
     isRelated = False
     isAssetRelated = False   
+    isPersonalAsset = False
 
     asset_names  = get_asset_list()
     asset_names = list(asset_names)
     asset_names = ", ".join(asset_names)
-    prompt = f"""Identify if any of the following asset names is present in the question or not.
-            If you identify an exact asset name from the list, return that exact value.
-            If you find a similar name that the user might be referring to (considering typos, misspellings, or approximate context), return that closest matching asset name from the list.
-            Treat & and and as equivalent when matching asset names.
-            If no relevant match is found, return 'None'.
-            STRICTLY REPLY IN THE ABOVE FORMAT. DO NOT ADD ANYTHING ELSE IN YOUR RESPONSE.
-            Asset Names - {asset_names}"""
+    prompt = f"""TO RETURN NAME OF ASSET:  
+                Last Question Category - `{last_ques_cat}`  
+
+                ### **Step 1: If Explicit Asset Name is Found, Return Asset Name**
+                - If the question contains an **exact match** or **a close match** (with typos/misspellings), RETURN that asset name.  
+                - If multiple assets match, separate them with `","`.  
+                - If no match is found, continue to Step 3. 
+                    Asset Name Matching Priority:   
+                        - If you  identify an exact asset name  from the list, return that exact value.  
+                        - If you find a  similar  asset name that the user might be referring to (considering typos, misspellings, or approximate context), return the closest matching asset name from the list.  
+                        - Treat  "&" and "and"  as equivalent when matching asset names.  
+                        -  If the user has not explicitly mentioned an asset name but is referring to a previously mentioned one, return `{last_asset}`.   
+                        -  If the question explicitly asks about an asset (like "Who is the manager of XYZ?"), RETURN only the ASSET NAME and do not classify this as a general investment query.   
+                    Asset Names - {asset_names}
+                
+                ### **Step 2: If Last Question Category is "Owned Assets", Return "1"**
+                - If `{last_ques_cat} == "Owned Assets"` and question is about user-owned assets, holdings, trades, and commitments, **IMMEDIATELY RETURN `"1"`**—DO NOT check for `last_asset`.  
+                - This ensures that **user-owned assets, holdings, trades, and commitments always return `"1"`**.  
+                - Owned Assets have ONLY following data: If question is related to following data while Last Question Category is "Owned Assets" : Return '1'.
+                    Owned Asset Data(**ONLY THIS DATA IS AVAILABLE**): IF QUESTION IS ABOUT ANYTHING ELSE THAN BELOW MENTIONED TOPIC THEN REFER TO OTHER STEPS - 
+                        Trade Details:- Trade Asset, Price, Total Units, Available Units, Trade Units, Trade Status, Number of Clients, Asset Maker
+                        Commitment Details:- Asset Name, Commitment Amount, Allotted Units, Commitment Status
+                
+                ### **Step 3: If Last Question Category is "Personal Assets" and a Relevant Topic is Found, Return `{last_asset}`**
+                - If `{last_ques_cat} == "Personal Assets"` **AND** the question is related to **Relevant Topics** below, RETURN `{last_asset}`.  
+
+                ### **Relevant Topics (For Personal Assets Only)**
+                - Name (e.g., Title, Label, Designation)  
+                - Description (e.g., Details, Summary, Overview, Information)  
+                - Location (e.g., Country, Region, Place, Address, Jurisdiction)  
+                - Currency (e.g., Money, Denomination, Trading Currency, Financial Unit)  
+                - Status (e.g., Condition, Current State, Standing, Availability)  
+                - Structuring (e.g., Organization, Framework, Setup, Type)  
+                - Vertical/Type (e.g., Category, Industry, Asset Class, Classification)  
+                - Updates (e.g., Modifications, Changes, Revisions, Latest Information)  
+                - Retirement Eligibility (e.g., Maturity, Expiry, Withdraw Criteria)  
+                - Investment Mode (e.g., Trading Method, Funding Type, Capital Deployment)  
+                - IRR (Internal Rate of Return/Rate of Return) (e.g., ROI, Yield, Profitability, Earnings Rate)  
+                - Impacts (e.g., Effect, Influence, ESG Factors, Sustainability, Social Responsibility)  
+                - Manager (e.g., Asset Manager, Fund Manager, Portfolio Manager, Administrator)  
+                - Company (e.g., Organization, Entity, Business, Firm, Issuer)  
+                - Investment Details (e.g., Funding Information, Capital Info, Portfolio Details, Including Asset-specific: Trades and Commitments)  
+                - Commitment Details (e.g., Target Amount, Minimum Investment Amount, Maximum Investment Amount, Raised Amount)  
+                - Trade Details (e.g., Open Offers, Number of Investors, Total Invested Amount)  
+                - Open Offers (e.g., Available Deals, Active Investments, Ongoing Offers)  
+                - Number of Investors (e.g., Total Investors, Investor Count, Stakeholders)  
+                - Total Invested Amount (e.g., Capital Deployed, Funds Raised, Total Funding)  
+                - Exit Strategy (e.g., Liquidity Plan, Withdrawal Plan, Disinvestment Plan)  
+                - Key Highlights (e.g., Important Points, Notable Features, Core Insights)  
+                - Events (e.g., Occurrences, Announcements, Happenings, Ongoing Activities)  
+
+                ### **Step 4: If question is related or in context of previous category, Return "2"**
+                - If the current question is related to the previous question category, STRICTLY RETURN `2`.                  
+                
+                ### **Step 5: If question does not belong to any of the above mentioned steps i.e. from Step 1 to Step 4, Return "0"**
+                - If the question does not match any to any of the above steps, RETURN `"0"`.
+
+                STRICTLY REPLY IN THE ABOVE FORMAT. DO NOT ADD ANYTHING ELSE IN YOUR RESPONSE. **RESPONSE SHOULD EITHER 0,1,2, OR NAME OF ASSET NOTHING ELSE IS ACCEPTABLE AS RESPONSE.**"""
     asset_identified_flag = get_gemini_response(current_question,prompt)
-    # print(asset_identified_flag)
+    print('asset_identified_flag - ',asset_identified_flag)
     promp_cat = []
-    if asset_identified_flag in asset_names:
-        promp_cat.append('Personal_Assets')   
-        current_asset = asset_identified_flag  
-    else:
-        # Identify question's category
+    try:
+        if int(asset_identified_flag)==1:
+            """Owned asset"""
+            isPersonalAsset = True
+            isAssetRelated = True
+            promp_cat.append('Personal_Assets')
+        elif int(asset_identified_flag)==0:
+            """Non asset related"""
+            promp_cat = get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
+            promp_cat = promp_cat.split(",")
+            promp_cat = [p.strip() for p in promp_cat]      
+        elif int(asset_identified_flag)==2:
+            temp_last_ques_cat = last_ques_cat.split(",")
+            promp_cat = get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
+            promp_cat = promp_cat.split(",")
+            promp_cat = [p.strip() for p in promp_cat]  
+            temp_last_ques_cat = promp_cat + temp_last_ques_cat
+            for cat in temp_last_ques_cat:
+                if 'onboarding' in cat:
+                    promp_cat.append(cat)
+                    break
+    except:
+        """Name of asset"""
         promp_cat = get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
         promp_cat = promp_cat.split(",")
-        promp_cat = [p.strip() for p in promp_cat] 
-        current_asset = last_asset
-    
-    # Check if question is in context of current question or not if this is not fresh conversation
-    if len(previous_questions)>=1:        
-        prompt = f"""Determine if the current question is related to or in the context of the previous questions.  
-                    Asset Names: {last_asset}  
-                    Question Category: {last_ques_cat}  
-                    Previous Questions: {previous_questions}  
-                    Current Question: {current_question}  
-                    Relevant Topics to Asset: Name, Description, Location, Currency, Status, Structuring, Vertical/Type, Updates, Retirement Eligibility, Investment Mode, IRR (Internal Rate of Return/Rate of Return), Impacts, Manager, Company, Investment Details, Open Offers, Number of Investors, Total Invested Amount, Exit Strategy, Key Highlights, Events.  
-                    Response Rules:  
-                    1. If the current question is related to any relevant topic in the provided list(CONSIDER ALL KIND OF SYNONYMS CAN BE USED FOR ABOVE TOPICS OR CAN ASKED IN VARIOUS FORM: E.g. Number of Investors is equivalent to Total Investors or Count of Inverstors), STRICTLY RETURN 1.  
-                    2. If the current question is related to the previous question category, STRICTLY RETURN 2.  
-                    3. Otherwise, STRICTLY RETURN 0.  
-                    DO NOT add any extra text, explanations, or formatting beyond the specified response.
-                    """
-        question_related = get_gemini_response(current_question,prompt)
-        temp_last_ques_cat = last_ques_cat.split(",")
-        try:
-            if int(question_related.strip())==1 and last_asset=='':
-                isRelated = True
-            elif int(question_related.strip())==1 and last_asset!='':
-                isRelated = True
-                isAssetRelated = True     
-            elif int(question_related.strip())==2:
-                for cat in temp_last_ques_cat:
-                    if 'onboarding' in cat:
-                        promp_cat.append(cat)
-                        break
+        promp_cat = [p.strip() for p in promp_cat]      
+        names = asset_names.split(", ")
+        for n in names:
+            if asset_identified_flag in n:
+                isAssetRelated = True
+                current_asset = asset_identified_flag
+                break
 
-            logger.info(f"Question is related to previous question status is - {isRelated}")                   
-        except Exception as e:
-            logger.error(f"Failed to check if question is related to previous question or not, following error occured - {str(e)}")
     # If question is just a greeting nothing else is asked in that question
     if 'Greetings' in promp_cat[0] and len(promp_cat)==1:
         prompt = f"""User name is - {user_name}, reply to user in polite and positive way. Encourage for further communication. if user name is not present then skip using user's name. 'Please let me know if you have any other questions...' or 'Is there anything else...' As it can be user's 1st message. DO NOT FRAME ANSWER IN THIS WAY, INSTEAD ASK HOW YOU CAN HELP USER."""
@@ -1018,8 +981,8 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, pre
     # Remove greetings category from prompt categories
     else:
         promp_cat = [p.strip() for p in promp_cat if 'Greetings' not in p.strip()]
-
-    response,asset_found,specific_category = category_based_question(current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_asset, last_ques_cat,current_asset)
+    print(promp_cat)
+    response,asset_found,specific_category = category_based_question(current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset)
     # logger.info(f"final response from handle_questions - {response}")
     specific_category = ",".join(specific_category)
     # print("specific_category= ",specific_category)
@@ -1129,14 +1092,8 @@ def evidAI_chat(request):
             if len(previous_questions)==1:
                 update_chat_title(current_question,chat_session_id)
                 
-            response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_name, user_role, previous_questions, current_question, onboarding_step)
+            response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step)
             response = response.replace("\n", "  \n")  
-            # response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units|Raised Amount|Number of Investors|Open Offers|Total Invested Amount|IRR)\s*-\s*)\n', r'\1 ', response)
-            # response = re.sub(r'(\b(Price|Trade Units|Total Units|Available Units|Commitment Amount|Alloted Units|Raised Amount|Number of Investors|Open Offers|Total Invested Amount|IRR)\s*:\s*)\n', r'\1 ', response)
-    
-            # response = format_response(response)
-            logger.info(f"After HTML markup from main function - {response}")
-            # print("current_ques_cat- ",current_ques_cat)
             add_to_conversations(user_id, chat_session_id, current_question, response, current_asset, current_ques_cat)      
             
             return JsonResponse({"message":"Response generated successfully","data":{
