@@ -867,7 +867,7 @@ def get_asset_based_response(assets_identified,question,token):
 
 # Question handling flow - IP Count:9, OP Count:3
 def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step):     
-    logger.info(f"last_asset - {last_asset}\nuser_role - {user_role}\nlast_ques_cat - {last_ques_cat}")
+    logger.info(f"\nlast_asset - {last_asset}\nuser_role - {user_role}\nlast_ques_cat - {last_ques_cat}")
     asset_found = ''
     response = ''
     current_asset = last_asset
@@ -937,7 +937,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
 
                 STRICTLY REPLY IN THE ABOVE FORMAT. DO NOT ADD ANYTHING ELSE IN YOUR RESPONSE. **RESPONSE SHOULD EITHER 0,1,2, OR NAME OF ASSET NOTHING ELSE IS ACCEPTABLE AS RESPONSE.**"""
     asset_identified_flag = get_gemini_response(current_question,prompt)
-    print('asset_identified_flag - ',asset_identified_flag)
+    logger.info(f'asset_identified_flag - {asset_identified_flag}')
     promp_cat = []
     try:
         if int(asset_identified_flag)==1:
@@ -962,9 +962,10 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
                     break
     except:
         """Name of asset"""
-        promp_cat = get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
-        promp_cat = promp_cat.split(",")
-        promp_cat = [p.strip() for p in promp_cat]      
+        # promp_cat = get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
+        # promp_cat = promp_cat.split(",")
+        # promp_cat = [p.strip() for p in promp_cat]     
+        promp_cat=['Personal Assets']
         names = asset_names.split(", ")
         for n in names:
             if asset_identified_flag in n:
@@ -981,7 +982,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
     # Remove greetings category from prompt categories
     else:
         promp_cat = [p.strip() for p in promp_cat if 'Greetings' not in p.strip()]
-    print(promp_cat)
+    logger.info(f"Prompt categories - {promp_cat}")
     response,asset_found,specific_category = category_based_question(current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset)
     # logger.info(f"final response from handle_questions - {response}")
     specific_category = ",".join(specific_category)
