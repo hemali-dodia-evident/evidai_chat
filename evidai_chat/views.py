@@ -639,9 +639,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                 else:
                     assets_identified = current_asset.split(",")
                     response = get_asset_based_response(assets_identified,question,token)
-                    final_response = final_response + '\n' + response  
-
-                asset_found = ",".join(assets_identified)                 
+                    final_response = final_response + '\n' + response 
+                    asset_found = ",".join(assets_identified)                 
             else:
                 response = search_on_internet(question)
                 final_response = final_response + '\n' + response  
@@ -823,6 +822,7 @@ def get_asset_based_response(assets_identified,question,token):
                 **MAKE SURE YOU DO NOT SHOW ANY MAIN POINT AS SUB POINT OF ANYOTHER MAIN POINT.**
                 **DO NOT WRITE ANY VALUE AS "None", INSTEAD KEEP IT AS "Unavailable"**
                 **MAKE SURE IF SPECIFIC DETAILS ARE ASKED THEN SHARE ONLY AND ONLY SPECIFIC DETAILS**
+                E.g.
                 Asset Name - Abc
                 Asset Description - this is asset's description
                 Asset Location in Country - IND
