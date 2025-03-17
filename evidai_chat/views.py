@@ -659,6 +659,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     "Certain details are unavailable, but our support team would be happy to assist you. Please reach out to support@evident.capital with your query."
                     If no relevant information is available: Respond with:
                     "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
+                    For more assistance or further assistance scenario provide support contact - support@evident.capital
                     Ensure:
                     The response is structured well with line breaks for readability.
                     Ensure line breaks are only applied between different attributes, or point, NOT within values.
@@ -952,7 +953,27 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
             """Non asset related"""
             promp_cat = get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
             promp_cat = promp_cat.split(",")
-            promp_cat = [p.strip() for p in promp_cat]      
+            promp_cat = [p.strip() for p in promp_cat]  
+            if 'Personal Assets' in promp_cat:
+                prompt = f"""TO RETURN NAME OF ASSET:  
+                Last Question Category - `{last_ques_cat}`  
+
+                ### **Step 1: If Explicit Asset Name is Found, Return Asset Name**
+                - If the question contains an **exact match** or **a close match** (with typos/misspellings), RETURN that asset name.  
+                - If multiple assets match, separate them with `","`.  
+                - If name of asset is found strictly return asset name.
+                - If no match is found, continue to Step 3. 
+                    Asset Name Matching Priority:   
+                        - If you  identify an exact asset name  from the list, return that exact value.  
+                        - If you find a  similar  asset name that the user might be referring to (considering typos, misspellings, or approximate context), return the closest matching asset name from the list.  
+                        - Treat  "&" and "and"  as equivalent when matching asset names.  
+                        -  If the user has not explicitly mentioned an asset name but is referring to a previously mentioned one, return `{last_asset}`.   
+                        -  If the question explicitly asks about an asset (like "Who is the manager of XYZ?"), RETURN only the ASSET NAME and do not classify this as a general investment query.   
+                    Asset Names - {asset_names}
+                """
+                asset_identified_flag = get_gemini_response(prompt,current_question)
+                logger.info(f"asset_identified_flag 0 - {asset_identified_flag}")
+                current_asset = asset_identified_flag
         elif int(asset_identified_flag)==2:
             temp_last_ques_cat = last_ques_cat.split(",")
             promp_cat = get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
@@ -972,8 +993,10 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
                 isAssetRelated = True
                 current_asset = asset_identified_flag
                 break
+        else:
+            current_asset = asset_identified_flag
+        logger.info(f"asset_identified_flag except - {asset_identified_flag}")
         
-
     # If question is just a greeting nothing else is asked in that question
     if 'Greetings' in promp_cat[0] and len(promp_cat)==1:
         prompt = f"""User name is - {user_name}, reply to user in polite and positive way. Encourage for further communication. if user name is not present then skip using user's name. 'Please let me know if you have any other questions...' or 'Is there anything else...' As it can be user's 1st message. DO NOT FRAME ANSWER IN THIS WAY, INSTEAD ASK HOW YOU CAN HELP USER."""
