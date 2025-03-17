@@ -697,13 +697,14 @@ def get_specific_asset_details(asset_name,token):
         data = response.json()
         all_asset_details = data['data'][0]
         # print(data)
-        
+        visibility = all_asset_details['visibility'][0]+all_asset_details['visibility'][1:].lower()
+        # print(visibility)
         retirementEligible = 'Not Available'
         if all_asset_details['retirementEligible'] == False:
             retirementEligible = 'Not Available for this asset'
         else:
             retirementEligible = 'Asset is elgible'
-
+        asset_url = all_asset_details['shortUrl']
         investment_details = ''
         if all_asset_details['investmentMode']=='Commitment':
             commitmentDetails = all_asset_details['commitmentDetails'][0]        
@@ -769,6 +770,7 @@ def get_specific_asset_details(asset_name,token):
                       Asset Location - {all_asset_details['location']}
                       Asset Currency - {all_asset_details['currency']}
                       Asset Status - {status}
+                      Visibility - {visibility}
                       Structuring - {all_asset_details['structuring']}                      
                       Asset vertical - {all_asset_details['assetVertical']}
                       Updates - Apologies, currently I am unable to provide you updates for this asset.
@@ -783,25 +785,26 @@ def get_specific_asset_details(asset_name,token):
                       Key Highlights - {keyHighlights}                      
                       Events - {event_details}
                       """
-        return asset_info
+        return asset_info,asset_url
     except Exception as e:
         logger.error(f"failed to get asset details - {str(e)}")
-        return "No information found"
+        return "No information found","Not available"
 
+# get_specific_asset_details("dnd small cap funds","NTY2NA.GE5EkGR_8RKIJve7iLXycA2pCeFiJGGJWpMWYSRMJHdzbDyiuif7Nolgpvwa")
 
 # Generate response based on provided asset specific detail
 def get_asset_based_response(assets_identified,question,token):
     final_response = ''
     try:
         for ass in assets_identified:
-            data = get_specific_asset_details(ass,token)
-            note = """Response Guidelines:
+            data,asset_url = get_specific_asset_details(ass,token)
+            note = f"""Response Guidelines:
                     If an answer is fully available: Provide a clear, concise response with proper structure and formatting.
                     If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable. If needed, suggest contacting support:
                     "Certain details are unavailable for this asset, but our support team would be happy to assist you. Please reach out to support@evident.capital with your query."
                     If no relevant information is available: Respond with:
                     "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
-                    Ask user to visit for more details - "https://uat.account.v2.evident.capital/" 
+                    Ask user to visit for more details - "{asset_url}" 
                     Note: The response should be clear, concise, and user-friendly, adhering to these guidelines. Encourage to ask more queries."""
             prompt = f"""Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about.
                 To get proper trade values, add all results of that perticular assets. Do not provide paramters like id, and also create proper response it **SHOULD NOT** be in key value format.
@@ -818,7 +821,7 @@ def get_asset_based_response(assets_identified,question,token):
                 **IF USER IS ASKING ABOUT INVESTMENT, COMMITMENT PROCESS OR STEPS IN ASSET THEN RETURN ONLY 'Apologies, currently I am not able to assit you with step by step details but You can start investment by clicking on "Invest" tab.'
                 **COMPANY DOCUMENT IS AVAILABLE: Go to 'Company Document' -> 'NDA' pop-up will appear -> Click on 'I have read and agree to the terms of this NDA.' -> Click on 'Sign'**
                 **TO DOWNLOAD COMPANY DOCUMENT: Go to 'Company Document' -> 'NDA' pop-up will appear -> Click on 'I have read and agree to the terms of this NDA.' -> Click on 'Sign' -> Click on 'Download all'
-                **ASSET "TYPE" IS EQUAL TO ASSET "VERTICAL"**
+                **ASSET "TYPE" IS EQUAL TO ASSET "VERTICAL" AND "Target Amount" IS EQUAL TO "Allocated Amount"**
                 **MAKE SURE YOU DO NOT SHOW ANY MAIN POINT AS SUB POINT OF ANYOTHER MAIN POINT.**
                 **DO NOT WRITE ANY VALUE AS "None", INSTEAD KEEP IT AS "Unavailable"**
                 **MAKE SURE IF SPECIFIC DETAILS ARE ASKED THEN SHARE ONLY AND ONLY SPECIFIC DETAILS**
@@ -827,6 +830,7 @@ def get_asset_based_response(assets_identified,question,token):
                 Asset Description - this is asset's description
                 Asset Location in Country - IND
                 Asset Status - Completed
+                Asset Visibility - Public
                 Retirement Elgibility - Yes
                 Investment Mode - Trade
                 Structuring - Note
@@ -841,7 +845,7 @@ def get_asset_based_response(assets_identified,question,token):
                         Number of Investors - 10
                         Total invested amount - 50000
                         Commitment Status - Completed
-                        Target Amount - 5000
+                        Target Amount/Allocated Amount - 5000
                         Minimum Investment Amount - 10
                         Maximum Investment Amount - 500
                         Raised Amount - 2000
