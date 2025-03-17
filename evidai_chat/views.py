@@ -509,7 +509,8 @@ def users_assets(token):
 
 # Get list of all assets from DB
 def get_asset_list():
-    asset_names = models.Asset.objects.exclude(visibility='PRIVATE').values_list('name',flat=True)
+    # asset_names = models.Asset.objects.exclude(visibility='PRIVATE').values_list('name',flat=True)
+    asset_names = models.Asset.objects.values_list('name',flat=True)
     return asset_names
 
 
@@ -880,35 +881,177 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
 
     asset_names  = get_asset_list()
     asset_names = list(asset_names)
-    asset_names = ", ".join(asset_names)
+    asset_names = ", ".join(asset_names)+", DND small cap funds, Uma Landry"
     prompt = f"""TO RETURN NAME OF ASSET:  
                 Last Question Category - `{last_ques_cat}`  
 
                 ### **Step 1: If Explicit Asset Name is Found, Return Asset Name**
-                - If the question contains an **exact match** or **a close match** (with typos/misspellings), RETURN that asset name.  
+                - Normalize asset names for matching by **removing spaces, dashes, and capitalization** before comparison.  
+                - If the question contains an **exact match** or **a close match** (considering typos/misspellings), return that asset name immediately.  
+                - **If a new asset is matched, update the active asset before returning the result.**  
+                - **STRICTLY DO NOT return `{last_asset}` if a new asset is found.**  
+                - Treat **spaces (" "), dashes ("-"), and underscores ("_") as equivalent** when matching asset names.  
+                - **Ignore case sensitivity** when matching.  
+                - **"&" and "and" should be treated as equivalent.**  
+                - **Once an asset is matched, STOP further processing.**  
+
+                #### **Asset Name Matching Priority:**  
+                - If an exact asset name is found in `{asset_names}`, return it immediately.  
+                - If a close match (with minor typos/misspellings) is found, return the closest matching asset.  
+                - Treat **"&" and "and"** as equivalent when matching asset names.  
+                - **Normalize asset names before comparison** (remove spaces, dashes, underscores, and convert to lowercase).  
                 - If multiple assets match, separate them with `","`.  
-                - If no match is found, continue to Step 3. 
-                    Asset Name Matching Priority:   
-                        - If you  identify an exact asset name  from the list, return that exact value.  
-                        - If you find a  similar  asset name that the user might be referring to (considering typos, misspellings, or approximate context), return the closest matching asset name from the list.  
-                        - Treat  "&" and "and"  as equivalent when matching asset names.  
-                        -  If the user has not explicitly mentioned an asset name but is referring to a previously mentioned one, return `{last_asset}`.   
-                        -  If the question explicitly asks about an asset (like "Who is the manager of XYZ?"), RETURN only the ASSET NAME and do not classify this as a general investment query.   
-                    Asset Names - {asset_names}
-                - If asset name is found strictly return asset name from "Asset Names"
+
+                #### **Example Normalization:**
+                | User Input  | Matched Asset |
+                |-------------|--------------|
+                | OpenAI      | OpenAI       |
+                | Open AI     | OpenAI       |
+                | Open-AI     | OpenAI       |
+                | open ai     | OpenAI       |
+                | openai      | OpenAI       |
+                | open_ai     | OpenAI       |
+
+                - If an asset is found, **STOP and return the name immediately**.  
+                - If no match is found, continue to Step 2. 
 
                 ### **Step 2: If Last Question Category is "Owned Assets", Return "1"**
-                - If `{last_ques_cat} == "Owned Assets"` and question is about user-owned assets, holdings, trades, and commitments, **IMMEDIATELY RETURN `"1"`**—DO NOT check for `last_asset`.  
-                - This ensures that **user-owned assets, holdings, trades, and commitments always return `"1"`**.  
-                - Owned Assets have ONLY following data: If question is related to following data while Last Question Category is "Owned Assets" : Return '1'.
-                    Owned Asset Data(**ONLY THIS DATA IS AVAILABLE**): IF QUESTION IS ABOUT ANYTHING ELSE THAN BELOW MENTIONED TOPIC THEN REFER TO OTHER STEPS - 
-                        Trade Details:- Trade Asset, Price, Total Units, Available Units, Trade Units, Trade Status, Number of Clients, Asset Maker
-                        Commitment Details:- Asset Name, Commitment Amount, Allotted Units, Commitment Status
-                
-                ### **Step 3: If Last Question Category is "Personal Assets" and a Relevant Topic is Found, Return `{last_asset}`**
-                - If `{last_ques_cat} == "Personal Assets"` **AND** the question is related to **Relevant Topics** below, RETURN `{last_asset}`.  
+                - If `{last_ques_cat} == "Owned Assets"` and question is about user-owned assets, holdings, trades, and commitments, **IMMEDIATELY RETURN `"1"`**.  
+                - **DO NOT check for `{last_asset}` here.**  
+                - Owned Asset Data (ONLY THIS DATA IS AVAILABLE):
+                    - Trade Details: Trade Asset, Price, Total Units, Available Units, Trade Units, Trade Status, Number of Clients, Asset Maker
+                    - Commitment Details: Asset Name, Commitment Amount, Allotted Units, Commitment Status  
+                - If question is unrelated to these topics, proceed to Step 3.  
 
-                ### **Relevant Topics (For Personal Assets Only)**
+                ### **Step 3: If Last Question Category is "Personal Assets" and a Relevant Topic is Found, Return `{last_asset}`**
+                - If `{last_ques_cat} == "Personal Assets"`, **ONLY return `{last_asset}` if Step 1 DID NOT FIND A NEW ASSET**.  
+                - **If Step 1 found a new asset, `{last_asset}` is ignored.**  
+
+                **Relevant Topics (For Personal Assets Only)**:  
+                    - Name (e.g., Title, Label, Designation)  
+                    - Description (e.g., Details, Summary, Overview, Information)  
+                    - Location (e.g., Country, Region, Place, Address, Jurisdiction)  
+                    - Currency (e.g., Money, Denomination, Trading Currency, Financial Unit)  
+                    - Status (e.g., Condition, Current State, Standing, Availability)  
+                    - Structuring (e.g., Organization, Framework, Setup, Type)  
+                    - Vertical/Type (e.g., Category, Industry, Asset Class, Classification)  
+                    - Updates (e.g., Modifications, Changes, Revisions, Latest Information)  
+                    - Retirement Eligibility (e.g., Maturity, Expiry, Withdraw Criteria)  
+                    - Investment Mode (e.g., Trading Method, Funding Type, Capital Deployment)  
+                    - IRR (Internal Rate of Return/Rate of Return) (e.g., ROI, Yield, Profitability, Earnings Rate)  
+                    - Impacts (e.g., Effect, Influence, ESG Factors, Sustainability, Social Responsibility)  
+                    - Manager (e.g., Asset Manager, Fund Manager, Portfolio Manager, Administrator)  
+                    - Company (e.g., Organization, Entity, Business, Firm, Issuer)  
+                    - Investment Details (e.g., Funding Information, Capital Info, Portfolio Details, Including Asset-specific: Trades and Commitments)  
+                    - Commitment Details (e.g., Target Amount, Minimum Investment Amount, Maximum Investment Amount, Raised Amount)  
+                    - Trade Details (e.g., Open Offers, Number of Investors, Total Invested Amount)  
+                    - Open Offers (e.g., Available Deals, Active Investments, Ongoing Offers)  
+                    - Number of Investors (e.g., Total Investors, Investor Count, Stakeholders)  
+                    - Total Invested Amount (e.g., Capital Deployed, Funds Raised, Total Funding)  
+                    - Exit Strategy (e.g., Liquidity Plan, Withdrawal Plan, Disinvestment Plan)  
+                    - Key Highlights (e.g., Important Points, Notable Features, Core Insights)  
+                    - Events (e.g., Occurrences, Announcements, Happenings, Ongoing Activities)  
+
+                ### **Step 4: If question is related or in context of previous category, Return "2"**
+                - If the current question is related to the previous question category, STRICTLY RETURN `2`.  
+
+                ### **Step 5: If question does not belong to any of the above mentioned steps, Return "0"**
+                - If the question does not match any of the above steps, RETURN `"0"`.  
+
+                **STRICTLY REPLY WITH EITHER 0, 1, 2, OR THE EXACT ASSET NAME. NO ADDITIONAL TEXT IS ALLOWED.**"""
+
+    # prompt = f"""TO RETURN NAME OF ASSET:  
+    #             Last Question Category - `{last_ques_cat}`  
+
+    #             ### **Step 1: If Explicit Asset Name is Found, Return Asset Name**
+    #             - If the question contains an **exact match** or **a close match** (with typos/misspellings), RETURN that asset name.  
+    #                 Asset Name Matching Priority:   
+    #                     - If you  identify an exact asset name  from the list, return that exact value.  
+    #                     - If you find a  similar  asset name that the user might be referring to (considering typos, misspellings, or approximate context), return the closest matching asset name from the list.  
+    #                     - Treat  "&" and "and"  as equivalent when matching asset names.  
+    #                     -  If the user has not explicitly mentioned an asset name but is referring to a previously mentioned one, return `{last_asset}`.   
+    #                     -  If the question explicitly asks about an asset (like "Who is the manager of XYZ?"), RETURN only the ASSET NAME and do not classify this as a general investment query.   
+    #                 Asset Names - {asset_names}
+    #             - If multiple assets match, separate them with `","`.                    
+    #             - If asset name is found strictly return asset name from "Asset Names"  
+    #             - If no match is found, continue to Step 3. 
+
+    #             ### **Step 2: If Last Question Category is "Owned Assets", Return "1"**
+    #             - If `{last_ques_cat} == "Owned Assets"` and question is about user-owned assets, holdings, trades, and commitments, **IMMEDIATELY RETURN `"1"`**—DO NOT check for `last_asset`.  
+    #             - This ensures that **user-owned assets, holdings, trades, and commitments always return `"1"`**.  
+    #             - Owned Assets have ONLY following data: If question is related to following data while Last Question Category is "Owned Assets" : Return '1'.
+    #                 Owned Asset Data(**ONLY THIS DATA IS AVAILABLE**): IF QUESTION IS ABOUT ANYTHING ELSE THAN BELOW MENTIONED TOPIC THEN REFER TO OTHER STEPS - 
+    #                     Trade Details:- Trade Asset, Price, Total Units, Available Units, Trade Units, Trade Status, Number of Clients, Asset Maker
+    #                     Commitment Details:- Asset Name, Commitment Amount, Allotted Units, Commitment Status
+                
+    #             ### **Step 3: If Last Question Category is "Personal Assets" and a Relevant Topic is Found, Return `{last_asset}`**
+    #             - If `{last_ques_cat} == "Personal Assets"` **AND** the question is related to **Relevant Topics** below, RETURN `{last_asset}`.  
+
+    #             ### **Relevant Topics (For Personal Assets Only)**
+    #             - Name (e.g., Title, Label, Designation)  
+    #             - Description (e.g., Details, Summary, Overview, Information)  
+    #             - Location (e.g., Country, Region, Place, Address, Jurisdiction)  
+    #             - Currency (e.g., Money, Denomination, Trading Currency, Financial Unit)  
+    #             - Status (e.g., Condition, Current State, Standing, Availability)  
+    #             - Structuring (e.g., Organization, Framework, Setup, Type)  
+    #             - Vertical/Type (e.g., Category, Industry, Asset Class, Classification)  
+    #             - Updates (e.g., Modifications, Changes, Revisions, Latest Information)  
+    #             - Retirement Eligibility (e.g., Maturity, Expiry, Withdraw Criteria)  
+    #             - Investment Mode (e.g., Trading Method, Funding Type, Capital Deployment)  
+    #             - IRR (Internal Rate of Return/Rate of Return) (e.g., ROI, Yield, Profitability, Earnings Rate)  
+    #             - Impacts (e.g., Effect, Influence, ESG Factors, Sustainability, Social Responsibility)  
+    #             - Manager (e.g., Asset Manager, Fund Manager, Portfolio Manager, Administrator)  
+    #             - Company (e.g., Organization, Entity, Business, Firm, Issuer)  
+    #             - Investment Details (e.g., Funding Information, Capital Info, Portfolio Details, Including Asset-specific: Trades and Commitments)  
+    #             - Commitment Details (e.g., Target Amount, Minimum Investment Amount, Maximum Investment Amount, Raised Amount)  
+    #             - Trade Details (e.g., Open Offers, Number of Investors, Total Invested Amount)  
+    #             - Open Offers (e.g., Available Deals, Active Investments, Ongoing Offers)  
+    #             - Number of Investors (e.g., Total Investors, Investor Count, Stakeholders)  
+    #             - Total Invested Amount (e.g., Capital Deployed, Funds Raised, Total Funding)  
+    #             - Exit Strategy (e.g., Liquidity Plan, Withdrawal Plan, Disinvestment Plan)  
+    #             - Key Highlights (e.g., Important Points, Notable Features, Core Insights)  
+    #             - Events (e.g., Occurrences, Announcements, Happenings, Ongoing Activities)  
+
+    #             ### **Step 4: If question is related or in context of previous category, Return "2"**
+    #             - If the current question is related to the previous question category, STRICTLY RETURN `2`.                  
+                
+    #             ### **Step 5: If question does not belong to any of the above mentioned steps i.e. from Step 1 to Step 4, Return "0"**
+    #             - If the question does not match any to any of the above steps, RETURN `"0"`.
+
+    #             STRICTLY REPLY IN THE ABOVE FORMAT. DO NOT ADD ANYTHING ELSE IN YOUR RESPONSE. **RESPONSE SHOULD EITHER 0,1,2, OR NAME OF ASSET NOTHING ELSE IS ACCEPTABLE AS RESPONSE.**"""
+    asset_identified_flag = get_gemini_response(current_question,prompt)
+    logger.info(f'asset_identified_flag - {asset_identified_flag}')
+    promp_cat = []
+    # print(asset_names)
+    try:
+        if int(asset_identified_flag)==1:
+            """Owned asset"""
+            isPersonalAsset = True
+            isAssetRelated = True
+            promp_cat.append('Personal_Assets')
+        elif int(asset_identified_flag)==0:
+            """Non asset related"""
+            promp_cat = get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
+            promp_cat = promp_cat.split(",")
+            promp_cat = [p.strip() for p in promp_cat]  
+            # print("promp_cat - ",promp_cat)
+            if 'Personal_Assets' in promp_cat:
+                prompt = f"""FOLLOW BELOW INSTRUCTIONS STRICTLY:  
+                Last Question Category - `{last_ques_cat}`  
+
+                **If Explicit Asset Name is Found, Return Asset Name**
+                - If the question contains an **exact match** or **a close match** (with typos/misspellings), RETURN that asset name.  
+                - If multiple assets match, separate them with `","`.  
+                - If name of asset is found strictly return asset name.                
+                Asset Name Matching Priority:   
+                    - If you  identify an exact asset name  from the list, return that exact value.  
+                    - If you find a  similar  asset name that the user might be referring to (considering typos, misspellings, or approximate context), return the closest matching asset name from the list.  
+                    - Treat  "&" and "and"  as equivalent when matching asset names.  
+                    - If the question explicitly asks about an asset (like "Who is the manager of XYZ?"), RETURN only the ASSET NAME and do not classify this as a general investment query.   
+                Asset Names - {asset_names}
+                -  If the user has not explicitly mentioned an asset name but is referring to a previously mentioned one, return `{last_asset}`.   
+                - If no match is found, return 0. 
+                ### **Relevant Topics TO ASSETS**
                 - Name (e.g., Title, Label, Designation)  
                 - Description (e.g., Details, Summary, Overview, Information)  
                 - Location (e.g., Country, Region, Place, Address, Jurisdiction)  
@@ -933,43 +1076,15 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
                 - Key Highlights (e.g., Important Points, Notable Features, Core Insights)  
                 - Events (e.g., Occurrences, Announcements, Happenings, Ongoing Activities)  
 
-                ### **Step 4: If question is related or in context of previous category, Return "2"**
-                - If the current question is related to the previous question category, STRICTLY RETURN `2`.                  
-                
-                ### **Step 5: If question does not belong to any of the above mentioned steps i.e. from Step 1 to Step 4, Return "0"**
-                - If the question does not match any to any of the above steps, RETURN `"0"`.
-
-                STRICTLY REPLY IN THE ABOVE FORMAT. DO NOT ADD ANYTHING ELSE IN YOUR RESPONSE. **RESPONSE SHOULD EITHER 0,1,2, OR NAME OF ASSET NOTHING ELSE IS ACCEPTABLE AS RESPONSE.**"""
-    asset_identified_flag = get_gemini_response(current_question,prompt)
-    logger.info(f'asset_identified_flag - {asset_identified_flag}')
-    promp_cat = []
-    try:
-        if int(asset_identified_flag)==1:
-            """Owned asset"""
-            isPersonalAsset = True
-            isAssetRelated = True
-            promp_cat.append('Personal_Assets')
-        elif int(asset_identified_flag)==0:
-            """Non asset related"""
-            promp_cat = get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
-            promp_cat = promp_cat.split(",")
-            promp_cat = [p.strip() for p in promp_cat]  
-            if 'Personal_Assets' in promp_cat:
-                prompt = f"""TO RETURN NAME OF ASSET:  
-                Last Question Category - `{last_ques_cat}`  
-
-                ### **Step 1: If Explicit Asset Name is Found, Return Asset Name**
-                - If the question contains an **exact match** or **a close match** (with typos/misspellings), RETURN that asset name.  
-                - If multiple assets match, separate them with `","`.  
-                - If name of asset is found strictly return asset name.
-                - If no match is found, continue to Step 3. 
-                    Asset Name Matching Priority:   
-                        - If you  identify an exact asset name  from the list, return that exact value.  
-                        - If you find a  similar  asset name that the user might be referring to (considering typos, misspellings, or approximate context), return the closest matching asset name from the list.  
-                        - Treat  "&" and "and"  as equivalent when matching asset names.  
-                        -  If the user has not explicitly mentioned an asset name but is referring to a previously mentioned one, return `{last_asset}`.   
-                        -  If the question explicitly asks about an asset (like "Who is the manager of XYZ?"), RETURN only the ASSET NAME and do not classify this as a general investment query.   
-                    Asset Names - {asset_names}
+                REFER BELOW EXAMPLES TO GENERATE RESPONSE:
+                Q: Tell me about openai
+                A: OpenAI - Co-Investment
+                Q: Provide me details and overview about spacex
+                A: SpaceX - Co-Investment
+                Q: Who is manager for openai
+                A: OpenAI - Co-Investment
+                Q: what is IRR for this?
+                A: {last_asset}
                 """
                 asset_identified_flag = get_gemini_response(prompt,current_question)
                 logger.info(f"asset_identified_flag 0 - {asset_identified_flag}")
