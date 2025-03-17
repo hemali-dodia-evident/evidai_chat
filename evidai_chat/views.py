@@ -821,7 +821,7 @@ def get_asset_based_response(assets_identified,question,token):
                 **IF USER IS ASKING ABOUT INVESTMENT, COMMITMENT PROCESS OR STEPS IN ASSET THEN RETURN ONLY 'Apologies, currently I am not able to assit you with step by step details but You can start investment by clicking on "Invest" tab.'
                 **COMPANY DOCUMENT IS AVAILABLE: Go to 'Company Document' -> 'NDA' pop-up will appear -> Click on 'I have read and agree to the terms of this NDA.' -> Click on 'Sign'**
                 **TO DOWNLOAD COMPANY DOCUMENT: Go to 'Company Document' -> 'NDA' pop-up will appear -> Click on 'I have read and agree to the terms of this NDA.' -> Click on 'Sign' -> Click on 'Download all'
-                **ASSET "TYPE" IS EQUAL TO ASSET "VERTICAL" AND "Target Amount" IS EQUAL TO "Allocated Amount"**
+                **ASSET "TYPE" IS EQUAL TO ASSET "VERTICAL" AND ONLY "Target Amount" IS EQUAL TO "Allocated Amount"**
                 **MAKE SURE YOU DO NOT SHOW ANY MAIN POINT AS SUB POINT OF ANYOTHER MAIN POINT.**
                 **DO NOT WRITE ANY VALUE AS "None", INSTEAD KEEP IT AS "Unavailable"**
                 **MAKE SURE IF SPECIFIC DETAILS ARE ASKED THEN SHARE ONLY AND ONLY SPECIFIC DETAILS**
@@ -843,7 +843,7 @@ def get_asset_based_response(assets_identified,question,token):
                 Investment Details:
                         Open Offers - 2
                         Number of Investors - 10
-                        Total invested amount - 50000
+                        Invested amount - 50000
                         Commitment Status - Completed
                         Target Amount/Allocated Amount - 5000
                         Minimum Investment Amount - 10
