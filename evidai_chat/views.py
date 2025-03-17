@@ -790,8 +790,6 @@ def get_specific_asset_details(asset_name,token):
         logger.error(f"failed to get asset details - {str(e)}")
         return "No information found","Not available"
 
-# get_specific_asset_details("dnd small cap funds","NTY2NA.GE5EkGR_8RKIJve7iLXycA2pCeFiJGGJWpMWYSRMJHdzbDyiuif7Nolgpvwa")
-
 # Generate response based on provided asset specific detail
 def get_asset_based_response(assets_identified,question,token):
     final_response = ''
@@ -896,7 +894,8 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
                         -  If the user has not explicitly mentioned an asset name but is referring to a previously mentioned one, return `{last_asset}`.   
                         -  If the question explicitly asks about an asset (like "Who is the manager of XYZ?"), RETURN only the ASSET NAME and do not classify this as a general investment query.   
                     Asset Names - {asset_names}
-                
+                - If asset name is found strictly return asset name from "Asset Names"
+
                 ### **Step 2: If Last Question Category is "Owned Assets", Return "1"**
                 - If `{last_ques_cat} == "Owned Assets"` and question is about user-owned assets, holdings, trades, and commitments, **IMMEDIATELY RETURN `"1"`**—DO NOT check for `last_asset`.  
                 - This ensures that **user-owned assets, holdings, trades, and commitments always return `"1"`**.  
@@ -965,10 +964,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
                     promp_cat.append(cat)
                     break
     except:
-        """Name of asset"""
-        # promp_cat = get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
-        # promp_cat = promp_cat.split(",")
-        # promp_cat = [p.strip() for p in promp_cat]     
+        """Name of asset"""   
         promp_cat=['Personal Assets']
         names = asset_names.split(", ")
         for n in names:
@@ -976,6 +972,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
                 isAssetRelated = True
                 current_asset = asset_identified_flag
                 break
+        
 
     # If question is just a greeting nothing else is asked in that question
     if 'Greetings' in promp_cat[0] and len(promp_cat)==1:
