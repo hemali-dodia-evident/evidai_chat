@@ -539,7 +539,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     for d in data:
                         prm = d.prompt
                         if 'Onboarding' in promp_cat:
-                            prm = f"""{prm} \nONLY USE THIS INFORMATION IF REQUIRED TO ANSWER USER'S QUERY. IF USER IS NOT ASKING ABOUT PENDING STEP THEN DO NOT REFER BELOW INFORMATION.\nUser\'s current onboarding status - {onboarding_step}
+                            prm = f"""{prm} \nUSE THIS INFORMATION ONLY IF REQUIRED TO ANSWER USER'S QUERY. IF USER IS NOT ASKING ABOUT PENDING STEP THEN DO NOT REFER BELOW INFORMATION.\nUser\'s current onboarding status - {onboarding_step}
                                     If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step.
                                     NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS. DO NOT ASK USER TO FINISH PENDING STEPS."""
                         prompt_data_list.append(prm)
@@ -696,7 +696,12 @@ def get_specific_asset_details(asset_name,token):
 
         response = requests.request("POST", url, headers=headers, data=payload)
         data = response.json()
-        all_asset_details = data['data'][0]
+        try:
+            logger.info(f"got asset information - {data}")
+            all_asset_details = data['data'][0]
+        except:
+            logger.info(f"failed to get asset info - {data}")
+            return "Asset is not available", "Not available"
         # print(data)
         visibility = all_asset_details['visibility'][0]+all_asset_details['visibility'][1:].lower()
         # print(visibility)
@@ -756,6 +761,7 @@ def get_specific_asset_details(asset_name,token):
         except:
             pass
         try:
+            logger.info(f"Asset id is - {data['data'][0]['id']}")
             url = "https://api-uat.evident.capital/event/get-events-by-asset"
             payload = json.dumps({
             "assetId": data['data'][0]['id']
@@ -768,6 +774,7 @@ def get_specific_asset_details(asset_name,token):
             response = requests.request("POST", url, headers=headers, data=payload)
             data = response.json()
             data = data['data']
+            logger.info(f"got information from event api - \n{data}")
             event_details = 'No ongoing events.'
             if data !=[]:
                 evnNum = 1
@@ -801,6 +808,8 @@ def get_specific_asset_details(asset_name,token):
     except Exception as e:
         logger.error(f"failed to get asset details - {str(e)}")
         return "No information found","Not available"
+
+get_specific_asset_details("uma landry","NTY4MQ.QY7aYx-fBGyNFEqZW61P4og5T5pIZ1RNRJ93Pp3TNxKICUcMFMpiIAjnTtem")
 
 # Generate response based on provided asset specific detail
 def get_asset_based_response(assets_identified,question,token):
