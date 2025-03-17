@@ -954,7 +954,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
             promp_cat = get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
             promp_cat = promp_cat.split(",")
             promp_cat = [p.strip() for p in promp_cat]  
-            if 'Personal Assets' in promp_cat:
+            if 'Personal_Assets' in promp_cat:
                 prompt = f"""TO RETURN NAME OF ASSET:  
                 Last Question Category - `{last_ques_cat}`  
 
@@ -996,7 +996,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
         else:
             current_asset = asset_identified_flag
         logger.info(f"asset_identified_flag except - {asset_identified_flag}")
-        
+
     # If question is just a greeting nothing else is asked in that question
     if 'Greetings' in promp_cat[0] and len(promp_cat)==1:
         prompt = f"""User name is - {user_name}, reply to user in polite and positive way. Encourage for further communication. if user name is not present then skip using user's name. 'Please let me know if you have any other questions...' or 'Is there anything else...' As it can be user's 1st message. DO NOT FRAME ANSWER IN THIS WAY, INSTEAD ASK HOW YOU CAN HELP USER."""
