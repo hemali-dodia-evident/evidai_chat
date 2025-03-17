@@ -94,8 +94,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                  Onboarding_Issuer:Detailed process for issuer onboarding process.
                  Forget_Password: Contains step by step process to change or update password.
                  Corp_Investor_Onboarding:Detailed process for Corp investor onboarding process. Can also be reffered as Corp Onboarding or in similar context.
-                 Onboarding_Investor:Detailed process for investor onboarding process. Which contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions,
-                 Investment_Guide:Provides step by step process and guidance for investing in any asset.    
+                 Onboarding_Investor:Detailed process for investor onboarding process. Which contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions, Investment personality or eligibility criteria, Investment_Guide:Provides step by step process and guidance for investing in any asset.    
                  NOTE - IF MORE THAN ONE CATEGORY MATCHES THEN RETURN THEIR NAME WITH "," SEPERATED. 
                  - If user is talking or mentioning platform without specifying name of platform then it simply means Evident platform on which currently they are present. So refer all categories present above then provide answer.
                  E.g. Qestion: What are the steps for investor onboarding?
@@ -732,25 +731,6 @@ def get_specific_asset_details(asset_name,token):
             keyHighlights = keyHighlights+str(knum)+'.'+kh['text']+'\n'
             knum+=1
         
-        url = "https://api-uat.evident.capital/event/get-events-by-asset"
-        payload = json.dumps({
-        "assetId": data['data'][0]['id']
-        })
-        headers = {
-                    'Authorization': f'Bearer {token}',
-                    'Content-Type': 'application/json'
-                }
-
-        response = requests.request("POST", url, headers=headers, data=payload)
-        data = response.json()
-        data = data['data']
-        # print(data)
-        event_details = 'No ongoing events.'
-        if data !=[]:
-            evnNum = 1
-            for evn in data:
-                event_details = event_details+f"""{evnNum}. Event Title - {evn['title']}\nContent - {evn['content']}\nLink to Join Event - {evn['zoomLink']}\nStart Date - {evn['startDate']}\nEnd Date - {evn['endDate']}"""
-        
         rateOfReturn = all_asset_details['rateOfReturn'] if all_asset_details['rateOfReturn'] is not None else 'Unavailable'
         exitStrategy = all_asset_details['exitStrategy'] if all_asset_details['exitStrategy'] is not None else 'Unavailable'
         try:
@@ -762,11 +742,41 @@ def get_specific_asset_details(asset_name,token):
         except:
             company = "Not Available"
         impacts = []
-        impact_details = all_asset_details['impacts']
-        for imp in impact_details:
-            impacts.append(imp['name'])
-        impacts = ", ".join(impacts)
-        status = all_asset_details['status'][0].upper()+all_asset_details['status'][1:].lower()
+        impact_details = ""
+        try:
+            impact_details = all_asset_details['impacts']
+            for imp in impact_details:
+                impacts.append(imp['name'])
+            impacts = ", ".join(impacts)
+        except:
+            impact_details = "Not available"
+        status = "Not available"
+        try:
+            status = all_asset_details['status'][0].upper()+all_asset_details['status'][1:].lower()
+        except:
+            pass
+        try:
+            url = "https://api-uat.evident.capital/event/get-events-by-asset"
+            payload = json.dumps({
+            "assetId": data['data'][0]['id']
+            })
+            headers = {
+                        'Authorization': f'Bearer {token}',
+                        'Content-Type': 'application/json'
+                    }
+
+            response = requests.request("POST", url, headers=headers, data=payload)
+            data = response.json()
+            data = data['data']
+            event_details = 'No ongoing events.'
+            if data !=[]:
+                evnNum = 1
+                for evn in data:
+                    event_details = event_details+f"""{evnNum}. Event Title - {evn['title']}\nContent - {evn['content']}\nLink to Join Event - {evn['zoomLink']}\nStart Date - {evn['startDate']}\nEnd Date - {evn['endDate']}"""
+        except:
+            logger.error(f"Data from event api - \n{data}")
+            event_details = 'No ongoing events.'
+
         asset_info = f"""Asset Name - {all_asset_details['name']}
                       Asset Description - {all_asset_details['description']}
                       Asset Location - {all_asset_details['location']}
