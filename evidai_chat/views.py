@@ -89,7 +89,6 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                         - "Tell me about OpenAI."
                         - "What is OpenAI’s investment mode?"
                  Assets_Creation: Detailed process only to create assets. 
-                 Asset_Managers:This category contains information about due diligence process for asset managers, the structuring and tokenization of assets, and the various fundraising methods available on the platform, emphasizing efficiency, transparency, and investor protection.
                  Onboarding_Distributor:Detailed process for distributor onboarding process.
                  Onboarding_Issuer:Detailed process for issuer onboarding process.
                  Forget_Password: Contains step by step process to change or update password.
@@ -539,9 +538,9 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     for d in data:
                         prm = d.prompt
                         if 'Onboarding' in promp_cat:
-                            prm = f"""{prm} \nUSE THIS INFORMATION ONLY IF REQUIRED TO ANSWER USER'S QUERY. IF USER IS NOT ASKING ABOUT PENDING STEP THEN DO NOT REFER BELOW INFORMATION.\nUser\'s current onboarding status - {onboarding_step}
+                            prm = f"""{prm} \nUSE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS. \nUser\'s current onboarding status - {onboarding_step}
                                     If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step.
-                                    NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS. DO NOT ASK USER TO FINISH PENDING STEPS."""
+                                    NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS, AND CURRENT STATUS OF USER'S ONBOARDING. DO NOT ASK USER TO FINISH PENDING STEPS."""
                         prompt_data_list.append(prm)
                     # logger.info(prompt_data_list)
                     prompt_data = f"""Customer is not providing you any information, all information is with you, DO NOT SAY TO CUSTOMER THAT THEY HAVE NOT PROVIDED INFORMATION,INSTEAD SAY YOU DONT HAVE INFORMATION CURRENTLY ON THIS. You are smart and intelligent chat-bot having good knowledge of finance sector considering this chat with user. 
@@ -809,7 +808,7 @@ def get_specific_asset_details(asset_name,token):
         logger.error(f"failed to get asset details - {str(e)}")
         return "No information found","Not available"
 
-get_specific_asset_details("uma landry","NTY4MQ.QY7aYx-fBGyNFEqZW61P4og5T5pIZ1RNRJ93Pp3TNxKICUcMFMpiIAjnTtem")
+# get_specific_asset_details("uma landry","NTY4MQ.QY7aYx-fBGyNFEqZW61P4og5T5pIZ1RNRJ93Pp3TNxKICUcMFMpiIAjnTtem")
 
 # Generate response based on provided asset specific detail
 def get_asset_based_response(assets_identified,question,token):
@@ -823,7 +822,7 @@ def get_asset_based_response(assets_identified,question,token):
                     "Certain details are unavailable for this asset, but our support team would be happy to assist you. Please reach out to support@evident.capital with your query."
                     If no relevant information is available: Respond with:
                     "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
-                    Ask user to visit for more details - "{asset_url}" 
+                    Ask user to visit "Marketplace(https://uat.account.v2.evident.capital/)" for more details related to this asset and other asset. 
                     Note: The response should be clear, concise, and user-friendly, adhering to these guidelines. Encourage to ask more queries."""
             prompt = f"""Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about.
                 To get proper trade values, add all results of that perticular assets. Do not provide paramters like id, and also create proper response it **SHOULD NOT** be in key value format.
@@ -844,7 +843,7 @@ def get_asset_based_response(assets_identified,question,token):
                 **MAKE SURE YOU DO NOT SHOW ANY MAIN POINT AS SUB POINT OF ANYOTHER MAIN POINT.**
                 **DO NOT WRITE ANY VALUE AS "None", INSTEAD KEEP IT AS "Unavailable"**
                 **MAKE SURE IF SPECIFIC DETAILS ARE ASKED THEN SHARE ONLY AND ONLY SPECIFIC DETAILS**
-                E.g.
+                E.g. 
                 Asset Name - Abc
                 Asset Description - this is asset's description
                 Asset Location in Country - IND
@@ -855,22 +854,19 @@ def get_asset_based_response(assets_identified,question,token):
                 Structuring - Note
                 Asset vertical/Type - Venture
                 Asset Manager - Thomas
-                Comapny Name - Evident LLP
+                Comapny Name - Evident LLP  
                 IRR(Internal Rate of Return/Rate of Return) - 10%
                 Exit Strategy - Not available
                 Impacts: Social, Planet saving
                 Investment Details:
-                        Open Offers - 2
-                        Number of Investors - 10
-                        Invested amount - 50000
-                        Commitment Status - Completed
-                        Target Amount/Allocated Amount - 5000
-                        Minimum Investment Amount - 10
-                        Maximum Investment Amount - 500
-                        Raised Amount - 2000
-                        Start On - 10-2-2025
-                        End On - 10-3-2025                
-                Key Highlights:
+                        Commitment Status - Completed           |   Open Offers - 2
+                        Target Amount/Allocated Amount - 5000   |   Number of Investors - 10
+                        Minimum Investment Amount - 10          |   Invested amount - 50000
+                        Maximum Investment Amount - 500         |
+                        Raised Amount - 2000                    |
+                        Start On - 10-2-2025                    |
+                        End On - 10-3-2025                      |
+                Key Highlights:                                     
                         asset works good
                         progress happend with 10%                
                 Events:
@@ -922,14 +918,14 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
                 - If multiple assets match, separate them with `","`.  
 
                 #### **Example Normalization:**
-                | User Input  | Matched Asset |
-                |-------------|--------------|
-                | OpenAI      | OpenAI       |
-                | Open AI     | OpenAI       |
-                | Open-AI     | OpenAI       |
-                | open ai     | OpenAI       |
-                | openai      | OpenAI       |
-                | open_ai     | OpenAI       |
+                | User Input  | Matched Asset          |
+                |-------------|------------------------|
+                | OpenAI      | OpenAI - Co-Investment |
+                | Open AI     | OpenAI - Co-Investment |
+                | Open-AI     | OpenAI - Co-Investment |
+                | open ai     | OpenAI - Co-Investment |
+                | openai      | OpenAI - Co-Investment |
+                | open_ai     | OpenAI - Co-Investment |
 
                 - If an asset is found, **STOP and return the name immediately**.  
                 - If no match is found, continue to Step 2. 
