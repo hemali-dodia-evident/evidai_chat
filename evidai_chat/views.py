@@ -724,11 +724,17 @@ def get_specific_asset_details(asset_name,token):
                                     Start On - {startDate}\n
                                     End On - {endDate}
                                     """
-            
         elif all_asset_details['investmentMode']=='Trading':
             tardeDetails = all_asset_details['investmentDetails']
             investment_details = f"""Open Offers - {tardeDetails['openOffers']}\nNumber of Investors - {tardeDetails['numberOfInvestors']}\nTotal invested amount - {tardeDetails['totalInvested']}\n"""
             
+        updates_details = all_asset_details['updates']
+        updates = ""
+        if updates_details !=[]:
+            for u in updates_details:
+                updates = updates+f"Title: {u['title']}\nDescription: {u['description']}\n"
+        else:
+            updates = "Unavailable"
         keyHighlights = ""
         knum = 1
         for kh in all_asset_details['assetKeyHighlights']:
@@ -798,17 +804,23 @@ def get_specific_asset_details(asset_name,token):
                       Impacts - {impacts}
                       Asset Manager - {manager}
                       Comapny Name - {company}
-                      Investment Details - {investment_details}
+                      Updates - 
+                            {updates}
+                      Investment Details - 
+                            {investment_details}
                       Exit Strategy - {exitStrategy}
-                      Key Highlights - {keyHighlights}                      
-                      Events - {event_details}
+                      Key Highlights - 
+                            {keyHighlights}                      
+                      Events - 
+                            {event_details}
                       """
+        # print(asset_info)
         return asset_info,asset_url
     except Exception as e:
         logger.error(f"failed to get asset details - {str(e)}")
         return "No information found","Not available"
 
-# get_specific_asset_details("uma landry","NTY4MQ.QY7aYx-fBGyNFEqZW61P4og5T5pIZ1RNRJ93Pp3TNxKICUcMFMpiIAjnTtem")
+# get_specific_asset_details("dnd small cap funds","NTcyNA.-R661fn1g0Tk0G8gFCSpTk32ShZW4iK_9vsdtIoSGXuuXUQBBpjQc8RD4vBB")
 
 # Generate response based on provided asset specific detail
 def get_asset_based_response(assets_identified,question,token):
@@ -833,7 +845,7 @@ def get_asset_based_response(assets_identified,question,token):
                 **DO NOT APPLY BULLETS, OR NUMBERING.**
                 **Ensure line breaks are ONLY applied between different attributes, NOT within values.**
                 **DO NOT APPLY LINE BREAKS BETWEEN ATTRIBUTE AND VALUE. FOLLOW :- "Attribute:Value" FORMAT**
-                **STRUCTURE TEMPLATE TO CREATE ANSWER: STRICTLY FOLLOW THIS TEMPLATE TO ARRANGE AASSET DETAILS, IF ANY DETAILS IS UNAVAILABLE SKIP THAT TITLE IN CASE OF "Investment Details" AND "Events": **
+                **STRUCTURE TEMPLATE TO CREATE ANSWER: STRICTLY FOLLOW THIS TEMPLATE TO ARRANGE AASSET DETAILS, IF ANY DETAILS IS UNAVAILABLE SKIP THAT TITLE IN CASE OF "Investment Details" AND "Events"**
                 **"Events:","Investment Details:" AND "Key Highlights:" HAVE SUB POINTS. MAKE SURE MAIN POINTS AND SUB POINTS ARE IN PROPER DIFFERENTIATE MANNER. DO NOT TREAT MAIN POINTS AS SUBPOINTS WHILE APPLYING ANY KIND OF LISTING OR BULLETING.**
                 **IF USER IS ASKING ABOUT ANY SPECIFIC DETAILS LIKE "MANAGER NAME", "EVENTS", "IRR", OR ANY OTHER KEY DETAILS PRESENT IN STRUCTURE. THEN PROVIDE ONLY THAT SPECIFIC INFORMATION. DO NOT PROVIDE ALL INFORMATION.
                 **IF USER IS ASKING ABOUT INVESTMENT, COMMITMENT PROCESS OR STEPS IN ASSET THEN RETURN ONLY 'Apologies, currently I am not able to assit you with step by step details but You can start investment by clicking on "Invest" tab.'
