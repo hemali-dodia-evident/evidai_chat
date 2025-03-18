@@ -828,7 +828,7 @@ def get_asset_based_response(assets_identified,question,token):
                 To get proper trade values, add all results of that perticular assets. Do not provide paramters like id, and also create proper response it **SHOULD NOT** be in key value format.
                 PROVIDE ALL INFORMATION TO USER, DO NOT SKIP ANY INFORMATION. IN CASE IF USER IS ASKING ABOUT ANY SPECIFIC DETAIL THEN PROVIDE ONLY THAT SPECIFIC DETAIL.
                 NOTE - {note}
-                Asset Details: - {data}
+                
                 RESPONSE GUIDELINES: STRICTLY FOLLOW THIS GUIDELINE WHILE PROVIDING RESPONSE. FOLLOW HTML FORMATTING AS SHOWN IN TEMPLATE ONLY.
                 **DO NOT APPLY BULLETS, OR NUMBERING.**
                 **Ensure line breaks are ONLY applied between different attributes, NOT within values.**
@@ -843,38 +843,8 @@ def get_asset_based_response(assets_identified,question,token):
                 **MAKE SURE YOU DO NOT SHOW ANY MAIN POINT AS SUB POINT OF ANYOTHER MAIN POINT.**
                 **DO NOT WRITE ANY VALUE AS "None", INSTEAD KEEP IT AS "Unavailable"**
                 **MAKE SURE IF SPECIFIC DETAILS ARE ASKED THEN SHARE ONLY AND ONLY SPECIFIC DETAILS**
-                E.g. 
-                Asset Name - Abc
-                Asset Description - this is asset's description
-                Asset Location in Country - IND
-                Asset Status - Completed
-                Asset Visibility - Public
-                Retirement Elgibility - Yes
-                Investment Mode - Trade
-                Structuring - Note
-                Asset vertical/Type - Venture
-                Asset Manager - Thomas
-                Comapny Name - Evident LLP  
-                IRR(Internal Rate of Return/Rate of Return) - 10%
-                Exit Strategy - Not available
-                Impacts: Social, Planet saving
-                Investment Details:
-                        Commitment Status - Completed           |   Open Offers - 2
-                        Target Amount/Allocated Amount - 5000   |   Number of Investors - 10
-                        Minimum Investment Amount - 10          |   Invested amount - 50000
-                        Maximum Investment Amount - 500         |
-                        Raised Amount - 2000                    |
-                        Start On - 10-2-2025                    |
-                        End On - 10-3-2025                      |
-                Key Highlights:                                     
-                        asset works good
-                        progress happend with 10%                
-                Events:
-                        Event Title - Onboarding Introduction
-                        Content - hello how are you
-                        Link to Join Event - https://samplelink.com
-                        Start Date - 03-03-2025
-                        End Date - 05-03-2025
+                Asset Details: - 
+                {data}                
                 """
             response = get_gemini_response(question,prompt)      
             final_response = final_response + '\n'+ response  
