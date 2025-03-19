@@ -11,5 +11,8 @@ urlpatterns = [
     path('get_chat_session_details',views.get_chat_session_details,name='get_chat_session_details'),
     path('update_prompt_values',views.update_prompt_values,name='update_prompt_values'),
     path('login',views.login,name='login'),
-    path('add_prompt_values',views.add_prompt_values,name='add_prompt_values')
+    path('add_prompt_values',views.add_prompt_values,name='add_prompt_values'),
+    path('get_prompt_id',views.get_prompt_id,name='get_prompt_id'),
+    path('delete_prompt_value',views.delete_prompt_value,name='delete_prompt_value'),
+    path('get_all_prompt_catogiries',views.get_all_prompt_catogiries,name='get_all_prompt_catogiries')
 ]
