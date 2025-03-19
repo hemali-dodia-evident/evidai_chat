@@ -684,6 +684,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     If no relevant information is available: Respond with: Also make sure this statement SHOULD NOT be at start of respose:
                     "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
                     For more assistance or further assistance scenario provide support contact - support@evident.capital
+                    **KEEP THIS STATEMENT AS IT IS, DO NOT ADD ANY FORMATTING FOR THIS**: "I can assist you with onboarding assistance for investors and asset research & overview. Let me know how I can help! More features will be available soon."
                     Ensure:
                     The response is structured well with line breaks for readability.
                     Ensure line breaks are only applied between different attributes, or point, NOT within values.
