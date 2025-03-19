@@ -93,7 +93,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                  Onboarding_Issuer:Detailed process for issuer onboarding process.
                  Forget_Password: Contains step by step process to change or update password.
                  Corp_Investor_Onboarding:Detailed process for Corp investor onboarding process. Can also be reffered as Corp Onboarding or in similar context.
-                 Onboarding_Investor:Detailed process for investor onboarding process. Which contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions, Investment personality or eligibility criteria, Investment_Guide:Provides step by step process and guidance for investing in any asset.    
+                 Onboarding_Investor:Detailed process for investor onboarding process. Which contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions, Investment personality or eligibility criteria, 
                  NOTE - IF MORE THAN ONE CATEGORY MATCHES THEN RETURN THEIR NAME WITH "," SEPERATED. 
                  - If user is talking or mentioning platform without specifying name of platform then it simply means Evident platform on which currently they are present. So refer all categories present above then provide answer.
                  E.g. Qestion: What are the steps for investor onboarding?
@@ -848,7 +848,7 @@ def get_asset_based_response(assets_identified,question,token):
                 **STRUCTURE TEMPLATE TO CREATE ANSWER: STRICTLY FOLLOW THIS TEMPLATE TO ARRANGE AASSET DETAILS, IF ANY DETAILS IS UNAVAILABLE SKIP THAT TITLE IN CASE OF "Investment Details" AND "Events"**
                 **"Events:","Investment Details:" AND "Key Highlights:" HAVE SUB POINTS. MAKE SURE MAIN POINTS AND SUB POINTS ARE IN PROPER DIFFERENTIATE MANNER. DO NOT TREAT MAIN POINTS AS SUBPOINTS WHILE APPLYING ANY KIND OF LISTING OR BULLETING.**
                 **IF USER IS ASKING ABOUT ANY SPECIFIC DETAILS LIKE "MANAGER NAME", "EVENTS", "IRR", OR ANY OTHER KEY DETAILS PRESENT IN STRUCTURE. THEN PROVIDE ONLY THAT SPECIFIC INFORMATION. DO NOT PROVIDE ALL INFORMATION.
-                **IF USER IS ASKING ABOUT INVESTMENT, COMMITMENT PROCESS OR STEPS IN ASSET THEN RETURN ONLY 'Apologies, currently I am not able to assit you with step by step details but You can start investment by clicking on "Invest" tab.'
+                **IF USER IS ASKING ABOUT INVESTMENT PROCESS, COMMITMENT PROCESS OR STEPS IN ASSET THEN RETURN ONLY 'Apologies, currently I am not able to assit you with step by step details but You can start investment by clicking on "Invest" tab.'
                 **COMPANY DOCUMENT IS AVAILABLE: Go to 'Company Document' -> 'NDA' pop-up will appear -> Click on 'I have read and agree to the terms of this NDA.' -> Click on 'Sign'**
                 **TO DOWNLOAD COMPANY DOCUMENT: Go to 'Company Document' -> 'NDA' pop-up will appear -> Click on 'I have read and agree to the terms of this NDA.' -> Click on 'Sign' -> Click on 'Download all'
                 **ASSET "TYPE" IS EQUAL TO ASSET "VERTICAL" AND ONLY "Target Amount" IS EQUAL TO "Allocated Amount"**
@@ -1294,21 +1294,43 @@ def add_prompt_values(request):
             return JsonResponse({"message":"Failed to add prompt","data":{"error":str(e)},"status":False},status=400)
 
 
-def add_prompt_to_UAT():
-    data = models.BasicPrompts.objects.exclude(prompt_category='Existing Assets').all().values()
-    for d in data:
-        if d['prompt_category'] in ['Forget Password','Corp Investor Onboarding','Onboarding Investor']:
-            continue
-        # print(d['prompt_category'])
-        value = d['prompt']
-        category = d['prompt_category']
-        asset_name = d['asset_name'][0] if d['asset_name'] is not None else ""
-        asset_sub_cat = d['asset_sub_cat'][0] if d['asset_sub_cat'] is not None else ""
-        url = "https://chatbot-api.evident.capital/add_prompt_values"
+@csrf_exempt
+def delete_prompt_value(request):
+    if request.method=='POST':
+        try:
+            data = json.loads(request.body)
+            prompt_id = data.get('id')  # Get ID from request body
+            
+            # Check if the object exists
+            prompt = models.BasicPrompts.objects.get(id=prompt_id)
+            prompt.delete()  # Delete the object
+            
+            return JsonResponse({"message": "Deleted successfully"}, status=200)
+        except models.BasicPrompts.DoesNotExist:
+            return JsonResponse({"error": "Prompt not found"}, status=404)
 
-        payload = json.dumps({"value":value,"category":category,"asset_name":asset_name,"asset_sub_cat":asset_sub_cat})
-        headers = {}
-        # print(payload)
-        response = requests.request("POST", url, headers=headers, data=payload)
+@csrf_exempt
+def get_prompt_id(request):
+    if request.method=='POST':
+        try:
+            data = json.loads(request.body)
+            category = data['category'].replace("_"," ")
 
-        # print(response.content)
+            prompt_table = models.BasicPrompts.objects.filter(prompt_category=category).values_list('id',flat=True)
+            prompt_id = list(prompt_table)
+
+            return JsonResponse({"message":"ID fetched successfully","data":{"IDs":prompt_id},"status":True},status=200)
+        except Exception as e:
+            return JsonResponse({"message":"Failed to get prompt id","data":{"error":str(e)},"status":False},status=400)
+
+
+@csrf_exempt
+def get_all_prompt_catogiries(request):
+    if request.method=='POST':
+        try:
+            data = json.loads(request.body)
+            prompt_table = models.BasicPrompts.objects.all().values_list('id','prompt_category')
+            prompt_id = list(prompt_table)
+            return JsonResponse({"message":"ID fetched successfully","data":{"IDs":prompt_id},"status":True},status=200)
+        except Exception as e:
+            return JsonResponse({"message":"Failed to get prompt categories","data":{"error":str(e)},"status":False},status=400)
