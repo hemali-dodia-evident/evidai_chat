@@ -684,7 +684,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     If no relevant information is available: Respond with: Also make sure this statement SHOULD NOT be at start of respose:
                     "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
                     For more assistance or further assistance scenario provide support contact - support@evident.capital
-                    **KEEP THIS STATEMENT AS IT IS IF IT IS PRESENT, DO NOT ADD ANY FORMATTING FOR THIS**: "I can assist you with onboarding assistance for investors and asset research & overview. Let me know how I can help! More features will be available soon."
+                    **KEEP THIS STATEMENT AS IT IS ONLY IF IT IS PRESENT IN RESPONSE, DO NOT ADD IT EXPLICTELY AND DO NOT ADD ANY FORMATTING FOR THIS**: "I can assist you with onboarding assistance for investors and asset research & overview. Let me know how I can help! More features will be available soon."
                     Ensure:
                     The response is structured well with line breaks for readability.
                     Ensure line breaks are only applied between different attributes, or point, NOT within values.
@@ -874,7 +874,8 @@ def get_asset_based_response(assets_identified,question,token):
                 **STRUCTURE TEMPLATE TO CREATE ANSWER: STRICTLY FOLLOW THIS TEMPLATE TO ARRANGE AASSET DETAILS, IF ANY DETAILS IS UNAVAILABLE SKIP THAT TITLE IN CASE OF "Investment Details" AND "Events"**
                 **"Events:","Investment Details:" AND "Key Highlights:" HAVE SUB POINTS. MAKE SURE MAIN POINTS AND SUB POINTS ARE IN PROPER DIFFERENTIATE MANNER. DO NOT TREAT MAIN POINTS AS SUBPOINTS WHILE APPLYING ANY KIND OF LISTING OR BULLETING.**
                 **IF USER IS ASKING ABOUT ANY SPECIFIC DETAILS LIKE "MANAGER NAME", "EVENTS", "IRR", OR ANY OTHER KEY DETAILS PRESENT IN STRUCTURE. THEN PROVIDE ONLY THAT SPECIFIC INFORMATION. DO NOT PROVIDE ALL INFORMATION.
-                **IF USER IS ASKING ABOUT INVESTMENT PROCESS, COMMITMENT PROCESS OR STEPS IN ASSET THEN RETURN ONLY **"I can assist you with onboarding assistance for investors and asset research & overview. Let me know how I can help! More features will be available soon."**
+                **IF USER IS ASKING ABOUT INVESTMENT PROCESS, COMMITMENT PROCESS OR STEPS IN ASSET THEN RETURN ONLY :** 
+                    "I can assist you with onboarding assistance for investors and asset research & overview. Let me know how I can help! More features will be available soon."
                 **COMPANY DOCUMENT IS AVAILABLE: Go to 'Company Document' -> 'NDA' pop-up will appear -> Click on 'I have read and agree to the terms of this NDA.' -> Click on 'Sign'**
                 **TO DOWNLOAD COMPANY DOCUMENT: Go to 'Company Document' -> 'NDA' pop-up will appear -> Click on 'I have read and agree to the terms of this NDA.' -> Click on 'Sign' -> Click on 'Download all'
                 **ASSET "TYPE" IS EQUAL TO ASSET "VERTICAL" AND ONLY "Target Amount" IS EQUAL TO "Allocated Amount"**
