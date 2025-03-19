@@ -527,6 +527,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
         specific_category = promp_cat_new.replace("_",' ').split(',')
         assets_identified = ""
         personalAssets = isPersonalAsset 
+        failed_cat = False
         for promp_cat in specific_category:   
             logger.info(f"Getting answer for category - {promp_cat}")    
             if (promp_cat!='FAILED' and promp_cat !='Personal Assets'): 
@@ -554,7 +555,10 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     Maintain a positive and polite tone throughout the response.
                     The response should be clear, concise, and user-friendly, adhering to these guidelines."""
                     response = get_gemini_response(question,prompt_data)
-                    final_response = final_response + '\n' + response    
+                    if final_response == "":
+                        final_response = response
+                    else:
+                        final_response = final_response + '\n' + response
                 except Exception as e:
                     logger.info(f"Failed to find general category related information in DB - {str(e)}")
                     prm = """For this topic currently we don't have any information. 
@@ -567,7 +571,11 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                 logger.info("Prompt Category is 'FAILED'")
                 response = "I can assist you with onboarding assistance for investors and asset research & overview. Let me know how I can help! More features will be available soon."
                 # response = search_on_internet(question)
-                final_response = final_response + '\n' + response   
+                if final_response == "":
+                    final_response = response
+                else:
+                    final_response = final_response + '\n' + response
+                failed_cat = True 
             elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True or personalAssets==True:    
                 logger.info("Prompt Category is Personal Asset") 
                 if personalAssets==True:
@@ -634,16 +642,25 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
 
                     FAILURE TO FOLLOW THIS RESPONSE FORMAT IS NOT ACCEPTABLE. STRICTLY ADHERE TO THE GUIDELINES."""
                     response = get_gemini_response(question,prompt)
-                    final_response = final_response + '\n' + response   
+                    if final_response == "":
+                        final_response = response
+                    else:
+                        final_response = final_response + '\n' + response
                     personalAssets = False                
                 else:
                     assets_identified = current_asset.split(",")
                     response = get_asset_based_response(assets_identified,question,token)
-                    final_response = final_response + '\n' + response 
+                    if final_response == "":
+                        final_response = response
+                    else:
+                        final_response = final_response + '\n' + response
                     asset_found = ",".join(assets_identified)                 
             else:
                 response = search_on_internet(question)
-                final_response = final_response + '\n' + response  
+                if final_response == "":
+                    final_response = response
+                else:
+                    final_response = final_response + '\n' + response  
         if final_response == "":
             final_response = "Sorry! I am unable understand the question. Can you provide more details so I can assist you better?"
         prompt = """Follow these instructions exactly to ensure a structured, clear, and user-friendly response:
@@ -670,7 +687,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     No extra words, unnecessary greetings, or irrelevant details are added.
                     Do not include the full support message unless all information is unavailable.
                     Strictly follow these instructions to generate the best response."""
-        if personalAssets==False:
+        if personalAssets==False and failed_cat==False:
             final_response = get_gemini_response(final_response,prompt)
         
         logger.info(f"Categories final - {specific_category}")
