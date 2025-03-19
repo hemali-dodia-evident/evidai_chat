@@ -539,21 +539,28 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     for d in data:
                         prm = d.prompt
                         if 'Onboarding' in promp_cat:
-                            prm = f"""{prm} \nUSE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS. \nUser\'s current onboarding status - {onboarding_step}
+                            prm = f"""{prm} \nIF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.\nUSE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS. \nUser\'s current onboarding status - {onboarding_step}
                                     If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step.
                                     NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS, AND CURRENT STATUS OF USER'S ONBOARDING. DO NOT ASK USER TO FINISH PENDING STEPS."""
                         prompt_data_list.append(prm)
+                    prompt_data_list = "\n".join(prompt_data_list)
                     # logger.info(prompt_data_list)
-                    prompt_data = f"""Customer is not providing you any information, all information is with you, DO NOT SAY TO CUSTOMER THAT THEY HAVE NOT PROVIDED INFORMATION,INSTEAD SAY YOU DONT HAVE INFORMATION CURRENTLY ON THIS. You are smart and intelligent chat-bot having good knowledge of finance sector considering this chat with user. 
-                    Provide answer in a way that you are chatting with customer. Do not use any kind of emojis. Do not greet user while answering. Guide and help user to finish their steps and complete onboarding. Use below information to get answer -
-                    {prompt_data_list}
-                    NOTE - If you are not able to find answer then say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
-                    Keep tone positive and polite while answering user's query.
-                    Avoid mentioning or implying that the user has not provided information.
-                    Do not greet the user in your response. If you are unable to find answer then just say "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
-                    Use proper formatting such as line breaks to enhance readability. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
-                    Maintain a positive and polite tone throughout the response.
-                    The response should be clear, concise, and user-friendly, adhering to these guidelines."""
+                    prompt_data = f"""Customer is not providing you any information, all information is with you. DO NOT say to the customer that they have not provided information. Instead, say you don’t have the information currently.
+                            You are a smart and intelligent chatbot with strong knowledge of the finance sector. Answer as if you are chatting with a customer.
+                            Do not use emojis. Do not greet the user while answering. Guide and help the user to finish their steps and complete onboarding.
+
+                            Use the following information to find the answer:
+                            {prompt_data_list}
+
+                            ### IMPORTANT GUIDELINES:  
+                            1. If the user asks about onboarding, directly provide the steps without extra explanations.  
+                            2. If the user asks about 'US Person' selection, the correct response is:  
+                            "You will not be able to proceed ahead as we are currently working on an updated account opening process for US clients. We will notify you once it becomes available."  
+                            Do NOT mention tax implications or suggest contacting support unless explicitly asked.  
+                            3. If the user asks about pending onboarding steps, list the incomplete steps and guide them accordingly.  
+                            4. If you cannot find an answer, say:  
+                            "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please email them at support@evident.capital with the details of your query for prompt assistance."  
+                            5. Keep your tone **polite, clear, and direct**. Use line breaks for readability"""
                     response = get_gemini_response(question,prompt_data)
                     if final_response == "":
                         final_response = response
