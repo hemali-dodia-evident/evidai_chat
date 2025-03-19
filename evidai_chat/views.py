@@ -50,7 +50,7 @@ def get_gemini_response(question,prompt):
 # Identify prompt category based on current and previous questions
 def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
     # logger.info("Finding prompt from get_prompt_category")
-    prompt = f"""Based on user's question identify the category of a question from below mentioned categories. STRICTLY PROVIDE ONLY NAME OF CATEGORIES NOTHING ELSE, IF NO CATEGORY MATCHES THEN RETURN "FAILED".
+    prompt = f"""Based on user's question identify the category of a question from below mentioned categories. STRICTLY PROVIDE ONLY NAME OF CATEGORIES NOTHING ELSE, IF NO CATEGORY MATCHES THEN RETURN "FAILED". DO NOT CREATE CATEGORY NAME BY YOURSELF, STRICTLY REFER BELOW MENTIONED CATEGORIES ONLY.
                  Note - While answering do not add any other information or words. Just reply as per specified way. ONLY PROVIDE ONLY NAME OF CATEGORIES. CONSIDER GENERIC ABRIAVATIONS IN CONTEXT OF QUESTION, LIKE 'CORP INV' WILL BE 'Corp Investor'.
                  USER's QUESTION - {current_question}
                  Last Asset about which user asked - {last_asset}
@@ -89,11 +89,9 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                         - "Tell me about OpenAI."
                         - "What is OpenAI’s investment mode?"
                  Assets_Creation: Detailed process only to create assets. 
-                 Onboarding_Distributor:Detailed process for distributor onboarding process.
-                 Onboarding_Issuer:Detailed process for issuer onboarding process.
                  Forget_Password: Contains step by step process to change or update password.
                  Corp_Investor_Onboarding:Detailed process for Corp investor onboarding process. Can also be reffered as Corp Onboarding or in similar context.
-                 Onboarding_Investor:Detailed process for investor onboarding process. Which contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions, Investment personality or eligibility criteria, 
+                 Onboarding_Investor:Detailed process for investor onboarding process. Which ONLY contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions, Investment personality or eligibility criteria, 
                  NOTE - IF MORE THAN ONE CATEGORY MATCHES THEN RETURN THEIR NAME WITH "," SEPERATED. 
                  - If user is talking or mentioning platform without specifying name of platform then it simply means Evident platform on which currently they are present. So refer all categories present above then provide answer.
                  E.g. Qestion: What are the steps for investor onboarding?
@@ -104,15 +102,17 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                       Bot: Personal_Assets
                       Question: Hey i want some help
                       Bot: Greetings
-                    
+                      Question: How to logout from this platform?
+                      Bot: FAILED
                     - IF USER'S ROLE - Individual Investor
                       Question: What are my onboarding steps/What are my pending steps
                       Bot: Onboarding_Investor
                  """
     response = get_gemini_response(current_question,prompt)
-    # logger.info(f"prompt category - {response}")
+    logger.info(f"prompt category - {response}")
     return response
 
+# get_prompt_category("how to set 2FA","investor","","Owned Assets")
 
 # Authenticate from jwt token we are getting from UI
 @csrf_exempt
@@ -565,7 +565,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     final_response = get_gemini_response(question,prm)
             elif promp_cat=='FAILED':
                 logger.info("Prompt Category is 'FAILED'")
-                response = search_on_internet(question)
+                response = "I can assist you with onboarding assistance for investors and asset research & overview. Let me know how I can help! More features will be available soon."
+                # response = search_on_internet(question)
                 final_response = final_response + '\n' + response   
             elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True or personalAssets==True:    
                 logger.info("Prompt Category is Personal Asset") 
@@ -654,9 +655,9 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     Never imply that the user has not provided information.
                     Response Guidelines:
                     If an answer is fully available: Provide a clear, concise response with proper structure and formatting.
-                    If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable. If needed, suggest contacting support:
+                    If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable.  Also make sure this statement SHOULD NOT be at start of respose: If needed, suggest contacting support:
                     "Certain details are unavailable, but our support team would be happy to assist you. Please reach out to support@evident.capital with your query."
-                    If no relevant information is available: Respond with:
+                    If no relevant information is available: Respond with: Also make sure this statement SHOULD NOT be at start of respose:
                     "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
                     For more assistance or further assistance scenario provide support contact - support@evident.capital
                     Ensure:
@@ -848,7 +849,7 @@ def get_asset_based_response(assets_identified,question,token):
                 **STRUCTURE TEMPLATE TO CREATE ANSWER: STRICTLY FOLLOW THIS TEMPLATE TO ARRANGE AASSET DETAILS, IF ANY DETAILS IS UNAVAILABLE SKIP THAT TITLE IN CASE OF "Investment Details" AND "Events"**
                 **"Events:","Investment Details:" AND "Key Highlights:" HAVE SUB POINTS. MAKE SURE MAIN POINTS AND SUB POINTS ARE IN PROPER DIFFERENTIATE MANNER. DO NOT TREAT MAIN POINTS AS SUBPOINTS WHILE APPLYING ANY KIND OF LISTING OR BULLETING.**
                 **IF USER IS ASKING ABOUT ANY SPECIFIC DETAILS LIKE "MANAGER NAME", "EVENTS", "IRR", OR ANY OTHER KEY DETAILS PRESENT IN STRUCTURE. THEN PROVIDE ONLY THAT SPECIFIC INFORMATION. DO NOT PROVIDE ALL INFORMATION.
-                **IF USER IS ASKING ABOUT INVESTMENT PROCESS, COMMITMENT PROCESS OR STEPS IN ASSET THEN RETURN ONLY 'Apologies, currently I am not able to assit you with step by step details but You can start investment by clicking on "Invest" tab.'
+                **IF USER IS ASKING ABOUT INVESTMENT PROCESS, COMMITMENT PROCESS OR STEPS IN ASSET THEN RETURN ONLY **"I can assist you with onboarding assistance for investors and asset research & overview. Let me know how I can help! More features will be available soon."**
                 **COMPANY DOCUMENT IS AVAILABLE: Go to 'Company Document' -> 'NDA' pop-up will appear -> Click on 'I have read and agree to the terms of this NDA.' -> Click on 'Sign'**
                 **TO DOWNLOAD COMPANY DOCUMENT: Go to 'Company Document' -> 'NDA' pop-up will appear -> Click on 'I have read and agree to the terms of this NDA.' -> Click on 'Sign' -> Click on 'Download all'
                 **ASSET "TYPE" IS EQUAL TO ASSET "VERTICAL" AND ONLY "Target Amount" IS EQUAL TO "Allocated Amount"**
@@ -957,65 +958,6 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
 
                 **STRICTLY REPLY WITH EITHER 0, 1, 2, OR THE EXACT ASSET NAME. NO ADDITIONAL TEXT IS ALLOWED.**"""
 
-    # prompt = f"""TO RETURN NAME OF ASSET:  
-    #             Last Question Category - `{last_ques_cat}`  
-
-    #             ### **Step 1: If Explicit Asset Name is Found, Return Asset Name**
-    #             - If the question contains an **exact match** or **a close match** (with typos/misspellings), RETURN that asset name.  
-    #                 Asset Name Matching Priority:   
-    #                     - If you  identify an exact asset name  from the list, return that exact value.  
-    #                     - If you find a  similar  asset name that the user might be referring to (considering typos, misspellings, or approximate context), return the closest matching asset name from the list.  
-    #                     - Treat  "&" and "and"  as equivalent when matching asset names.  
-    #                     -  If the user has not explicitly mentioned an asset name but is referring to a previously mentioned one, return `{last_asset}`.   
-    #                     -  If the question explicitly asks about an asset (like "Who is the manager of XYZ?"), RETURN only the ASSET NAME and do not classify this as a general investment query.   
-    #                 Asset Names - {asset_names}
-    #             - If multiple assets match, separate them with `","`.                    
-    #             - If asset name is found strictly return asset name from "Asset Names"  
-    #             - If no match is found, continue to Step 3. 
-
-    #             ### **Step 2: If Last Question Category is "Owned Assets", Return "1"**
-    #             - If `{last_ques_cat} == "Owned Assets"` and question is about user-owned assets, holdings, trades, and commitments, **IMMEDIATELY RETURN `"1"`**—DO NOT check for `last_asset`.  
-    #             - This ensures that **user-owned assets, holdings, trades, and commitments always return `"1"`**.  
-    #             - Owned Assets have ONLY following data: If question is related to following data while Last Question Category is "Owned Assets" : Return '1'.
-    #                 Owned Asset Data(**ONLY THIS DATA IS AVAILABLE**): IF QUESTION IS ABOUT ANYTHING ELSE THAN BELOW MENTIONED TOPIC THEN REFER TO OTHER STEPS - 
-    #                     Trade Details:- Trade Asset, Price, Total Units, Available Units, Trade Units, Trade Status, Number of Clients, Asset Maker
-    #                     Commitment Details:- Asset Name, Commitment Amount, Allotted Units, Commitment Status
-                
-    #             ### **Step 3: If Last Question Category is "Personal Assets" and a Relevant Topic is Found, Return `{last_asset}`**
-    #             - If `{last_ques_cat} == "Personal Assets"` **AND** the question is related to **Relevant Topics** below, RETURN `{last_asset}`.  
-
-    #             ### **Relevant Topics (For Personal Assets Only)**
-    #             - Name (e.g., Title, Label, Designation)  
-    #             - Description (e.g., Details, Summary, Overview, Information)  
-    #             - Location (e.g., Country, Region, Place, Address, Jurisdiction)  
-    #             - Currency (e.g., Money, Denomination, Trading Currency, Financial Unit)  
-    #             - Status (e.g., Condition, Current State, Standing, Availability)  
-    #             - Structuring (e.g., Organization, Framework, Setup, Type)  
-    #             - Vertical/Type (e.g., Category, Industry, Asset Class, Classification)  
-    #             - Updates (e.g., Modifications, Changes, Revisions, Latest Information)  
-    #             - Retirement Eligibility (e.g., Maturity, Expiry, Withdraw Criteria)  
-    #             - Investment Mode (e.g., Trading Method, Funding Type, Capital Deployment)  
-    #             - IRR (Internal Rate of Return/Rate of Return) (e.g., ROI, Yield, Profitability, Earnings Rate)  
-    #             - Impacts (e.g., Effect, Influence, ESG Factors, Sustainability, Social Responsibility)  
-    #             - Manager (e.g., Asset Manager, Fund Manager, Portfolio Manager, Administrator)  
-    #             - Company (e.g., Organization, Entity, Business, Firm, Issuer)  
-    #             - Investment Details (e.g., Funding Information, Capital Info, Portfolio Details, Including Asset-specific: Trades and Commitments)  
-    #             - Commitment Details (e.g., Target Amount, Minimum Investment Amount, Maximum Investment Amount, Raised Amount)  
-    #             - Trade Details (e.g., Open Offers, Number of Investors, Total Invested Amount)  
-    #             - Open Offers (e.g., Available Deals, Active Investments, Ongoing Offers)  
-    #             - Number of Investors (e.g., Total Investors, Investor Count, Stakeholders)  
-    #             - Total Invested Amount (e.g., Capital Deployed, Funds Raised, Total Funding)  
-    #             - Exit Strategy (e.g., Liquidity Plan, Withdrawal Plan, Disinvestment Plan)  
-    #             - Key Highlights (e.g., Important Points, Notable Features, Core Insights)  
-    #             - Events (e.g., Occurrences, Announcements, Happenings, Ongoing Activities)  
-
-    #             ### **Step 4: If question is related or in context of previous category, Return "2"**
-    #             - If the current question is related to the previous question category, STRICTLY RETURN `2`.                  
-                
-    #             ### **Step 5: If question does not belong to any of the above mentioned steps i.e. from Step 1 to Step 4, Return "0"**
-    #             - If the question does not match any to any of the above steps, RETURN `"0"`.
-
-    #             STRICTLY REPLY IN THE ABOVE FORMAT. DO NOT ADD ANYTHING ELSE IN YOUR RESPONSE. **RESPONSE SHOULD EITHER 0,1,2, OR NAME OF ASSET NOTHING ELSE IS ACCEPTABLE AS RESPONSE.**"""
     asset_identified_flag = get_gemini_response(current_question,prompt)
     logger.info(f'asset_identified_flag - {asset_identified_flag}')
     promp_cat = []
