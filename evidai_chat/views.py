@@ -143,6 +143,7 @@ def token_validation(token):
             user_role = 'Issuer'
         elif data['user']['isDistributor']==False and data['user']['isOwner']==False and data['user']['profile']['isInstitutional']==True:
             user_role = 'Corp Investor'
+        logger.info(f"Token - {token}\nUser_Role = {user_role}")
         onboarding_details = data['user']['individualOnboarding']
         onboarding_steps = []
         for stp in onboarding_details:
@@ -160,6 +161,7 @@ def token_validation(token):
         logger.error(f"Failed to get user/me response due to - {str(e)}")
         return token, '', '', '', ''
 
+# token_validation("NTk1Ng.BGwieslpl3FEDFFZjcgbhNSciTQSJmLSTBWRkzymUt3A2MDHNhbu701D0cag")
 
 # Add conversation to DB
 @csrf_exempt
@@ -1101,7 +1103,8 @@ def login(request):
     payload = json.dumps({
     # "email": "shweta+indinvuat03@evident.capital",
     # "password": "Evident@2024",
-    "email": "sai+0303ind@gmail.com",
+    # "email": "sai+1802ipi@evident.capital",
+    "email":"sai+0303ind@gmail.com",
     "password": "Evident@2025",
     "ipInfo": {
         "asn": "asn",
