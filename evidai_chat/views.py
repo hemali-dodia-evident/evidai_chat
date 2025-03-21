@@ -143,7 +143,7 @@ def token_validation(token):
             user_role = 'Issuer'
         elif data['user']['isDistributor']==False and data['user']['isOwner']==False and data['user']['profile']['isInstitutional']==True:
             user_role = 'Corp Investor'
-        logger.info(f"Token - {token}\nUser_Role = {user_role}")
+        # logger.info(f"Token - {token}\nUser_Role = {user_role}")
         onboarding_details = data['user']['individualOnboarding']
         onboarding_steps = []
         for stp in onboarding_details:
@@ -1186,7 +1186,7 @@ def evidAI_chat(request):
             data = json.loads(request.body)
             current_question = data.get('question')
             chat_session_id = int(data.get('chat_session_id'))
-            logger.info(f"token - ",token)
+            # logger.info(f"token - ",token)
             # chat session validation
             chat_session_validation = validate_chat_session(chat_session_id)
             if chat_session_validation is None:
