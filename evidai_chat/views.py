@@ -541,9 +541,11 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     for d in data:
                         prm = d.prompt
                         if 'Onboarding' in promp_cat and 'Corp' in promp_cat:
-                            prm = f"""{prm}\nIF USER IS SPECIFICALLY ASKING ABOUT IPI, CPI, OR NON-PI THEN ONLY ANSWER ABOUT IT.\n\nIF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.\nUSE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS. \nUser\'s current onboarding status - {onboarding_step}
-                                    If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step.
-                                    NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS, AND CURRENT STATUS OF USER'S ONBOARDING. DO NOT ASK USER TO FINISH PENDING STEPS."""
+                            prm = f"""{prm}\nIF USER IS SPECIFICALLY ASKING ABOUT IPI, CPI, OR NON-PI THEN ONLY ANSWER ABOUT THAT SPECIFIC FLOW DO NOT ADD ANY OTHER INFORMATION.
+                            IF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.
+                            NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS, AND CURRENT STATUS OF USER'S ONBOARDING. DO NOT ASK USER TO FINISH PENDING STEPS.
+                            USE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS ONLY IF ASKED. \nUser\'s current onboarding status - {onboarding_step}
+                            If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step."""
                         elif 'Onboarding' in promp_cat:
                             prm = f"""{prm} \nIF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.\nUSE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS. \nUser\'s current onboarding status - {onboarding_step}
                                     If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step.
