@@ -555,15 +555,11 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                 4. If onboarding is **incomplete**, provide details on **pending steps** and ask the user to complete them.  
                                 5. **Do not lead the user to another option** (e.g., If the user asks about Non-PI, do not suggest CPI or any other alternative).  
 
-                            ---
-
                             ### SCENARIO 1: USER ASKS ABOUT THE ONBOARDING PROCESS  
                                 - Provide **only** onboarding step details.  
                                 - Example queries:  
                                 - "What is the onboarding process?"  
                                 - "Provide details about onboarding steps."  
-
-                            ---
 
                             ### SCENARIO 2: USER ASKS ABOUT THEIR ONBOARDING STATUS  
 
@@ -580,20 +576,34 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                 - "What are my mandatory steps?"  
                                 - "How do I complete my onboarding?"  
 
-                            ---
-
-                            ### SCENARIO 3: USER ASKS ABOUT AR, NON-PI, IPI, OR CPI  
+                            ### SCENARIO 3: USER ASKS ABOUT AR : Authorised Representative
                                 1. Provide **ONLY** the requested information - Do **NOT** add extra details about other categories unless explicitly asked.  
                                 2. Ensure **all required details** are included in the response based on the user's query.  
-                                3. If the user asks for **steps to proceed as AR, Non-PI, IPI, or CPI**, provide **only those steps** without suggesting alternatives.  
+                                3. If the user asks for **steps to proceed as AR**, provide **only those steps** without suggesting alternatives.  
                                 4. **Do not suggest an alternative category** unless the user explicitly asks for a comparison.  
                                 
+                            ### SCENARIO 4: USER ASKS ABOUT NON-PI : Non Professional Investor
+                                1. Provide **ONLY** the requested information - Do **NOT** add extra details about other categories unless explicitly asked.  
+                                2. Ensure **all required details** are included in the response based on the user's query.  
+                                3. If the user asks for **steps to proceed as Non-PI**, provide **only those steps** without suggesting alternatives.  
+                                4. **Do not suggest an alternative category** unless the user explicitly asks for a comparison.  
+
+                            ### SCENARIO 5: USER ASKS ABOUT IPI : Institutional Professional Investor
+                                1. Provide **ONLY** the requested information - Do **NOT** add extra details about other categories unless explicitly asked.  
+                                2. Ensure **all required details** are included in the response based on the user's query.  
+                                3. If the user asks for **steps to proceed as IPI**, provide **only those steps** without suggesting alternatives.  
+                                4. **Do not suggest an alternative category** unless the user explicitly asks for a comparison.  
+
+                            ### SCENARIO 6: USER ASKS ABOUT CPI : Corporate Professional Investor
+                                1. Provide **ONLY** the requested information - Do **NOT** add extra details about other categories unless explicitly asked.  
+                                2. Ensure **all required details** are included in the response based on the user's query.  
+                                3. If the user asks for **steps to proceed as CPI**, provide **only those steps** without suggesting alternatives.  
+                                4. **Do not suggest an alternative category** unless the user explicitly asks for a comparison.  
+
                             - Example queries:  
                             - "How can I proceed as a Non-PI?" → Answer **only** with the steps for Non-PI.  
                             - "Can CPI or Non-PI invest in complex assets?" → Answer **only** about CPI and Non-PI without mentioning AR or IPI.  
                             - "What are the requirements for IPI or CPI?" → Provide requirements for **both IPI and CPI** as requested.  
-
-                            ---
 
                             ### Onboarding Guide -
                             {prm}  
