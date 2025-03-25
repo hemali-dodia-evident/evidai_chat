@@ -137,31 +137,35 @@ def token_validation(token):
         user_id = data["user"]["id"]
         user_name = data['user']['kyc']['fullName'].split()[0] if data['user']['kyc']['fullName'] != '' else ''
         user_role = 'Individual Investor'
+        isAR = data['user']['profile']['isAuthorizedRepresentative']
         if data['user']['isDistributor']==True:
             user_role = 'Distributor'
         elif data['user']['isOwner']==True:
             user_role = 'Issuer'
         elif data['user']['isDistributor']==False and data['user']['isOwner']==False and data['user']['profile']['isInstitutional']==True:
             user_role = 'Corp Investor'
-        # logger.info(f"Token - {token}\nUser_Role = {user_role}")
-        onboarding_details = data['user']['individualOnboarding']
-        onboarding_steps = []
-        for stp in onboarding_details:
-            temp_stp = {}
-            temp_stp['stepName'] = stp['stepName']
-            temp_stp['stepStatus'] = stp['stepStatus']     
-            onboarding_steps.append(temp_stp)       
         
+        onboarding_details = data['user']['individualOnboarding']
+        onboarding_steps = ""
+        for stp in onboarding_details:
+            step_name = stp['stepName'].replace("_"," ")
+            step_name = step_name[0].upper()+step_name[1:]
+            step_status = stp['stepStatus'][0]+stp['stepStatus'][1:].lower()
+
+            temp_stp = f"{step_name}:{step_status}"
+            if onboarding_steps != '':
+                onboarding_steps=onboarding_steps+'\n'+temp_stp    
+            else:
+                onboarding_steps=f"Authorised Represntative Status - {isAR}"+'\n'+temp_stp
         if validate:
             return token, user_id, user_name, user_role, onboarding_steps
         else:
-            return token, None, None, None, None
+            return None, None, None, None, None
 
     except Exception as e:
         logger.error(f"Failed to get user/me response due to - {str(e)}")
-        return token, '', '', '', ''
+        return None, None, None, None, None
 
-# token_validation("NTk1Ng.BGwieslpl3FEDFFZjcgbhNSciTQSJmLSTBWRkzymUt3A2MDHNhbu701D0cag")
 
 # Add conversation to DB
 @csrf_exempt
@@ -519,7 +523,6 @@ def safe_value(value):
 
 
 # Check category of question and then based on category generate response
-# IP Count:10, OP Count:3
 def category_based_question(current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset):
     question = current_question
     final_response = ""
@@ -540,19 +543,58 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     prompt_data_list = []
                     for d in data:
                         prm = d.prompt
-                        if 'Onboarding' in promp_cat and 'Corp' in promp_cat:
-                            prm = f"""{prm}\nIF USER IS SPECIFICALLY ASKING ABOUT IPI, CPI, OR NON-PI THEN ONLY ANSWER ABOUT THAT SPECIFIC FLOW DO NOT ADD ANY OTHER INFORMATION.
-                            IF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.
-                            NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS, AND CURRENT STATUS OF USER'S ONBOARDING. DO NOT ASK USER TO FINISH PENDING STEPS.
-                            USE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS ONLY IF ASKED. \nUser\'s current onboarding status - {onboarding_step}
-                            If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step."""
-                        elif 'Onboarding' in promp_cat:
-                            prm = f"""{prm} \nIF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.\nUSE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS. \nUser\'s current onboarding status - {onboarding_step}
-                                    If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step.
-                                    NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS, AND CURRENT STATUS OF USER'S ONBOARDING. DO NOT ASK USER TO FINISH PENDING STEPS."""
+                        if 'Onboarding' in promp_cat:
+                            onb_res_prm = f"""Follow below instructions to generate response using required information given -
+                                Current Onboarding Status - {onboarding_step}
+
+                                **GENERAL RULES TO FOLLOW WHILE GENERATING RESPONSE**
+                                1. Provide all detailed information for each step.
+                                2. IF question is about or related to any specific step then provide information for those steps ONLY.
+                                3. IF USER IS ASKING ABOUT AR, IPI, CPI, NON-PI THEN PROVIDE DETAILED INFORMATION ON IT.
+                                4. If user's onboarding is incomplete then ask user to finish onboarding with step details.
+
+                                ** When User is AR **
+                                ### CASE 1 :- IF USER IS ASKING ABOUT ONBOARDING STEPS ###
+                                1. Provide only onboarding step details.
+                                
+                                ### CASE 2:- IF USER ASKES ABOUT HIS ONBOARDING STEPS/STATUS ###
+                                1. Provide details about ONLY pending steps 
+                                2. ASK USER TO FINISH ONBOARDING
+
+                                ** When User is Non-AR **
+                                ### CASE 1 :- IF USER IS ASKING ABOUT ONBOARDING STEPS ###
+                                1. Provide only onboarding step details.
+
+                                ### CASE 2:- IF USER ASKES ABOUT HIS ONBOARDING STEPS/STATUS ###
+                                1. Provide details about ONLY pending steps 
+                                2. ASK USER TO FINISH ONBOARDING
+                                3. ASK user to invite AR if not invited
+                                4. ASK user to wait till AR completes onboarding
+                                5. Without AR's onboarding completion, User CAN NOT proceed ahead
+
+                                Onboarding Guide - 
+                                {prm}
+                                """
+                            prm = onb_res_prm
+
+                        # if 'Onboarding' in promp_cat and 'Corp' in promp_cat:
+                        #     prm = f"""{prm}\nProvide details of each step.\nIF USER IS SPECIFICALLY ASKING ABOUT IPI, CPI, OR NON-PI THEN ONLY ANSWER ABOUT THAT SPECIFIC FLOW DO NOT ADD ANY OTHER INFORMATION.
+                        #     IF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.
+                        #     NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS, AND CURRENT STATUS OF USER'S ONBOARDING. DO NOT ASK USER TO FINISH PENDING STEPS.
+                        #     USE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS ONLY IF ASKED. \nUser\'s current onboarding status - {onboarding_step}
+                        #     If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step."""
+                        # elif 'Onboarding' in promp_cat:
+                        #     prm = f"""{prm} \nProvide details of each step.\nIF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.\nUSE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS. \nUser\'s current onboarding status - {onboarding_step}
+                        #             If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step.
+                        #             NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS, AND CURRENT STATUS OF USER'S ONBOARDING. DO NOT ASK USER TO FINISH PENDING STEPS."""
                         prompt_data_list.append(prm)
                     prompt_data_list = "\n".join(prompt_data_list)
                     # logger.info(prompt_data_list)
+                    # 1. If the user asks about onboarding, directly provide the steps without extra explanations.  
+                    #         2. If the user asks about 'US Person' selection, the correct response is:  
+                    #         "You will not be able to proceed ahead as we are currently working on an updated account opening process for US clients. We will notify you once it becomes available."  
+                    #         Do NOT mention tax implications or suggest contacting support unless explicitly asked.  
+                    #         3. If the user asks about pending onboarding steps, list the incomplete steps and guide them accordingly.  
                     prompt_data = f"""Customer is not providing you any information, all information is with you. DO NOT say to the customer that they have not provided information. Instead, say you don’t have the information currently.
                             You are a smart and intelligent chatbot with strong knowledge of the finance sector. Answer as if you are chatting with a customer.
                             Do not use emojis. Do not greet the user while answering. Guide and help the user to finish their steps and complete onboarding.
@@ -560,15 +602,10 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                             Use the following information to find the answer:
                             {prompt_data_list}
 
-                            ### IMPORTANT GUIDELINES:  
-                            1. If the user asks about onboarding, directly provide the steps without extra explanations.  
-                            2. If the user asks about 'US Person' selection, the correct response is:  
-                            "You will not be able to proceed ahead as we are currently working on an updated account opening process for US clients. We will notify you once it becomes available."  
-                            Do NOT mention tax implications or suggest contacting support unless explicitly asked.  
-                            3. If the user asks about pending onboarding steps, list the incomplete steps and guide them accordingly.  
-                            4. If you cannot find an answer, say:  
+                            ### IMPORTANT GUIDELINES:                              
+                            1. If you cannot find an answer for any part of question then provide available information and for missing information, say:  
                             "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please email them at support@evident.capital with the details of your query for prompt assistance."  
-                            5. Keep your tone **polite, clear, and direct**. Use line breaks for readability"""
+                            2. Keep your tone **polite, clear, and direct**. Use line breaks for readability"""
                     response = get_gemini_response(question,prompt_data)
                     if final_response == "":
                         final_response = response
@@ -854,7 +891,6 @@ def get_specific_asset_details(asset_name,token):
         logger.error(f"failed to get asset details - {str(e)}")
         return "No information found","Not available"
 
-# get_specific_asset_details("dnd small cap funds","NTcyNA.-R661fn1g0Tk0G8gFCSpTk32ShZW4iK_9vsdtIoSGXuuXUQBBpjQc8RD4vBB")
 
 # Generate response based on provided asset specific detail
 def get_asset_based_response(assets_identified,question,token):
@@ -1096,7 +1132,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
         promp_cat = [p.strip() for p in promp_cat if 'Greetings' not in p.strip()]
     logger.info(f"Prompt categories - {promp_cat}")
     response,asset_found,specific_category = category_based_question(current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset)
-    # logger.info(f"final response from handle_questions - {response}")
+    logger.info(f"final response from handle_questions - {response}")
     specific_category = ",".join(specific_category)
     # print("specific_category= ",specific_category)
     return response,asset_found,specific_category
@@ -1110,7 +1146,7 @@ def login(request):
     # "email": "shweta+indinvuat03@evident.capital",
     # "password": "Evident@2024",
     # "email": "sai+1802ipi@evident.capital",
-    "email":"sai+0303ind@gmail.com",
+    "email":"hemali-ci@evident.capital",
     "password": "Evident@2025",
     "ipInfo": {
         "asn": "asn",
@@ -1141,6 +1177,7 @@ def login(request):
     return JsonResponse({"token":token},status=200)
 
 
+# Convert response to HTML friendly format
 def format_response(response):
     # Normalize list formatting
     response = re.sub(r'\n\s*-\s*', '\n- ', response)  # Fix unordered lists
@@ -1163,11 +1200,8 @@ def format_response(response):
     # response = re.sub(r'^\d+\.\s*', '', response, flags=re.MULTILINE)
     response = re.sub(r'^-\s*', '', response, flags=re.MULTILINE)
 
-    # Convert Markdown to HTML
-    # html_content = markdown.markdown(response)
-    # html_content = html_content.replace("*","").replace("<em>","").replace("</em>","").replace("","").replace("","")
-    
     return response
+
 
 # Main flow
 @csrf_exempt
@@ -1192,7 +1226,7 @@ def evidAI_chat(request):
             data = json.loads(request.body)
             current_question = data.get('question')
             chat_session_id = int(data.get('chat_session_id'))
-            # logger.info(f"token - ",token)
+
             # chat session validation
             chat_session_validation = validate_chat_session(chat_session_id)
             if chat_session_validation is None:
