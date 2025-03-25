@@ -552,6 +552,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                 2. IF question is about or related to any specific step then provide information for those steps ONLY.
                                 3. IF USER IS ASKING ABOUT AR, IPI, CPI, NON-PI THEN PROVIDE DETAILED INFORMATION ON IT SPECIFICALLY.
                                 4. If user's onboarding is incomplete then ask user to finish onboarding with step details.
+                                5. DO NOT FAIL TO ADD INFORMATION WHICH IS ASKED FOR.
 
                                 ** When User is AR **
                                 ### CASE 1 :- IF USER IS ASKING ABOUT ONBOARDING STEPS ###
@@ -560,6 +561,10 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                 ### CASE 2:- IF USER ASKES ABOUT HIS ONBOARDING STEPS/STATUS ###
                                 1. Provide details about ONLY pending steps 
                                 2. ASK USER TO FINISH ONBOARDING
+
+                                ### CASE 3 :- WHEN USER IS ASKING ABOUT AR, NON-PI, IPI, OR CPI ###
+                                1. ONLY PROVIDE information related asked topic.
+                                2. DO NOT FAIL TO ADD INFORMATION WHICH IS ASKED FOR.
 
                                 ** When User is Non-AR **
                                 ### CASE 1 :- IF USER IS ASKING ABOUT ONBOARDING STEPS ###
@@ -571,6 +576,10 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                 3. ASK user to invite AR if not invited.
                                 4. ASK user to wait till AR completes onboarding.
                                 5. Without AR's onboarding completion, User CAN NOT proceed ahead.
+
+                                ### CASE 3 :- WHEN USER IS ASKING ABOUT AR, NON-PI, IPI, OR CPI ###
+                                1. ONLY PROVIDE information related asked topic.
+                                2. DO NOT FAIL TO ADD INFORMATION WHICH IS ASKED FOR.
 
                                 Onboarding Guide - 
                                 {prm}
