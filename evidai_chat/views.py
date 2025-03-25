@@ -543,19 +543,19 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     prompt_data_list = []
                     for d in data:
                         prm = d.prompt
-                        if 'Onboarding' in promp_cat:
+                        if 'Onboarding' in promp_cat and 'Corp' in promp_cat:
                             onb_res_prm = f"""Follow below instructions to generate response using required information given -
                                 Current Onboarding Status - {onboarding_step}
 
                                 **GENERAL RULES TO FOLLOW WHILE GENERATING RESPONSE**
-                                1. Provide all detailed information for each step.
+                                1. Provide all detailed information for each step first as asked in question.
                                 2. IF question is about or related to any specific step then provide information for those steps ONLY.
-                                3. IF USER IS ASKING ABOUT AR, IPI, CPI, NON-PI THEN PROVIDE DETAILED INFORMATION ON IT.
+                                3. IF USER IS ASKING ABOUT AR, IPI, CPI, NON-PI THEN PROVIDE DETAILED INFORMATION ON IT SPECIFICALLY.
                                 4. If user's onboarding is incomplete then ask user to finish onboarding with step details.
 
                                 ** When User is AR **
                                 ### CASE 1 :- IF USER IS ASKING ABOUT ONBOARDING STEPS ###
-                                1. Provide only onboarding step details.
+                                1. Provide only onboarding step details ONLY.
                                 
                                 ### CASE 2:- IF USER ASKES ABOUT HIS ONBOARDING STEPS/STATUS ###
                                 1. Provide details about ONLY pending steps 
@@ -563,30 +563,39 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
 
                                 ** When User is Non-AR **
                                 ### CASE 1 :- IF USER IS ASKING ABOUT ONBOARDING STEPS ###
-                                1. Provide only onboarding step details.
+                                1. Provide only onboarding step details ONLY.
 
                                 ### CASE 2:- IF USER ASKES ABOUT HIS ONBOARDING STEPS/STATUS ###
-                                1. Provide details about ONLY pending steps 
-                                2. ASK USER TO FINISH ONBOARDING
-                                3. ASK user to invite AR if not invited
-                                4. ASK user to wait till AR completes onboarding
-                                5. Without AR's onboarding completion, User CAN NOT proceed ahead
+                                1. Provide details about ONLY pending steps.
+                                2. ASK USER TO FINISH ONBOARDING.
+                                3. ASK user to invite AR if not invited.
+                                4. ASK user to wait till AR completes onboarding.
+                                5. Without AR's onboarding completion, User CAN NOT proceed ahead.
 
                                 Onboarding Guide - 
                                 {prm}
                                 """
                             prm = onb_res_prm
 
-                        # if 'Onboarding' in promp_cat and 'Corp' in promp_cat:
-                        #     prm = f"""{prm}\nProvide details of each step.\nIF USER IS SPECIFICALLY ASKING ABOUT IPI, CPI, OR NON-PI THEN ONLY ANSWER ABOUT THAT SPECIFIC FLOW DO NOT ADD ANY OTHER INFORMATION.
-                        #     IF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.
-                        #     NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS, AND CURRENT STATUS OF USER'S ONBOARDING. DO NOT ASK USER TO FINISH PENDING STEPS.
-                        #     USE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS ONLY IF ASKED. \nUser\'s current onboarding status - {onboarding_step}
-                        #     If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step."""
-                        # elif 'Onboarding' in promp_cat:
-                        #     prm = f"""{prm} \nProvide details of each step.\nIF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.\nUSE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS. \nUser\'s current onboarding status - {onboarding_step}
-                        #             If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step.
-                        #             NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS, AND CURRENT STATUS OF USER'S ONBOARDING. DO NOT ASK USER TO FINISH PENDING STEPS."""
+                        elif 'Onboarding' in promp_cat:
+                            onb_res_prm = f"""Follow below instructions to generate response using required information given -
+                                Current Onboarding Status - {onboarding_step}
+
+                                **GENERAL RULES TO FOLLOW WHILE GENERATING RESPONSE**
+                                1. Provide all detailed information for each step first as asked in question.
+                                2. IF question is about or related to any specific step then provide information for those steps ONLY.
+                                3. IF USER IS ASKING ABOUT AR, IPI, CPI, NON-PI THEN ASK USER TO SIGN-UP AS "CORP INVESTOR" TO GET MORE DETAILS ON THIS.
+                                4. If user's onboarding is incomplete then ask user to finish onboarding with step details.
+                                5. IF any step is pending for onboarding ask user to complete those steps and provide proper details of steps.
+
+                                Onboarding Guide - 
+                                {prm}
+                                """
+                            prm = onb_res_prm
+
+                            # prm = f"""{prm} \nProvide details of each step.\nIF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.\nUSE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS. \nUser\'s current onboarding status - {onboarding_step}
+                            #         If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step.
+                            #         NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS, AND CURRENT STATUS OF USER'S ONBOARDING. DO NOT ASK USER TO FINISH PENDING STEPS."""
                         prompt_data_list.append(prm)
                     prompt_data_list = "\n".join(prompt_data_list)
                     # logger.info(prompt_data_list)
