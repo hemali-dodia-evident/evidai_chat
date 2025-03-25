@@ -572,11 +572,12 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                     4. ASK user to wait till AR completes onboarding.
                                     5. Without AR's onboarding completion, User CAN NOT proceed ahead.
                                     e.g. What are my pending steps?, how i can finish my onboarding?, what are my mandatory steps?
-                                    
+
                                 ### SCENARIO 3 :- WHEN USER IS ASKING ANYTHING ABOUT AR, NON-PI, IPI, OR CPI ###
-                                1. ONLY PROVIDE information and STEPS related to it.
+                                1. ONLY PROVIDE INFORMATION and STEPS related to it.
                                 2. DO NOT FAIL TO ADD INFORMATION WHICH IS ASKED FOR.
-                                e.g. How to be an AR?, What are the steps to prceed as AR?, What is Non-PI?, what are the requirements for IPI or CPI?
+                                3. MAKE SURE YOU ADD ALL REQUIRED DETALS TO ANSWER USER'S QUERY FROM AVAILABLE INFORMATION.
+                                e.g. How to be an AR?, Can CPI or Non-PI invest in complex assets?, What are the steps to prceed as AR?, What is Non-PI?, what are the requirements for IPI or CPI?
 
                                 Onboarding Guide - 
                                 {prm}
