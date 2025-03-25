@@ -544,45 +544,101 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     for d in data:
                         prm = d.prompt
                         if 'Onboarding' in promp_cat and 'Corp' in promp_cat:
-                            onb_res_prm = f"""Follow below instructions to generate response using required information given -
-                                Current Onboarding Status - {onboarding_step}
+                            onb_res_prm = f"""### INSTRUCTIONS FOR GENERATING RESPONSE BASED ON ONBOARDING STATUS
+                            Current Onboarding Status: {onboarding_step}
 
-                                **GENERAL RULES TO FOLLOW WHILE GENERATING RESPONSE**
-                                1. Provide all detailed information for each step first as asked in question.
-                                2. IF question is about or related to any specific step then provide information for those steps ONLY.
-                                3. IF USER IS ASKING ABOUT AR, IPI, CPI, NON-PI THEN PROVIDE DETAILED INFORMATION ON IT SPECIFICALLY.
-                                4. If user's onboarding is incomplete then ask user to finish onboarding with step details.
-                                5. DO NOT FAIL TO ADD INFORMATION WHICH IS ASKED FOR.
+                            ### GENERAL RULES TO FOLLOW WHILE GENERATING RESPONSES  
+                                1. Answer **only** what the user is asking for – Do **not** suggest alternatives unless explicitly requested.  
+                                2. Provide **detailed information** for each requested step – Ensure all relevant details are included.  
+                                3. If the question is related to **AR, IPI, CPI, or Non-PI**, provide **only** information related to that specific category.  
+                                4. If onboarding is **incomplete**, provide details on **pending steps** and ask the user to complete them.  
+                                5. **Do not lead the user to another option** (e.g., If the user asks about Non-PI, do not suggest CPI or any other alternative).  
 
-                                ### SCENARIO 1 :- IF USER IS ASKING ABOUT ONBOARDING STEPS ###
-                                1. Provide only onboarding step details ONLY.
-                                e.g. What is onboarding process?, provide me details about onboarding process., etc.
+                            ---
 
-                                ** When User is AR **
-                                    ### SCENARIO 2:- IF USER ASKES ABOUT HIS ONBOARDING STEPS/STATUS ###
-                                    1. Provide details about ONLY pending steps 
-                                    2. ASK USER TO FINISH ONBOARDING
-                                    e.g. What are my pending steps?, how i can finish my onboarding?, what are my mandatory steps?
+                            ### SCENARIO 1: USER ASKS ABOUT THE ONBOARDING PROCESS  
+                                - Provide **only** onboarding step details.  
+                                - Example queries:  
+                                - "What is the onboarding process?"  
+                                - "Provide details about onboarding steps."  
+
+                            ---
+
+                            ### SCENARIO 2: USER ASKS ABOUT THEIR ONBOARDING STATUS  
+
+                                #### If the User is AR  
+                                - Provide **only pending steps** and request the user to complete them.  
+                                - Example queries:  
+                                - "What are my pending steps?"  
+                                - "How can I finish my onboarding?"  
+
+                                #### If the User is Non-AR  
+                                - Provide **only pending steps** and request the user to complete them.  
+                                - Additionally, **inform them that they need to invite an AR** (if not invited) and **wait until AR completes onboarding** before proceeding.  
+                                - Example queries:  
+                                - "What are my mandatory steps?"  
+                                - "How do I complete my onboarding?"  
+
+                            ---
+
+                            ### SCENARIO 3: USER ASKS ABOUT AR, NON-PI, IPI, OR CPI  
+                                1. Provide **ONLY** the requested information - Do **NOT** add extra details about other categories unless explicitly asked.  
+                                2. Ensure **all required details** are included in the response based on the user's query.  
+                                3. If the user asks for **steps to proceed as AR, Non-PI, IPI, or CPI**, provide **only those steps** without suggesting alternatives.  
+                                4. **Do not suggest an alternative category** unless the user explicitly asks for a comparison.  
                                 
-                                ** When User is Non-AR **
-                                    ### SCENARIO 2:- IF USER ASKES ABOUT HIS ONBOARDING STEPS/STATUS ###
-                                    1. Provide details about ONLY pending steps.
-                                    2. ASK USER TO FINISH ONBOARDING.
-                                    3. ASK user to invite AR if not invited.
-                                    4. ASK user to wait till AR completes onboarding.
-                                    5. Without AR's onboarding completion, User CAN NOT proceed ahead.
-                                    e.g. What are my pending steps?, how i can finish my onboarding?, what are my mandatory steps?
+                            - Example queries:  
+                            - "How can I proceed as a Non-PI?" → Answer **only** with the steps for Non-PI.  
+                            - "Can CPI or Non-PI invest in complex assets?" → Answer **only** about CPI and Non-PI without mentioning AR or IPI.  
+                            - "What are the requirements for IPI or CPI?" → Provide requirements for **both IPI and CPI** as requested.  
 
-                                ### SCENARIO 3 :- WHEN USER IS ASKING ANYTHING ABOUT AR, NON-PI, IPI, OR CPI ###
-                                1. ONLY PROVIDE INFORMATION and STEPS related to it.
-                                2. DO NOT FAIL TO ADD INFORMATION WHICH IS ASKED FOR.
-                                3. MAKE SURE YOU ADD ALL REQUIRED DETALS TO ANSWER USER'S QUERY FROM AVAILABLE INFORMATION.
-                                4. ONLY PROVIDE STEPS TO PROCEED AS AR/NON-PI/IPI/CPI IF ASKED FOR STEPS.
-                                e.g. How to be an AR?, Can CPI or Non-PI invest in complex assets?, What are the steps to proceed as AR?, What is Non-PI?, what are the requirements for IPI or CPI?
+                            ---
 
-                                Onboarding Guide - 
-                                {prm}
-                                """
+                            ### Onboarding Guide -
+                            {prm}  
+                            """  
+
+                            # onb_res_prm = f"""Follow below instructions to generate response using required information given -
+                            #     Current Onboarding Status - {onboarding_step}
+
+                            #     **GENERAL RULES TO FOLLOW WHILE GENERATING RESPONSE**
+                            #     1. Provide all detailed information for each step first as asked in question.
+                            #     2. IF question is about or related to any specific step then provide information for those steps ONLY.
+                            #     3. IF USER IS ASKING ABOUT AR, IPI, CPI, NON-PI THEN PROVIDE DETAILED INFORMATION ON IT SPECIFICALLY.
+                            #     4. If user's onboarding is incomplete then ask user to finish onboarding with step details.
+                            #     5. DO NOT FAIL TO ADD INFORMATION WHICH IS ASKED FOR.
+                            #     6. ANSWER ONLY FOR WHAT USER IS ASKING ABOUT. DO NOT LEAD THEM TO ANYTHING ELSE.
+
+                            #     ### SCENARIO 1 :- IF USER IS ASKING ABOUT ONBOARDING STEPS ###
+                            #     1. Provide only onboarding step details ONLY.
+                            #     e.g. What is onboarding process?, provide me details about onboarding process., etc.
+
+                            #     ** When User is AR **
+                            #         ### SCENARIO 2:- IF USER ASKES ABOUT HIS ONBOARDING STEPS/STATUS ###
+                            #         1. Provide details about ONLY pending steps 
+                            #         2. ASK USER TO FINISH ONBOARDING
+                            #         e.g. What are my pending steps?, how i can finish my onboarding?, what are my mandatory steps?
+                                
+                            #     ** When User is Non-AR **
+                            #         ### SCENARIO 2:- IF USER ASKES ABOUT HIS ONBOARDING STEPS/STATUS ###
+                            #         1. Provide details about ONLY pending steps.
+                            #         2. ASK USER TO FINISH ONBOARDING.
+                            #         3. ASK user to invite AR if not invited.
+                            #         4. ASK user to wait till AR completes onboarding.
+                            #         5. Without AR's onboarding completion, User CAN NOT proceed ahead.
+                            #         e.g. What are my pending steps?, how i can finish my onboarding?, what are my mandatory steps?
+
+                            #     ### SCENARIO 3 :- WHEN USER IS ASKING ANYTHING ABOUT AR, NON-PI, IPI, OR CPI ###
+                            #     1. ONLY PROVIDE INFORMATION and STEPS related to it.
+                            #     2. DO NOT FAIL TO ADD INFORMATION WHICH IS ASKED FOR.
+                            #     3. MAKE SURE YOU ADD ALL REQUIRED DETALS TO ANSWER USER'S QUERY FROM AVAILABLE INFORMATION.
+                            #     4. ONLY PROVIDE STEPS TO PROCEED AS AR/NON-PI/IPI/CPI IF ASKED FOR STEPS.
+                            #     5. DO NOT ASK USER TO PROCEED AS CPI/IPI WHEN THEY WANT TO BE NON-PI OR VISE-VERSA
+                            #     e.g. How to be an AR?, Can CPI or Non-PI invest in complex assets?, What are the steps to proceed as AR?, What is Non-PI?, what are the requirements for IPI or CPI?
+
+                            #     Onboarding Guide - 
+                            #     {prm}
+                            #     """
                             prm = onb_res_prm
 
                         elif 'Onboarding' in promp_cat:
