@@ -577,7 +577,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                 1. ONLY PROVIDE INFORMATION and STEPS related to it.
                                 2. DO NOT FAIL TO ADD INFORMATION WHICH IS ASKED FOR.
                                 3. MAKE SURE YOU ADD ALL REQUIRED DETALS TO ANSWER USER'S QUERY FROM AVAILABLE INFORMATION.
-                                e.g. How to be an AR?, Can CPI or Non-PI invest in complex assets?, What are the steps to prceed as AR?, What is Non-PI?, what are the requirements for IPI or CPI?
+                                4. ONLY PROVIDE STEPS TO PROCEED AS AR/NON-PI/IPI/CPI IF ASKED FOR STEPS.
+                                e.g. How to be an AR?, Can CPI or Non-PI invest in complex assets?, What are the steps to proceed as AR?, What is Non-PI?, what are the requirements for IPI or CPI?
 
                                 Onboarding Guide - 
                                 {prm}
