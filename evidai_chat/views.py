@@ -554,32 +554,29 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                 4. If user's onboarding is incomplete then ask user to finish onboarding with step details.
                                 5. DO NOT FAIL TO ADD INFORMATION WHICH IS ASKED FOR.
 
+                                ### SCENARIO 1 :- IF USER IS ASKING ABOUT ONBOARDING STEPS ###
+                                1. Provide only onboarding step details ONLY.
+                                e.g. What is onboarding process?, provide me details about onboarding process., etc.
+
                                 ** When User is AR **
-                                ### CASE 1 :- IF USER IS ASKING ABOUT ONBOARDING STEPS ###
-                                1. Provide only onboarding step details ONLY.
+                                    ### SCENARIO 2:- IF USER ASKES ABOUT HIS ONBOARDING STEPS/STATUS ###
+                                    1. Provide details about ONLY pending steps 
+                                    2. ASK USER TO FINISH ONBOARDING
+                                    e.g. What are my pending steps?, how i can finish my onboarding?, what are my mandatory steps?
                                 
-                                ### CASE 2:- IF USER ASKES ABOUT HIS ONBOARDING STEPS/STATUS ###
-                                1. Provide details about ONLY pending steps 
-                                2. ASK USER TO FINISH ONBOARDING
-
-                                ### CASE 3 :- WHEN USER IS ASKING ABOUT AR, NON-PI, IPI, OR CPI ###
-                                1. ONLY PROVIDE information related asked topic.
-                                2. DO NOT FAIL TO ADD INFORMATION WHICH IS ASKED FOR.
-
                                 ** When User is Non-AR **
-                                ### CASE 1 :- IF USER IS ASKING ABOUT ONBOARDING STEPS ###
-                                1. Provide only onboarding step details ONLY.
-
-                                ### CASE 2:- IF USER ASKES ABOUT HIS ONBOARDING STEPS/STATUS ###
-                                1. Provide details about ONLY pending steps.
-                                2. ASK USER TO FINISH ONBOARDING.
-                                3. ASK user to invite AR if not invited.
-                                4. ASK user to wait till AR completes onboarding.
-                                5. Without AR's onboarding completion, User CAN NOT proceed ahead.
-
-                                ### CASE 3 :- WHEN USER IS ASKING ABOUT AR, NON-PI, IPI, OR CPI ###
-                                1. ONLY PROVIDE information related asked topic.
+                                    ### SCENARIO 2:- IF USER ASKES ABOUT HIS ONBOARDING STEPS/STATUS ###
+                                    1. Provide details about ONLY pending steps.
+                                    2. ASK USER TO FINISH ONBOARDING.
+                                    3. ASK user to invite AR if not invited.
+                                    4. ASK user to wait till AR completes onboarding.
+                                    5. Without AR's onboarding completion, User CAN NOT proceed ahead.
+                                    e.g. What are my pending steps?, how i can finish my onboarding?, what are my mandatory steps?
+                                    
+                                ### SCENARIO 3 :- WHEN USER IS ASKING ANYTHING ABOUT AR, NON-PI, IPI, OR CPI ###
+                                1. ONLY PROVIDE information and STEPS related to it.
                                 2. DO NOT FAIL TO ADD INFORMATION WHICH IS ASKED FOR.
+                                e.g. How to be an AR?, What are the steps to prceed as AR?, What is Non-PI?, what are the requirements for IPI or CPI?
 
                                 Onboarding Guide - 
                                 {prm}
