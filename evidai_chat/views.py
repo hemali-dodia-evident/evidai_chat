@@ -27,6 +27,8 @@ generation_config = {
     "top_p": 0.8  # Nucleus sampling
 }
 
+URL = os.environ['URL']
+
 
 # Test API
 def hello_world(request):
@@ -121,7 +123,7 @@ def token_validation(token):
     try:
         
         # Get User details
-        url = "https://api-uat.evident.capital/user/me"
+        url = f"https://{URL}/user/me"
 
         payload = {
                     "code": "123456",
@@ -470,7 +472,7 @@ def search_on_internet(question):
 
 # Get user specific assets in which user has invested
 def users_assets(token):
-    url = "https://api-uat.evident.capital/investor/investment/transactions"
+    url = f"https://{URL}/investor/investment/transactions"
     payload = {}
     headers = {
                 'Authorization': f'Bearer {token}',
@@ -814,7 +816,7 @@ def get_specific_asset_details(asset_name,token):
     try:
         all_asset_details = None
         # Investor assets
-        url = "https://api-uat.evident.capital/asset/investor/list?page=1"
+        url = f"https://{URL}/asset/investor/list?page=1"
         payload = json.dumps({"name":f"{asset_name.strip()}"})
 
         headers = {
@@ -896,7 +898,7 @@ def get_specific_asset_details(asset_name,token):
             pass
         try:
             logger.info(f"Asset id is - {data['data'][0]['id']}")
-            url = "https://api-uat.evident.capital/event/get-events-by-asset"
+            url = f"https://{URL}/event/get-events-by-asset"
             payload = json.dumps({
             "assetId": data['data'][0]['id']
             })
@@ -1199,7 +1201,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
 # @csrf_exempt
 def login(request):
     # print("in login")
-    url = "https://api-uat.evident.capital/user/login"
+    url = f"https://{URL}/user/login"
     payload = json.dumps({
     "email": "shweta+indinvuat03@evident.capital",
     "password": "Evident@2024",
