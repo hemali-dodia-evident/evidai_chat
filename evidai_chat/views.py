@@ -91,7 +91,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                         - "What is OpenAI’s investment mode?"
                  Assets_Creation: Detailed process only to create assets. 
                  Forget_Password: Contains step by step process to change or update password.
-                 Corp_Investor_Onboarding:Detailed process for Corp investor onboarding process. Can also be reffered as Corp Onboarding or in similar context.
+                 Corp_Investor_Onboarding:Detailed process for Corp investor onboarding process. Can also be reffered as Corp Onboarding or in similar context. Contains Details adn step by step process about AR(Authorised Representative), CPI(Corporate Professional Investor), IPI(Institutional Professional Investor), Non-PI(Non Professional Investor).
                  Onboarding_Investor:Detailed process for investor onboarding process. Which ONLY contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions, Investment personality or eligibility criteria, 
                  NOTE - IF MORE THAN ONE CATEGORY MATCHES THEN RETURN THEIR NAME WITH "," SEPERATED. 
                  - If user is talking or mentioning platform without specifying name of platform then it simply means Evident platform on which currently they are present. So refer all categories present above then provide answer.
