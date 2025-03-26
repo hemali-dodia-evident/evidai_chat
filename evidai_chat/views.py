@@ -139,6 +139,10 @@ def token_validation(token):
         user_name = data['user']['kyc']['fullName'].split()[0] if data['user']['kyc']['fullName'] != '' else ''
         user_role = 'Individual Investor'
         isAR = data['user']['profile']['isAuthorizedRepresentative']
+        if isAR==True:
+            isAR = "Yes"
+        else:
+            isAR = 'No'
         if data['user']['isDistributor']==True:
             user_role = 'Distributor'
         elif data['user']['isOwner']==True:
@@ -599,6 +603,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                 4. If onboarding is **incomplete**, provide details on **pending steps** and ask the user to complete them.  
                                 5. **Do not lead the user to another option** (e.g., If the user asks about Non-PI, do not suggest CPI or any other alternative).  
 
+                            IF INFORMATION IS NOT AVAILABLE - "I’m sorry I couldn’t assist you right now on this point. However, our support team would be delighted to help! Please email them at support@evident.capital with the details of your query for prompt assistance."
+                            
                             - Example queries:  
                             Q: "How can I proceed as a Non-PI?"
                             A: Steps To be Non-PI :
