@@ -631,17 +631,15 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                             prm = onb_res_prm
 
                         elif 'Onboarding' in promp_cat:
-                            onb_res_prm = f"""Follow below instructions to generate response using required information given -
-                                Current Onboarding Status - {onboarding_step}
-
-                                **GENERAL RULES TO FOLLOW WHILE GENERATING RESPONSE**
-                                1. Provide all detailed information for each step first as asked in question.
-                                2. IF question is about or related to any specific step then provide information for those steps ONLY.
-                                3. IF any step is pending for onboarding ask user to complete those steps and provide proper details of steps.
-                                4. ONLY IF USER IS ASKING ABOUT AR, IPI, CPI, NON-PI THEN ASK USER TO SIGN-UP AS "CORP INVESTOR" TO GET MORE DETAILS ON THIS.
-
-                                Onboarding Guide - 
-                                {prm}
+                            onb_res_prm = f"""{prm}\nProvide details of each step.\nIF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.\nUSE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS. \nUser\'s current onboarding status - {onboarding_step}
+                                1. If the user asks about onboarding, directly provide the steps without extra explanations.  
+                                2. If the user asks about 'US Person' selection, the correct response is:  
+                                "You will not be able to proceed ahead as we are currently working on an updated account opening process for US clients. We will notify you once it becomes available."  
+                                3. Do NOT mention tax implications or suggest contacting support unless explicitly asked.  
+                                Provide all detailed information for each step first as asked in question.
+                                4. IF question is about or related to any specific step then provide information for those steps ONLY.
+                                5. IF any step is pending for onboarding ask user to complete those steps and provide proper details of steps.
+                                6. ONLY IF USER IS ASKING ABOUT AR, IPI, CPI, NON-PI THEN ASK USER TO SIGN-UP AS "CORP INVESTOR" TO GET MORE DETAILS ON THIS.
                                 """
                             prm = onb_res_prm
 
