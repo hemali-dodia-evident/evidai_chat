@@ -138,18 +138,16 @@ def token_validation(token):
         user_id = data["user"]["id"]
         user_name = data['user']['kyc']['fullName'].split()[0] if data['user']['kyc']['fullName'] != '' else ''
         user_role = 'Individual Investor'
-        isAR = data['user']['profile']['isAuthorizedRepresentative']
-        if isAR==True:
-            isAR = "Yes"
-        else:
-            isAR = 'No'
+        isAR = None
+        
         if data['user']['isDistributor']==True:
-            user_role = 'Distributor'
+            user_role = 'Distributor'            
         elif data['user']['isOwner']==True:
             user_role = 'Issuer'
         elif data['user']['isDistributor']==False and data['user']['isOwner']==False and data['user']['profile']['isInstitutional']==True:
             user_role = 'Corp Investor'
-        
+            isAR = data['user']['profile']['isAuthorizedRepresentative']
+            
         onboarding_details = data['user']['individualOnboarding']
         onboarding_steps = ""
         for stp in onboarding_details:
@@ -161,15 +159,15 @@ def token_validation(token):
             if onboarding_steps != '':
                 onboarding_steps=onboarding_steps+'\n'+temp_stp    
             else:
-                onboarding_steps=f"Authorised Represntative Status - {isAR}"+'\n'+temp_stp
+                onboarding_steps=temp_stp
         if validate:
-            return token, user_id, user_name, user_role, onboarding_steps
+            return token, user_id, user_name, user_role, onboarding_steps, isAR
         else:
-            return None, None, None, None, None
+            return None, None, None, None, None, None
 
     except Exception as e:
         logger.error(f"Failed to get user/me response due to - {str(e)}")
-        return None, None, None, None, None
+        return None, None, None, None, None, None
 
 
 # Add conversation to DB
@@ -528,7 +526,7 @@ def safe_value(value):
 
 
 # Check category of question and then based on category generate response
-def category_based_question(current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset):
+def category_based_question(current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR):
     question = current_question
     final_response = ""
     asset_found = current_asset
@@ -625,8 +623,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                 iii) Proceed with other questions
                             
                             Current Onboarding Status: {onboarding_step}
-                                
-                            ### Onboarding Guide with AR, CPI, IPI, and Non-PI steps -
+                            Is User Authorised Representative :- {isAR}
+                            ### Onboarding Guide with AR, Non-AR, CPI, IPI, and Non-PI steps -
                             {prm}  
                             """  
 
@@ -639,9 +637,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                 **GENERAL RULES TO FOLLOW WHILE GENERATING RESPONSE**
                                 1. Provide all detailed information for each step first as asked in question.
                                 2. IF question is about or related to any specific step then provide information for those steps ONLY.
-                                3. IF USER IS ASKING ABOUT AR, IPI, CPI, NON-PI THEN ASK USER TO SIGN-UP AS "CORP INVESTOR" TO GET MORE DETAILS ON THIS.
-                                4. If user's onboarding is incomplete then ask user to finish onboarding with step details.
-                                5. IF any step is pending for onboarding ask user to complete those steps and provide proper details of steps.
+                                3. IF any step is pending for onboarding ask user to complete those steps and provide proper details of steps.
+                                4. ONLY IF USER IS ASKING ABOUT AR, IPI, CPI, NON-PI THEN ASK USER TO SIGN-UP AS "CORP INVESTOR" TO GET MORE DETAILS ON THIS.
 
                                 Onboarding Guide - 
                                 {prm}
@@ -1002,7 +999,7 @@ def get_asset_based_response(assets_identified,question,token):
 
 
 # Question handling flow - IP Count:9, OP Count:3
-def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step):     
+def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR):     
     logger.info(f"\nlast_asset - {last_asset}\nuser_role - {user_role}\nlast_ques_cat - {last_ques_cat}")
     asset_found = ''
     response = ''
@@ -1195,7 +1192,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
     else:
         promp_cat = [p.strip() for p in promp_cat if 'Greetings' not in p.strip()]
     logger.info(f"Prompt categories - {promp_cat}")
-    response,asset_found,specific_category = category_based_question(current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset)
+    response,asset_found,specific_category = category_based_question(current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR)
     logger.info(f"final response from handle_questions - {response}")
     specific_category = ",".join(specific_category)
     # print("specific_category= ",specific_category)
@@ -1281,7 +1278,7 @@ def evidAI_chat(request):
 
             # Get the token and validate it
             token = auth_header.split(' ')[1]
-            token_valid,user_id,user_name,user_role,onboarding_step = token_validation(token)
+            token_valid,user_id,user_name,user_role,onboarding_step,isAR = token_validation(token)
 
             if token_valid is None:
                 logger.error(f"Invalid Token, Token: {token}")            
@@ -1304,7 +1301,7 @@ def evidAI_chat(request):
             if len(previous_questions)==1:
                 update_chat_title(current_question,chat_session_id)
                 
-            response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step)
+            response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR)
             response = response.replace("\n", "  \n")  
             add_to_conversations(user_id, chat_session_id, current_question, response, current_asset, current_ques_cat)      
             
