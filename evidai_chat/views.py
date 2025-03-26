@@ -631,16 +631,19 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                             prm = onb_res_prm
 
                         elif 'Onboarding' in promp_cat:
-                            onb_res_prm = f"""{prm}\nProvide details of each step.\nIF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.\nUSE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS. \nUser\'s current onboarding status - {onboarding_step}
-                                1. If the user asks about onboarding, directly provide the steps without extra explanations.  
-                                2. If the user asks about 'US Person' selection, the correct response is:  
-                                "You will not be able to proceed ahead as we are currently working on an updated account opening process for US clients. We will notify you once it becomes available."  
-                                3. Do NOT mention tax implications or suggest contacting support unless explicitly asked.  
-                                Provide all detailed information for each step first as asked in question.
-                                4. IF question is about or related to any specific step then provide information for those steps ONLY.
-                                5. IF any step is pending for onboarding ask user to complete those steps and provide proper details of steps.
-                                6. ONLY IF USER IS ASKING ABOUT AR, IPI, CPI, NON-PI THEN ASK USER TO SIGN-UP AS "CORP INVESTOR" TO GET MORE DETAILS ON THIS.
-                                """
+                            onb_res_prm = f"""{prm}
+                            Provide details of each step.
+
+                            - If the user asks about any information already present in the provided details, respond directly using that information.
+                            - Use this information to provide the user's onboarding status: {onboarding_step}.
+
+                            ### Rules for Responses:
+                            1. **Onboarding Steps:** If the user asks about onboarding, list the steps without extra explanations.
+                            2. **US Person Selection:** If the user asks about selecting "US Person" as **Yes**, respond with:
+                            "You will not be able to proceed ahead as we are currently working on an updated account opening process for US clients. We will notify you once it becomes available."
+                            3. Do **not** mention tax implications or suggest contacting support unless explicitly asked.
+                            4. **Pending Onboarding Steps:** If the user inquires about pending steps, list the incomplete steps and provide guidance.
+                            5. **Queries Related to AR, IPI, CPI, or NON-PI:** If the user asks about these, instruct them to **sign up as a 'Corp Investor'** to get more details."""
                             prm = onb_res_prm
 
                             # prm = f"""{prm} \nProvide details of each step.\nIF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.\nUSE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS. \nUser\'s current onboarding status - {onboarding_step}
@@ -649,11 +652,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                         prompt_data_list.append(prm)
                     prompt_data_list = "\n".join(prompt_data_list)
                     # logger.info(prompt_data_list)
-                    # 1. If the user asks about onboarding, directly provide the steps without extra explanations.  
-                    #         2. If the user asks about 'US Person' selection, the correct response is:  
-                    #         "You will not be able to proceed ahead as we are currently working on an updated account opening process for US clients. We will notify you once it becomes available."  
-                    #         Do NOT mention tax implications or suggest contacting support unless explicitly asked.  
-                    #         3. If the user asks about pending onboarding steps, list the incomplete steps and guide them accordingly.  
+                              
                     prompt_data = f"""Customer is not providing you any information, all information is with you. DO NOT say to the customer that they have not provided information. Instead, say you don’t have the information currently.
                             You are a smart and intelligent chatbot with strong knowledge of the finance sector. Answer as if you are chatting with a customer.
                             Do not use emojis. Do not greet the user while answering. Guide and help the user to finish their steps and complete onboarding.
@@ -1202,11 +1201,11 @@ def login(request):
     # print("in login")
     url = "https://api-uat.evident.capital/user/login"
     payload = json.dumps({
-    # "email": "shweta+indinvuat03@evident.capital",
-    # "password": "Evident@2024",
+    "email": "shweta+indinvuat03@evident.capital",
+    "password": "Evident@2024",
     # "email": "sai+1802ipi@evident.capital",
-    "email":"hemali-ci@evident.capital",
-    "password": "Evident@2025",
+    # "email":"hemali-ci@evident.capital",
+    # "password": "Evident@2025",
     "ipInfo": {
         "asn": "asn",
         "asnName": "asnName",
