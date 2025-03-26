@@ -545,9 +545,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     for d in data:
                         prm = d.prompt
                         if 'Onboarding' in promp_cat and 'Corp' in promp_cat:
-                            onb_res_prm = f"""### INSTRUCTIONS FOR GENERATING RESPONSE BASED ON ONBOARDING STATUS
-                            Current Onboarding Status: {onboarding_step}
-
+                            onb_res_prm = f"""### INSTRUCTIONS FOR GENERATING RESPONSE BASED ON -
+                            
                             ### SCENARIO 1: USER ASKS ABOUT THE ONBOARDING PROCESS  
                                 - Provide **only** onboarding step details.  
                                 - Example queries:  
@@ -621,6 +620,8 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                 ii) Select 'Yes' for first question - 'Are you a business providing investment services regulated or registered with a regulator or under the law?' 
                                 iii) Proceed with other questions
                             
+                            Current Onboarding Status: {onboarding_step}
+                                
                             ### Onboarding Guide with AR, CPI, IPI, and Non-PI steps -
                             {prm}  
                             """  
