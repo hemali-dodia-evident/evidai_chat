@@ -549,15 +549,15 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     for d in data:
                         prm = d.prompt
                         if 'Onboarding' in promp_cat and 'Corp' in promp_cat:
-                            onb_res_prm = f"""### INSTRUCTIONS FOR GENERATING RESPONSE BASED ON -
+                            onb_res_prm = f"""### INSTRUCTIONS FOR GENERATING RESPONSE CONSIDERING FOLLOWING SCENARIOS -
                             
-                            ### SCENARIO 1: USER ASKS ABOUT THE ONBOARDING PROCESS  
+                            ### SCENARIO 1: IF USER ASKS ABOUT THE ONBOARDING PROCESS  
                                 - Provide **only** onboarding step details.  
                                 - Example queries:  
                                 - "What is the onboarding process?"  
                                 - "Provide details about onboarding steps."  
 
-                            ### SCENARIO 2: USER ASKS ABOUT THEIR ONBOARDING STATUS  
+                            ### SCENARIO 2: IF USER ASKS ABOUT THEIR ONBOARDING STATUS  
 
                                 #### If the User is AR  
                                 - Provide **only pending steps** and request the user to complete them.  
@@ -572,25 +572,25 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                 - "What are my mandatory steps?"  
                                 - "How do I complete my onboarding?"  
 
-                            ### SCENARIO 3: USER ASKS ABOUT AR : Authorised Representative
+                            ### SCENARIO 3: IF USER ASKS ABOUT AR : Authorised Representative
                                 1. Provide **ONLY** the requested information - Do **NOT** add extra details about other categories unless explicitly asked.  
                                 2. Ensure **all required details** are included in the response based on the user's query.  
                                 3. If the user asks for **steps to proceed as AR**, provide **only those steps** without suggesting alternatives.  
                                 4. **Do not suggest an alternative category** unless the user explicitly asks for a comparison.  
                                 
-                            ### SCENARIO 4: USER ASKS ABOUT NON-PI : Non Professional Investor
+                            ### SCENARIO 4: IF USER ASKS ABOUT NON-PI : Non Professional Investor
                                 1. Provide **ONLY** the requested information - Do **NOT** add extra details about other categories unless explicitly asked.  
                                 2. Ensure **all required details** are included in the response based on the user's query.  
                                 3. If the user asks for **steps to proceed as Non-PI**, provide **only those steps** without suggesting alternatives.  
                                 4. **Do not suggest an alternative category** unless the user explicitly asks for a comparison.  
 
-                            ### SCENARIO 5: USER ASKS ABOUT IPI : Institutional Professional Investor
+                            ### SCENARIO 5: IF USER ASKS ABOUT IPI : Institutional Professional Investor
                                 1. Provide **ONLY** the requested information - Do **NOT** add extra details about other categories unless explicitly asked.  
                                 2. Ensure **all required details** are included in the response based on the user's query.  
                                 3. If the user asks for **steps to proceed as IPI**, provide **only those steps** without suggesting alternatives.  
                                 4. **Do not suggest an alternative category** unless the user explicitly asks for a comparison.  
 
-                            ### SCENARIO 6: USER ASKS ABOUT CPI : Corporate Professional Investor
+                            ### SCENARIO 6: IF USER ASKS ABOUT CPI : Corporate Professional Investor
                                 1. Provide **ONLY** the requested information - Do **NOT** add extra details about other categories unless explicitly asked.  
                                 2. Ensure **all required details** are included in the response based on the user's query.  
                                 3. If the user asks for **steps to proceed as CPI**, provide **only those steps** without suggesting alternatives.  
@@ -603,9 +603,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                 4. If onboarding is **incomplete**, provide details on **pending steps** and ask the user to complete them.  
                                 5. **Do not lead the user to another option** (e.g., If the user asks about Non-PI, do not suggest CPI or any other alternative).  
 
-                            ### IF ANY INFORMATION IS NOT AVAILABLE TO GENERATE ANSWER : "I’m sorry I couldn’t assist you right now on this point. However, our support team would be delighted to help! Please email them at support@evident.capital with the details of your query for prompt assistance."
-                            
-                            - Example queries:  
+                           - Example queries:  
                             Q: "How can I proceed as a Non-PI?"
                             A: Steps To be Non-PI :
                                 i) Go to Account Centre(Manage Account) -> Verification -> Verified -> Investment profile
