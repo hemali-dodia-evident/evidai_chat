@@ -514,8 +514,6 @@ def users_assets(token):
     return my_assets
 
 
-# users_assets('NTI4OQ.8mSh9ge4S6xpHA2a8k3RMsxo9-8otyPQMsg6bzqCq2K01BCp1VpbzEEi8ndw')
-
 # Get list of all assets from DB
 def get_asset_list():
     # asset_names = models.Asset.objects.exclude(visibility='PRIVATE').values_list('name',flat=True)
@@ -602,7 +600,9 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                                 3. If the question is related to **AR, IPI, CPI, or Non-PI**, provide **only** information related to that specific category.  
                                 4. If onboarding is **incomplete**, provide details on **pending steps** and ask the user to complete them.  
                                 5. **Do not lead the user to another option** (e.g., If the user asks about Non-PI, do not suggest CPI or any other alternative).  
-
+                                6. **US Person Selection:** If the user asks about selecting "US Person" as **Yes**, respond with:
+                            "You will not be able to proceed ahead as we are currently working on an updated account opening process for US clients. We will notify you once it becomes available."
+                            
                            - Example queries:  
                             Q: "How can I proceed as a Non-PI?"
                             A: Steps To be Non-PI :
@@ -630,8 +630,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                             {prm}  
                             """  
 
-                            prm = onb_res_prm
-
+                            prm = "Apologies I can not assist you on this point. Currently I can only assist you with Asset Specific question. For rest of the information like onboarding, AR(Authorised Representative), CPI(Corporate Professional Investor), IPI(Institutional Professional Investor), Non-PI(Non Professional Investor) Please email them at support@evident.capital with the details of your query for prompt assistance."
                         elif 'Onboarding' in promp_cat:
                             onb_res_prm = f"""{prm}
                             Provide details of each step.
@@ -667,6 +666,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                             "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please email them at support@evident.capital with the details of your query for prompt assistance."  
                             2. Keep your tone **polite, clear, and direct**. Use line breaks for readability"""
                     response = get_gemini_response(question,prompt_data)
+                    print(response)
                     if final_response == "":
                         final_response = response
                     else:
@@ -1379,6 +1379,7 @@ def delete_prompt_value(request):
             return JsonResponse({"message": "Deleted successfully"}, status=200)
         except models.BasicPrompts.DoesNotExist:
             return JsonResponse({"error": "Prompt not found"}, status=404)
+
 
 @csrf_exempt
 def get_prompt_id(request):
