@@ -24,7 +24,7 @@ USE_L10N = False
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#=3v=@5vyp$jj-8po0y0y!o_xc0l#q92npscf=z2#$)5c*$cmr'
+SECRET_KEY = str(os.environ['UAT_SECRET_KEY'])
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -90,11 +90,11 @@ WSGI_APPLICATION = 'evidai.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-db_name = str(os.environ['DB_NAME'])
-user_name = str(os.environ['DB_USER'])
-password_db = str(os.environ['DB_PASS'])
-db_host = str(os.environ['DB_HOST'])
-db_port = str(os.environ['DB_PORT'])
+db_name = str(os.environ['UAT_DB_NAME'])
+user_name = str(os.environ['UAT_DB_USER'])
+password_db = str(os.environ['UAT_DB_PASS'])
+db_host = str(os.environ['UAT_DB_HOST'])
+db_port = str(os.environ['UAT_DB_PORT'])
 # print(db_name,user_name,password_db,db_host,db_port)
 DATABASES = {
     'default': {
