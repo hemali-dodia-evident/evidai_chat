@@ -24,10 +24,10 @@ USE_L10N = False
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#=3v=@5vyp$jj-8po0y0y!o_xc0l#q92npscf=z2#$)5c*$cmr'
+SECRET_KEY = str(os.environ['SECRET_KEY'])
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 allowed_hosts = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts]
@@ -76,13 +76,13 @@ TEMPLATES = [
 ]
 
 # STATIC FILES CONFIGURATION
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    BASE_DIR / "evidai_chat/static",  # Your local static folder
-]
+# STATIC_URL = '/static/'
+# STATICFILES_DIRS = [
+#     BASE_DIR / "evidai_chat/static",  # Your local static folder
+# ]
 
-STATIC_ROOT = BASE_DIR / "staticfiles"  # Add this line
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"  # Optional
+# STATIC_ROOT = BASE_DIR / "staticfiles"  # Add this line
+# STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"  # Optional
 
 WSGI_APPLICATION = 'evidai.wsgi.application'
 
