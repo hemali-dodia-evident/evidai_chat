@@ -5,7 +5,9 @@ import os
 class DatabaseSelectionMiddleware(MiddlewareMixin):
     def process_request(self, request):
         """Switch database based on request headers"""
-        if request.headers.get('X-Environment') == 'prod':
+        host = request.get_host()
+        
+        if 'prod' in host:
             settings.DATABASES['default'] = {
                         'ENGINE': 'django.db.backends.postgresql',
                         'NAME': os.getenv('DB_NAME'),
