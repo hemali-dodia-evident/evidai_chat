@@ -9,10 +9,10 @@ logger = logging.getLogger(__name__)
 class DatabaseSelectionMiddleware(MiddlewareMixin):
     def process_request(self, request):
         """Switch database based on request headers"""
-        host = request.get_host()
+        host = request.headers.get('X-Environment').lower()
         logging.info(f"{host}")
         if 'prod' in host:
-            logging.info(f"Prod DB sesstings\n{os.getenv('DB_NAME')}\n")
+            logging.info(f"Prod DB sesstings\n{os.getenv('DB_NAME')}\n{os.getenv('URL')}")
             settings.DATABASES['default'] = {
                         'ENGINE': 'django.db.backends.postgresql',
                         'NAME': os.getenv('DB_NAME'),
@@ -27,8 +27,9 @@ class DatabaseSelectionMiddleware(MiddlewareMixin):
                         'CONN_MAX_AGE': 60,  # Keeps database connections open for reuse (in seconds)
                         'OPTIONS': {},  # Additional database options (optional, can be empty)
                     }
+            settings.URL=os.getenv('URL')
         else:
-            logging.info(f"Prod DB sesstings\n{os.getenv('UAT_DB_NAME')}\n")
+            logging.info(f"UAT DB sesstings\n{os.getenv('UAT_DB_NAME')}\n{os.getenv('UAT_URL')}")
             settings.DATABASES['default'] = {
                         'ENGINE': 'django.db.backends.postgresql',
                         'NAME': os.getenv('UAT_DB_NAME'),
@@ -42,4 +43,4 @@ class DatabaseSelectionMiddleware(MiddlewareMixin):
                         'CONN_MAX_AGE': 60,  # Keeps database connections open for reuse (in seconds)
                         'OPTIONS': {},  # Additional database options (optional, can be empty)
                     }
-            
+            settings.URL=os.getenv('UAT_URL')

@@ -78,6 +78,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'evidai.wsgi.application'
 
+URL = os.getenv('URL', 'UAT_URL')
 
 DATABASES = {
     'default': {
