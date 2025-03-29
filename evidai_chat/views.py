@@ -8,7 +8,7 @@ from . import models
 import logging
 import requests
 import re
-
+from django.conf import settings
 
 key = os.environ["GOOGLE_API_KEY"]
 genai.configure(api_key=f"{key}")
@@ -25,7 +25,7 @@ generation_config = {
     "top_p": 0.8  # Nucleus sampling
 }
 
-URL = os.environ['URL']
+URL = settings.URL
 
 
 # Test API
