@@ -630,7 +630,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                             {prm}  
                             """  
 
-                            prm = "Apologies I can not assist you on this point. Currently I can only assist you with Asset Specific question. For rest of the information like onboarding, AR(Authorised Representative), CPI(Corporate Professional Investor), IPI(Institutional Professional Investor), Non-PI(Non Professional Investor) Please email them at support@evident.capital with the details of your query for prompt assistance."
+                            prm = onb_res_prm #"Apologies I can not assist you on this point. Currently I can only assist you with Asset Specific question. For rest of the information like onboarding, AR(Authorised Representative), CPI(Corporate Professional Investor), IPI(Institutional Professional Investor), Non-PI(Non Professional Investor) Please email them at support@evident.capital with the details of your query for prompt assistance."
                         elif 'Onboarding' in promp_cat:
                             onb_res_prm = f"""{prm}
                             Provide details of each step.
@@ -1200,8 +1200,9 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
 
 # @csrf_exempt
 def login(request):
-    # print("in login")
+    print("in login")
     url = f"https://{URL}/user/login"
+    print(url)
     payload = json.dumps({
     "email": "shweta+indinvuat03@evident.capital",
     "password": "Evident@2024",
