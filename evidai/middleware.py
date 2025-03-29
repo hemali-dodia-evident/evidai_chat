@@ -1,13 +1,18 @@
 from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
 import os
+import logging
+
+# Configure the logging settings
+logger = logging.getLogger(__name__)
 
 class DatabaseSelectionMiddleware(MiddlewareMixin):
     def process_request(self, request):
         """Switch database based on request headers"""
         host = request.get_host()
-        
+        logging.info(f"{host}")
         if 'prod' in host:
+            logging.info(f"Prod DB sesstings\n{os.getenv('DB_NAME')}\n")
             settings.DATABASES['default'] = {
                         'ENGINE': 'django.db.backends.postgresql',
                         'NAME': os.getenv('DB_NAME'),
@@ -23,6 +28,7 @@ class DatabaseSelectionMiddleware(MiddlewareMixin):
                         'OPTIONS': {},  # Additional database options (optional, can be empty)
                     }
         else:
+            logging.info(f"Prod DB sesstings\n{os.getenv('UAT_DB_NAME')}\n")
             settings.DATABASES['default'] = {
                         'ENGINE': 'django.db.backends.postgresql',
                         'NAME': os.getenv('UAT_DB_NAME'),
