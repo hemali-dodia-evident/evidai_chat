@@ -6,8 +6,6 @@ from django.http import JsonResponse
 from datetime import datetime,timezone
 from . import models
 import logging
-from django.shortcuts import render
-import markdown
 import requests
 import re
 
@@ -1269,7 +1267,7 @@ def format_response(response):
 def evidAI_chat(request):
     try:
         if request.method == 'POST':
-            
+            logger.info(f"request url - {request.get_host()}")
             token = None
             # Extract the Bearer token from the Authorization header
             auth_header = request.headers.get('Authorization')
