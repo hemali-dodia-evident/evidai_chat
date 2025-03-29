@@ -55,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "corsheaders.middleware.CorsMiddleware",
+    'evidai.middleware.DatabaseSelectionMiddleware',
 ]
 
 ROOT_URLCONF = 'evidai.urls'
@@ -75,37 +76,22 @@ TEMPLATES = [
     },
 ]
 
-# STATIC FILES CONFIGURATION
-# STATIC_URL = '/static/'
-# STATICFILES_DIRS = [
-#     BASE_DIR / "evidai_chat/static",  # Your local static folder
-# ]
-
-# STATIC_ROOT = BASE_DIR / "staticfiles"  # Add this line
-# STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"  # Optional
-
 WSGI_APPLICATION = 'evidai.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-db_name = str(os.environ['DB_NAME'])
-user_name = str(os.environ['DB_USER'])
-password_db = str(os.environ['DB_PASS'])
-db_host = str(os.environ['DB_HOST'])
-db_port = str(os.environ['DB_PORT'])
-# print(db_name,user_name,password_db,db_host,db_port)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': db_name,
-        'USER': user_name,
-        'PASSWORD': password_db,
-        'HOST': db_host,
-        'PORT': db_port,
+        'NAME': os.environ.get('DB_NAME', 'UAT_DB_NAME'),
+        'USER': os.environ.get('DB_USER', 'UAT_DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASS', 'UAT_DB_PASS'),
+        'HOST': os.environ.get('DB_HOST', 'UAT_DB_HOST'),
+        'PORT': os.environ.get('DB_PORT', 'UAT_DB_PORT'),
     }
 }
+
+USE_TZ = True  # ✅ Ensure timezone support is enabled
+TIME_ZONE = 'UTC'  # ✅ Define timezone explicitly
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -154,6 +140,7 @@ CORS_ALLOW_HEADERS = [
     "Authorization",
     "Content-Type",
     "X-CSRFToken",
+    'X-Environment'
 ]
 
 CORS_ALLOW_METHODS = [
