@@ -50,7 +50,7 @@ class DatabaseSelectionMiddleware(MiddlewareMixin):
             # Check if database settings need an update
             if settings.DATABASES.get('default') != new_db_settings:
                 logger.info(f"Updating database settings for: {host}")
-                logger.info(f"DB Connection Details - \nDB Name - {os.getenv('UAT_DB_NAME')}\nHost - {os.getenv('UAT_DB_HOST')}")
+                logger.info(f"DB Connection Details - \nDB Name - {os.getenv('UAT_DB_NAME')}\nHost - {os.getenv('UAT_DB_HOST')}\nUser - {os.getenv('UAT_DB_USER')}")
             
                 settings.DATABASES['default'] = new_db_settings
                 settings.URL = new_url
