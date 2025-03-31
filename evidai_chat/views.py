@@ -165,11 +165,11 @@ def token_validation(token):
         if validate:
             return token, user_id, user_name, user_role, onboarding_steps, isAR
         else:
-            return token, None, user_name, user_role, None, None
+            return token, None, None, None, None, None
 
     except Exception as e:
         logger.error(f"Failed to get user/me response due to - {str(e)}")
-        return token, None, user_name, user_role, None, None
+        return token, None, None, None, None, None
 
 
 # Add conversation to DB
