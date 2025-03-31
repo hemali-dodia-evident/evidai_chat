@@ -664,7 +664,6 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                             "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please email them at support@evident.capital with the details of your query for prompt assistance."  
                             2. Keep your tone **polite, clear, and direct**. Use line breaks for readability"""
                     response = get_gemini_response(question,prompt_data)
-                    print(response)
                     if final_response == "":
                         final_response = response
                     else:
@@ -758,13 +757,24 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                         final_response = final_response + '\n' + response
                     personalAssets = False                
                 else:
-                    assets_identified = current_asset.split(",")
-                    response = get_asset_based_response(assets_identified,question,token)
-                    if final_response == "":
-                        final_response = response
+                    print(f"In else of personal assets cat - {current_asset}")
+                    if 'This Asset is not avaialble right now' not in current_asset:
+                        assets_identified = current_asset.split(",")
+                        response = get_asset_based_response(assets_identified,question,token)
+                        if final_response == "":
+                            final_response = response
+                        else:
+                            final_response = final_response + '\n' + response
+                        asset_found = ",".join(assets_identified)    
                     else:
-                        final_response = final_response + '\n' + response
-                    asset_found = ",".join(assets_identified)                 
+                        prompt = f"""This asset is not available with us currently, but you can explore other assets present at our Marketplace(https://uat.account.v2.evident.capital/)"""
+                        response = prompt
+                        if final_response == "":
+                            final_response = response
+                        else:
+                            final_response = final_response + '\n' + response
+                        asset_found = "" 
+                        failed_cat=True
             else:
                 response = search_on_internet(question)
                 if final_response == "":
@@ -783,9 +793,9 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     Response Guidelines:
                     If an answer is fully available: Provide a clear, concise response with proper structure and formatting.
                     If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable.  Also make sure this statement SHOULD NOT be at start of respose: If needed, suggest contacting support:
-                    "Certain details are unavailable, but our support team would be happy to assist you. Please reach out to support@evident.capital with your query."
+                    "Hey sorry these details are not handy with me. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly. Feel free to ask any other query that you have."
                     If no relevant information is available: Respond with: Also make sure this statement SHOULD NOT be at start of respose:
-                    "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
+                    "I’m sorry I couldn’t assist you right now with this query. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly. Feel free to ask any other query that you have."
                     For more assistance or further assistance scenario provide support contact - support@evident.capital
                     **KEEP THIS STATEMENT AS IT IS ONLY IF IT IS PRESENT IN RESPONSE, DO NOT ADD IT EXPLICTELY AND DO NOT ADD ANY FORMATTING FOR THIS**: "I can assist you with onboarding assistance for investors and asset research & overview. Let me know how I can help! More features will be available soon."
                     Ensure:
@@ -1155,7 +1165,10 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
                 """
                 asset_identified_flag = get_gemini_response(prompt,current_question)
                 logger.info(f"asset_identified_flag 0 - {asset_identified_flag}")
-                current_asset = asset_identified_flag
+                current_asset = "This Asset is not avaialble right now"
+                if int(asset_identified_flag.strip())!=0:
+                    current_asset = asset_identified_flag
+                logger.info(f"current_asset - {current_asset}")        
         elif int(asset_identified_flag)==2:
             temp_last_ques_cat = last_ques_cat.split(",")
             promp_cat = get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
