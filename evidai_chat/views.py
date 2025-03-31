@@ -1414,7 +1414,8 @@ def get_prompt_id(request):
 def get_all_prompt_catogiries(request):
     if request.method=='POST':
         try:
-            prompt_table = models.BasicPrompts.objects.all().values_list('id','prompt_category')
+            # 'id','prompt_category'
+            prompt_table = models.BasicPrompts.objects.all().values_list()
             prompt_id = list(prompt_table)
             logger.info(f"Available Prompts - {prompt_id}")
             return JsonResponse({"message":"ID fetched successfully","data":{"IDs":prompt_id},"status":True},status=200)
