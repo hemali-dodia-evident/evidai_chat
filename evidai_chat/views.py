@@ -1415,11 +1415,11 @@ def get_all_prompt_catogiries(request):
     if request.method=='POST':
         try:
             # 'id','prompt_category'
-            prompt_table = models.BasicPrompts.objects.all()#.values_list()
+            prompt_table = models.BasicPrompts.objects.values_list('id','prompt_category')
             logging.info(f"{prompt_table.query}")
-            prompt_table = prompt_table.values_list()
+            # prompt_table = prompt_table.values_list()
             prompt_id = list(prompt_table)
-            logger.info(f"Available Prompts - {prompt_id}")
+            logger.info(f"Available Prompts - {prompt_table}")
             return JsonResponse({"message":"ID fetched successfully","data":{"IDs":prompt_id},"status":True},status=200)
         except Exception as e:
             return JsonResponse({"message":"Failed to get prompt categories","data":{"error":str(e)},"status":False},status=400)
