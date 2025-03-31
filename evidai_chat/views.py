@@ -163,11 +163,11 @@ def token_validation(token):
         if validate:
             return token, user_id, user_name, user_role, onboarding_steps, isAR
         else:
-            return None, None, None, None, None, None
+            return token, None, user_name, user_role, None, None
 
     except Exception as e:
         logger.error(f"Failed to get user/me response due to - {str(e)}")
-        return None, None, None, None, None, None
+        return token, None, user_name, user_role, None, None
 
 
 # Add conversation to DB
@@ -541,6 +541,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                     categories = last_ques_cat.split(",")
                     categories.append(promp_cat)
                     data = models.BasicPrompts.objects.filter(prompt_category__in=categories)
+                    logger.info(f"Fetched category from database - {len(data)}")
                     prompt_data_list = []
                     for d in data:
                         prm = d.prompt
@@ -1017,7 +1018,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
 
     asset_names  = get_asset_list()
     asset_names = list(asset_names)
-    asset_names = ", ".join(asset_names)+", DND small cap funds, Uma Landry"
+    asset_names = ", ".join(asset_names)
     prompt = f"""TO RETURN NAME OF ASSET:  
                 Last Question Category - `{last_ques_cat}`  
 
