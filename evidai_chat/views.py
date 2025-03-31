@@ -1409,11 +1409,18 @@ def get_prompt_id(request):
         except Exception as e:
             return JsonResponse({"message":"Failed to get prompt id","data":{"error":str(e)},"status":False},status=400)
 
+from django.db import connections
+
+
 
 @csrf_exempt
 def get_all_prompt_catogiries(request):
     if request.method=='POST':
         try:
+            with connections['default'].cursor() as cursor:
+                cursor.execute("SELECT COUNT(*) FROM evidai_prompts;")
+                data = cursor.fetchone()
+                logger.info(f"{data}")  # Should return the correct count
             # 'id','prompt_category'
             prompt_table = models.BasicPrompts.objects.values_list('id','prompt_category')
             logging.info(f"{prompt_table.query}")
