@@ -29,7 +29,7 @@ SECRET_KEY = str(os.environ['SECRET_KEY'])
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-allowed_hosts = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+allowed_hosts = os.getenv('ALLOWED_HOSTS', '*').split(',')
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts]
 
 # Application definition
@@ -83,11 +83,19 @@ URL = os.getenv('URL', 'UAT_URL')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'UAT_DB_NAME'),
-        'USER': os.environ.get('DB_USER', 'UAT_DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASS', 'UAT_DB_PASS'),
-        'HOST': os.environ.get('DB_HOST', 'UAT_DB_HOST'),
-        'PORT': os.environ.get('DB_PORT', 'UAT_DB_PORT'),
+        'NAME': os.getenv('UAT_DB_NAME'),
+        'USER': os.getenv('UAT_DB_USER'),
+        'PASSWORD': os.getenv('UAT_DB_PASS'),
+        'HOST': os.getenv('UAT_DB_HOST'),
+        'PORT': os.getenv('UAT_DB_PORT'),
+    },
+    'prod': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASS'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
