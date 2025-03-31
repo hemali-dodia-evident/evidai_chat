@@ -516,6 +516,7 @@ def users_assets(token):
 def get_asset_list():
     # asset_names = models.Asset.objects.exclude(visibility='PRIVATE').values_list('name',flat=True)
     asset_names = models.Asset.objects.values_list('name',flat=True)
+    logger.info(f"List of Assets from DB - {asset_names}")
     return asset_names
 
 
