@@ -1417,13 +1417,15 @@ from django.db import connections
 def get_all_prompt_catogiries(request):
     if request.method=='POST':
         try:
+            db_settings = connections['default'].settings_dict
+            logger.info(db_settings)
             with connections['default'].cursor() as cursor:
                 cursor.execute("SELECT COUNT(*) FROM evidai_prompts;")
                 data = cursor.fetchone()
                 logger.info(f"{data}")  # Should return the correct count
             # 'id','prompt_category'
             prompt_table = models.BasicPrompts.objects.values_list('id','prompt_category')
-            logging.info(f"{prompt_table.query}")
+            logger.info(f"{prompt_table.query}")
             # prompt_table = prompt_table.values_list()
             prompt_id = list(prompt_table)
             logger.info(f"Available Prompts - {prompt_table}")

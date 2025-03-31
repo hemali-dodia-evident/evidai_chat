@@ -35,8 +35,8 @@ class BasicPrompts(models.Model):
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
     
-    def __str__(self):
-        return self.prompt
+    # def __str__(self):
+    #     return self.prompt
     
     class Meta:
         db_table = 'evidai_prompts'
