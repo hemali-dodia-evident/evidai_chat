@@ -1417,9 +1417,11 @@ from django.db import connections
 def get_all_prompt_catogiries(request):
     if request.method=='POST':
         try:
-            db_settings = connections['default'].settings_dict
+            env = request.headers.get('X-Environment', 'uat').lower()
+            db_alias = 'prod' if 'prod' in env else 'default'
+            db_settings = connections[db_alias].settings_dict
             logger.info(db_settings)
-            with connections['default'].cursor() as cursor:
+            with connections[db_alias].cursor() as cursor:
                 cursor.execute("SELECT COUNT(*) FROM evidai_prompts;")
                 data = cursor.fetchone()
                 logger.info(f"{data}")  # Should return the correct count
