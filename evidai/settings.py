@@ -55,7 +55,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "corsheaders.middleware.CorsMiddleware",
-    'evidai.middleware.DatabaseSelectionMiddleware',
 ]
 
 ROOT_URLCONF = 'evidai.urls'
