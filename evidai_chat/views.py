@@ -757,7 +757,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                         final_response = final_response + '\n' + response
                     personalAssets = False                
                 else:
-                    print(f"In else of personal assets cat - {current_asset}")
+                    # print(f"In else of personal assets cat - {current_asset}")
                     if 'This Asset is not avaialble right now' not in current_asset:
                         assets_identified = current_asset.split(",")
                         response = get_asset_based_response(assets_identified,question,token)
@@ -1211,9 +1211,9 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
 
 # @csrf_exempt
 def login(request):
-    print("in login")
+    # print("in login")
     url = f"https://{URL}/user/login"
-    print(url)
+    # print(url)
     payload = json.dumps({
     "email": "shweta+indinvuat03@evident.capital",
     "password": "Evident@2024",
