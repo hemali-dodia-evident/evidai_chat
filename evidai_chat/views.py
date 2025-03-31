@@ -9,6 +9,8 @@ import logging
 import requests
 import re
 from django.conf import settings
+from django.db import connections
+
 
 key = os.environ["GOOGLE_API_KEY"]
 genai.configure(api_key=f"{key}")
@@ -172,14 +174,14 @@ def token_validation(token):
 
 # Add conversation to DB
 @csrf_exempt
-def add_to_conversations(user_id, chat_session_id, current_question, response, current_asset, current_ques_cat):
+def add_to_conversations(db_alias, user_id, chat_session_id, current_question, response, current_asset, current_ques_cat):
     try:
         # Get the current date and time in UTC
         current_datetime = datetime.now(timezone.utc)
 
         # Convert to ISO 8601 format
         iso_format_datetime = current_datetime.isoformat()
-        new_conv = models.Conversation.objects.create(
+        new_conv = models.Conversation.objects.using(db_alias).create(
             user_id=user_id,
             chat_session_id=chat_session_id,
             question=current_question,
@@ -220,7 +222,9 @@ def get_chat_session_details(request):
             logger.error(f"Invalid Token, Token: {token}")            
             return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400) 
         try:
-            chats = models.ChatSession.objects.filter(user_id=user_id,show=True).order_by('-id')
+            env = request.headers.get('X-Environment', 'uat').lower()
+            db_alias = 'prod' if 'prod' in env else 'default'
+            chats = models.ChatSession.objects.using(db_alias).filter(user_id=user_id,show=True).order_by('-id')
             convos = []
             
             for chat in chats:  # Iterate over each ChatSession object in the QuerySet
@@ -261,14 +265,15 @@ def create_chat_session(request):
             if token_valid is None:
                 logger.error(f"Invalid Token, Token: {token}")            
                 return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
-                
+            env = request.headers.get('X-Environment', 'uat').lower()
+            db_alias = 'prod' if 'prod' in env else 'default'
             # Get the current date and time in UTC
             current_datetime = datetime.now(timezone.utc)
 
             # Convert to ISO 8601 format
             iso_format_datetime = current_datetime.isoformat()
             # Create a new ChatSession instance
-            new_chat_session = models.ChatSession.objects.create(
+            new_chat_session = models.ChatSession.objects.using(db_alias).create(
                 user_id=user_id,
                 title="New Conversation",
                 created_at=iso_format_datetime,
@@ -300,7 +305,7 @@ def create_chat_session(request):
 
 # Update title of newly created chat session
 @csrf_exempt
-def update_chat_title(question,chat_session_id):
+def update_chat_title(question,chat_session_id,db_alias):
     prompt = """Based on this question generate title for this conversation. 
     Title should be short, in context of question, and it should have 30 characters maximum. 
     Use proper formatting to enhance readability. DO NOT MENTIONE ANYTHING LIKE 'Short & Sweet: ...', Only generate title in context of conversatoin"""
@@ -312,7 +317,7 @@ def update_chat_title(question,chat_session_id):
     title = get_gemini_response(question,prompt)
     title = title.replace("*","")
     try:
-        chat_session = models.ChatSession.objects.get(id=chat_session_id)
+        chat_session = models.ChatSession.objects.using(db_alias).get(id=chat_session_id)
         chat_session.title = title
         chat_session.updated_at = iso_format_datetime
         chat_session.save()
@@ -324,8 +329,8 @@ def update_chat_title(question,chat_session_id):
 
 
 # Get question, answer, last asste, and last question category from conversation table in desc order(newest will be on top)
-def get_conv_details(chat_session_id):
-    all_convo = models.Conversation.objects.filter(chat_session_id=chat_session_id).order_by('-id')
+def get_conv_details(chat_session_id,db_alias):
+    all_convo = models.Conversation.objects.using(db_alias).filter(chat_session_id=chat_session_id).order_by('-id')
     previous_questions = [q.question for q in all_convo]
     if len(previous_questions)>0:
         last_asset = all_convo[0].is_asset
@@ -355,12 +360,13 @@ def get_conversations(request):
             return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
             
         data = json.loads(request.body)
-    
+        env = request.headers.get('X-Environment', 'uat').lower()
+        db_alias = 'prod' if 'prod' in env else 'default'
         chat_session_id=data.get('chat_session_id')
-        chat_present = models.ChatSession.objects.get(id=chat_session_id)
+        chat_present = models.ChatSession.objects.using(db_alias).get(id=chat_session_id)
         if chat_present.show ==True:
             try:
-                all_convo = models.Conversation.objects.filter(chat_session_id=chat_session_id).order_by('-id')
+                all_convo = models.Conversation.objects.using(db_alias).filter(chat_session_id=chat_session_id).order_by('-id')
                 convo_list = [
                     {"id": convo.id, "chat_session_id": convo.chat_session_id, "question": convo.question,
                     "answer":convo.answer, "created_at":convo.created_at,"updated_at":convo.updated_at}
@@ -400,10 +406,10 @@ def get_conversations(request):
 
 
 # Validate chat session id if it is active or not
-def validate_chat_session(chat_session_id):
+def validate_chat_session(chat_session_id,db_alias):
     try:
         # print("chat_session_id - ",chat_session_id)
-        chat_session = models.ChatSession.objects.get(id=int(chat_session_id))
+        chat_session = models.ChatSession.objects.using(db_alias).get(id=int(chat_session_id))
         return chat_session
     except Exception as e:
         # print(str(e))
@@ -431,8 +437,10 @@ def delete_chat_session(request):
             
         data = json.loads(request.body)
         chat_session_id = data.get("chat_session_id")
+        env = request.headers.get('X-Environment', 'uat').lower()
+        db_alias = 'prod' if 'prod' in env else 'default'
         try:
-            chat = models.ChatSession.objects.get(id=chat_session_id)
+            chat = models.ChatSession.objects.using(db_alias).get(id=chat_session_id)
             chat.show = False
             chat.save()
             logger.info(f"deleted chat session id - {chat_session_id} successfully")
@@ -469,7 +477,7 @@ def search_on_internet(question):
 
 
 # Get user specific assets in which user has invested
-def users_assets(token):
+def users_assets(token,db_alias):
     url = f"https://{URL}/investor/investment/transactions"
     payload = {}
     headers = {
@@ -489,7 +497,7 @@ def users_assets(token):
         for trd in trades:
             id = int(trd['assetId'])
             try:
-                asset = models.Asset.objects.get(id=id)
+                asset = models.Asset.objects.using(db_alias).get(id=id)
                 name = asset.name
             except:
                 name = 'Not Available'
@@ -513,9 +521,8 @@ def users_assets(token):
 
 
 # Get list of all assets from DB
-def get_asset_list():
-    # asset_names = models.Asset.objects.exclude(visibility='PRIVATE').values_list('name',flat=True)
-    asset_names = models.Asset.objects.values_list('name',flat=True)
+def get_asset_list(db_alias):
+    asset_names = models.Asset.objects.using(db_alias).values_list('name',flat=True)
     logger.info(f"List of Assets from DB - {asset_names}")
     return asset_names
 
@@ -525,7 +532,7 @@ def safe_value(value):
 
 
 # Check category of question and then based on category generate response
-def category_based_question(current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR):
+def category_based_question(db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR):
     question = current_question
     final_response = ""
     asset_found = current_asset
@@ -541,7 +548,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                 try:
                     categories = last_ques_cat.split(",")
                     categories.append(promp_cat)
-                    data = models.BasicPrompts.objects.filter(prompt_category__in=categories)
+                    data = models.BasicPrompts.objects.using(db_alias).filter(prompt_category__in=categories)
                     logger.info(f"Fetched category from database - {len(data)}")
                     prompt_data_list = []
                     for d in data:
@@ -692,7 +699,7 @@ def category_based_question(current_question,promp_cat,token,onboarding_step,isR
                 if personalAssets==True:
                     idx = specific_category.index(promp_cat)
                     specific_category[idx] = 'Owned Assets'
-                    assets_identified = users_assets(token)                    
+                    assets_identified = users_assets(token,db_alias)                    
                     prompt = f"""Below are asset details in which user has invested. 
                     Understand user's question carefully and provide answer using below mentioned details. 
                     Answer should be clear, and in positive and polite tone. Make sure answer is readable. 
@@ -1008,7 +1015,7 @@ def get_asset_based_response(assets_identified,question,token):
 
 
 # Question handling flow - IP Count:9, OP Count:3
-def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR):     
+def handle_questions(db_alias,token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR):     
     logger.info(f"\nlast_asset - {last_asset}\nuser_role - {user_role}\nlast_ques_cat - {last_ques_cat}")
     asset_found = ''
     response = ''
@@ -1017,7 +1024,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
     isAssetRelated = False   
     isPersonalAsset = False
 
-    asset_names  = get_asset_list()
+    asset_names  = get_asset_list(db_alias)
     asset_names = list(asset_names)
     asset_names = ", ".join(asset_names)
     prompt = f"""TO RETURN NAME OF ASSET:  
@@ -1204,7 +1211,7 @@ def handle_questions(token, last_asset, last_ques_cat, user_name, user_role, cur
     else:
         promp_cat = [p.strip() for p in promp_cat if 'Greetings' not in p.strip()]
     logger.info(f"Prompt categories - {promp_cat}")
-    response,asset_found,specific_category = category_based_question(current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR)
+    response,asset_found,specific_category = category_based_question(db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR)
     logger.info(f"final response from handle_questions - {response}")
     specific_category = ",".join(specific_category)
     # print("specific_category= ",specific_category)
@@ -1289,6 +1296,8 @@ def evidAI_chat(request):
             if not auth_header or not auth_header.startswith('Bearer '):
                 return JsonResponse({"message":"missing header, please pass authentication token","data":{"response":"No authentication token present"},"status":False},status=400)
 
+            env = request.headers.get('X-Environment', 'uat').lower()
+            db_alias = 'prod' if 'prod' in env else 'default'
             # Get the token and validate it
             token = auth_header.split(' ')[1]
             token_valid,user_id,user_name,user_role,onboarding_step,isAR = token_validation(token)
@@ -1302,21 +1311,21 @@ def evidAI_chat(request):
             chat_session_id = int(data.get('chat_session_id'))
 
             # chat session validation
-            chat_session_validation = validate_chat_session(chat_session_id)
+            chat_session_validation = validate_chat_session(chat_session_id,db_alias)
             if chat_session_validation is None:
                 logger.error(f'Invalid chat session, kindly create new chat session for user ID - {user_id}')
                 return JsonResponse({"message":"Unexpected error occured","data":{
                 "response":"Invalid chat session, kindly create new chat session"},"status":False},status=200)
             
-            previous_questions, last_asset, last_ques_cat = get_conv_details(chat_session_id)
+            previous_questions, last_asset, last_ques_cat = get_conv_details(chat_session_id,db_alias)
 
             # Update title
             if len(previous_questions)==1:
-                update_chat_title(current_question,chat_session_id)
+                update_chat_title(current_question,chat_session_id,db_alias)
                 
-            response, current_asset, current_ques_cat = handle_questions(token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR)
+            response, current_asset, current_ques_cat = handle_questions(db_alias,token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR)
             response = response.replace("\n", "  \n")  
-            add_to_conversations(user_id, chat_session_id, current_question, response, current_asset, current_ques_cat)      
+            add_to_conversations(db_alias,user_id, chat_session_id, current_question, response, current_asset, current_ques_cat)      
             
             return JsonResponse({"message":"Response generated successfully","data":{
                                     "response":response},"status":True},status=200)
@@ -1338,12 +1347,13 @@ def update_prompt_values(request):
             data = json.loads(request.body)
             value = data['value']
             category = data['category'].replace("_"," ")
-
-            prompt_table = models.BasicPrompts.objects.get(prompt_category=category)
+            env = request.headers.get('X-Environment', 'uat').lower()
+            db_alias = 'prod' if 'prod' in env else 'default'
+            prompt_table = models.BasicPrompts.objects.using(db_alias).get(prompt_category=category)
             prompt_table.prompt = value
             prompt_table.save()
 
-            prompt_table = models.BasicPrompts.objects.get(prompt_category=category)
+            prompt_table = models.BasicPrompts.objects.using(db_alias).get(prompt_category=category)
             value = prompt_table.prompt
             return JsonResponse({"message":"Value updated successfully","data":{"updated_prompt":value},"status":True},status=200)
         except Exception as e:
@@ -1363,7 +1373,9 @@ def add_prompt_values(request):
             asset_sub_cat = data['asset_sub_cat']
             # Convert to ISO 8601 format
             iso_format_datetime = current_datetime.isoformat()
-            new_cat = models.BasicPrompts.objects.create(
+            env = request.headers.get('X-Environment', 'uat').lower()
+            db_alias = 'prod' if 'prod' in env else 'default'
+            new_cat = models.BasicPrompts.objects.using(db_alias).create(
                 prompt_category=category,
                 prompt=value,
                 asset_name=asset_name,
@@ -1383,11 +1395,14 @@ def add_prompt_values(request):
 def delete_prompt_value(request):
     if request.method=='POST':
         try:
+            env = request.headers.get('X-Environment', 'uat').lower()
+            db_alias = 'prod' if 'prod' in env else 'default'
+
             data = json.loads(request.body)
             prompt_id = data.get('id')  # Get ID from request body
             
             # Check if the object exists
-            prompt = models.BasicPrompts.objects.get(id=prompt_id)
+            prompt = models.BasicPrompts.objects.using(db_alias).get(id=prompt_id)
             prompt.delete()  # Delete the object
             
             return JsonResponse({"message": "Deleted successfully"}, status=200)
@@ -1401,16 +1416,14 @@ def get_prompt_id(request):
         try:
             data = json.loads(request.body)
             category = data['category'].replace("_"," ")
-
-            prompt_table = models.BasicPrompts.objects.filter(prompt_category=category).values_list('id',flat=True)
+            env = request.headers.get('X-Environment', 'uat').lower()
+            db_alias = 'prod' if 'prod' in env else 'default'
+            prompt_table = models.BasicPrompts.objects.using(db_alias).filter(prompt_category=category).values_list('id',flat=True)
             prompt_id = list(prompt_table)
 
             return JsonResponse({"message":"ID fetched successfully","data":{"IDs":prompt_id},"status":True},status=200)
         except Exception as e:
             return JsonResponse({"message":"Failed to get prompt id","data":{"error":str(e)},"status":False},status=400)
-
-from django.db import connections
-
 
 
 @csrf_exempt
@@ -1419,10 +1432,7 @@ def get_all_prompt_catogiries(request):
         try:
             env = request.headers.get('X-Environment', 'uat').lower()
             db_alias = 'prod' if 'prod' in env else 'default'
-            db_settings = connections[db_alias].settings_dict
-            logger.info(db_settings)
             prompt_table = models.BasicPrompts.objects.using(db_alias).values_list('id','prompt_category')
-            logger.info(f"{prompt_table.query}")
             prompt_id = list(prompt_table)
             logger.info(f"Available Prompts - {prompt_table}")
             return JsonResponse({"message":"ID fetched successfully","data":{"IDs":prompt_id},"status":True},status=200)
