@@ -11,7 +11,7 @@ class DatabaseSelectionMiddleware(MiddlewareMixin):
         """Switch database based on request headers, but only if needed"""
         try:
             host = request.headers.get('X-Environment', '').lower()
-            logging.info(f"Received request for environment: {host}")
+            logger.info(f"Received request for environment: {host}")
 
             if 'prod' in host:
                 new_db_settings = {
@@ -29,6 +29,7 @@ class DatabaseSelectionMiddleware(MiddlewareMixin):
                     'OPTIONS': {},
                 }
                 new_url = os.getenv('URL')
+                logger.info(f"DB Connection Details - \nDB Name - {os.getenv('DB_NAME')}\nHost - {os.getenv('DB_HOST')}")
             
             else:
                 new_db_settings = {
@@ -48,14 +49,17 @@ class DatabaseSelectionMiddleware(MiddlewareMixin):
 
             # Check if database settings need an update
             if settings.DATABASES.get('default') != new_db_settings:
-                logging.info(f"Updating database settings for: {host}")
+                logger.info(f"Updating database settings for: {host}")
+                logger.info(f"DB Connection Details - \nDB Name - {os.getenv('UAT_DB_NAME')}\nHost - {os.getenv('UAT_DB_HOST')}")
+            
                 settings.DATABASES['default'] = new_db_settings
                 settings.URL = new_url
             else:
-                logging.info(f"Database settings for {host} are already set. Skipping update.")
+                logger.info(f"Database settings for {host} are already set. Skipping update.")
 
         except Exception as e:
-            logging.error(f"Error in DatabaseSelectionMiddleware: {e}")
+            logger.error(f"Error in DatabaseSelectionMiddleware: {e}")
+            logger.info(f"DB Connection Details - \nDB Name - {os.getenv('UAT_DB_NAME')}\nHost - {os.getenv('UAT_DB_HOST')}")
             # Use UAT settings as fallback
             settings.DATABASES['default'] = {
                 'ENGINE': 'django.db.backends.postgresql',
