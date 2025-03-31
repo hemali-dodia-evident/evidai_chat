@@ -523,7 +523,7 @@ def users_assets(token,db_alias):
 # Get list of all assets from DB
 def get_asset_list(db_alias):
     asset_names = models.Asset.objects.using(db_alias).values_list('name',flat=True)
-    logger.info(f"List of Assets from DB - {asset_names}")
+    # logger.info(f"List of Assets from DB - {asset_names}")
     return asset_names
 
 
