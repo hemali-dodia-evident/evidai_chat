@@ -162,14 +162,15 @@ def token_validation(token):
                 onboarding_steps=onboarding_steps+'\n'+temp_stp    
             else:
                 onboarding_steps=temp_stp
+        print(f"user id - {user_id}")
         if validate:
             return token, user_id, user_name, user_role, onboarding_steps, isAR
         else:
-            return token, None, None, None, None, None
+            return token, user_id, None, None, None, None
 
     except Exception as e:
         logger.error(f"Failed to get user/me response due to - {str(e)}")
-        return token, None, None, None, None, None
+        return token, user_id, None, None, None, None
 
 
 # Add conversation to DB
@@ -1224,11 +1225,11 @@ def login(request):
     url = f"https://{URL}/user/login"
     # print(url)
     payload = json.dumps({
-    "email": "shweta+indinvuat03@evident.capital",
-    "password": "Evident@2024",
+    "email": "sai+0303ind@gmail.com",
+    # "password": "Evident@2024",
     # "email": "sai+1802ipi@evident.capital",
     # "email":"hemali-ci@evident.capital",
-    # "password": "Evident@2025",
+    "password": "Evident@2025",
     "ipInfo": {
         "asn": "asn",
         "asnName": "asnName",
