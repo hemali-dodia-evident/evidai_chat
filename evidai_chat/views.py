@@ -1421,14 +1421,8 @@ def get_all_prompt_catogiries(request):
             db_alias = 'prod' if 'prod' in env else 'default'
             db_settings = connections[db_alias].settings_dict
             logger.info(db_settings)
-            with connections[db_alias].cursor() as cursor:
-                cursor.execute("SELECT COUNT(*) FROM evidai_prompts;")
-                data = cursor.fetchone()
-                logger.info(f"{data}")  # Should return the correct count
-            # 'id','prompt_category'
-            prompt_table = models.BasicPrompts.objects.values_list('id','prompt_category')
+            prompt_table = models.BasicPrompts.objects.using(db_alias).values_list('id','prompt_category')
             logger.info(f"{prompt_table.query}")
-            # prompt_table = prompt_table.values_list()
             prompt_id = list(prompt_table)
             logger.info(f"Available Prompts - {prompt_table}")
             return JsonResponse({"message":"ID fetched successfully","data":{"IDs":prompt_id},"status":True},status=200)
