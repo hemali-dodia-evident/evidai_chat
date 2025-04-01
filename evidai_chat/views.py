@@ -210,6 +210,9 @@ def get_contextual_input(conversation_history, max_length=1000):
 @csrf_exempt
 def get_chat_session_details(request):
     if request.method == 'GET':
+        env = request.headers.get('X-Environment', 'uat').lower()
+        db_alias = 'prod' if 'prod' in env else 'default'
+        logger.info(f"get chat session db_alias - {db_alias}")
         token = None
         # Extract the Bearer token from the Authorization header
         auth_header = request.headers.get('Authorization')
@@ -224,8 +227,6 @@ def get_chat_session_details(request):
             logger.error(f"Invalid Token, Token: {token}")            
             return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400) 
         try:
-            env = request.headers.get('X-Environment', 'uat').lower()
-            db_alias = 'prod' if 'prod' in env else 'default'
             chats = models.ChatSession.objects.using(db_alias).filter(user_id=user_id,show=True).order_by('-id')
             convos = []
             
@@ -253,6 +254,10 @@ def get_chat_session_details(request):
 def create_chat_session(request):
     try:
         if request.method=='POST':
+            env = request.headers.get('X-Environment', 'uat').lower()
+            db_alias = 'prod' if 'prod' in env else 'default'
+            logger.info(f"db_alias in create chat session - {db_alias}")
+            
             token = None
             # Extract the Bearer token from the Authorization header
             auth_header = request.headers.get('Authorization')
@@ -267,8 +272,7 @@ def create_chat_session(request):
             if token_valid is None:
                 logger.error(f"Invalid Token, Token: {token}")            
                 return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
-            env = request.headers.get('X-Environment', 'uat').lower()
-            db_alias = 'prod' if 'prod' in env else 'default'
+            
             # Get the current date and time in UTC
             current_datetime = datetime.now(timezone.utc)
 
@@ -1224,7 +1228,7 @@ def handle_questions(db_alias,token, last_asset, last_ques_cat, user_name, user_
 def login(request):
     # print("in login")
     url = f"https://{URL}/user/login"
-    # print(url)
+    logger.info(url)
     payload = json.dumps({
     "email": "sai+0303ind@gmail.com",
     # "password": "Evident@2024",
@@ -1256,6 +1260,7 @@ def login(request):
     }
     response = requests.request("POST", url, headers=headers, data=payload)
     data = response.json()
+    logger.info(f"login response - {data}")
     token = data['token']
     return JsonResponse({"token":token},status=200)
 
