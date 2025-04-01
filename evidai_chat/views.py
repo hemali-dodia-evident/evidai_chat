@@ -1225,7 +1225,7 @@ def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, u
 # @csrf_exempt
 def login(request):
     # print("in login")
-    url = f"https://api-prod.evident.capital/user/login"
+    url = f"https://api-uat.evident.capital/user/login"
     payload = json.dumps({
     "email": "sai+0303ind@gmail.com",
     # "password": "Evident@2024",
