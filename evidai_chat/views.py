@@ -27,8 +27,6 @@ generation_config = {
     "top_p": 0.8  # Nucleus sampling
 }
 
-URL = settings.URL
-
 
 # Test API
 def hello_world(request):
@@ -119,7 +117,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
 
 # Authenticate from jwt token we are getting from UI
 @csrf_exempt
-def token_validation(token):    
+def token_validation(token,URL):    
     try:
         
         # Get User details
@@ -171,7 +169,7 @@ def token_validation(token):
 
     except Exception as e:
         logger.error(f"Failed to get user/me response due to - {str(e)}")
-        return token, user_id, None, None, None, None
+        return token, None, None, None, None, None
 
 
 # Add conversation to DB
@@ -212,7 +210,8 @@ def get_chat_session_details(request):
     if request.method == 'GET':
         env = request.headers.get('X-Environment', 'uat').lower()
         db_alias = 'prod' if 'prod' in env else 'default'
-        logger.info(f"get chat session db_alias - {db_alias}")
+        URL = os.getenv('URL') if 'prod' in env else os.getenv('UAT_URL')
+        logger.info(f"get chat session db_alias - {db_alias}\n URL - {URL}")
         token = None
         # Extract the Bearer token from the Authorization header
         auth_header = request.headers.get('Authorization')
@@ -221,7 +220,7 @@ def get_chat_session_details(request):
         
         # Get the token and validate it
         token = auth_header.split(' ')[1]
-        token_valid,user_id,*extra = token_validation(token)
+        token_valid,user_id,*extra = token_validation(token,URL)
         del extra
         if token_valid is None:
             logger.error(f"Invalid Token, Token: {token}")            
@@ -256,7 +255,8 @@ def create_chat_session(request):
         if request.method=='POST':
             env = request.headers.get('X-Environment', 'uat').lower()
             db_alias = 'prod' if 'prod' in env else 'default'
-            logger.info(f"db_alias in create chat session - {db_alias}")
+            URL = os.getenv('URL') if 'prod' in env else os.getenv('UAT_URL')
+            logger.info(f"db_alias in create chat session - {db_alias}\nURL - {URL}")
             
             token = None
             # Extract the Bearer token from the Authorization header
@@ -266,7 +266,7 @@ def create_chat_session(request):
             
             # Get the token and validate it
             token = auth_header.split(' ')[1]
-            token_valid,user_id,*extra = token_validation(token)
+            token_valid,user_id,*extra = token_validation(token,URL)
             del extra
             # print(token)
             if token_valid is None:
@@ -356,18 +356,18 @@ def get_conversations(request):
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return JsonResponse({"message":"missing header, please pass authentication token","data":{"response":"No authentication token present"},"status":False},status=400)
-        
+        env = request.headers.get('X-Environment', 'uat').lower()
+        db_alias = 'prod' if 'prod' in env else 'default'
+        URL = os.getenv('URL') if 'prod' in env else os.getenv('UAT_URL')
         # Get the token and validate it
         token = auth_header.split(' ')[1]
-        token_valid,*extra = token_validation(token)
+        token_valid,*extra = token_validation(token,URL)
         del extra
         if token_valid is None:
             logger.error(f"Invalid Token, Token: {token}")            
             return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
             
         data = json.loads(request.body)
-        env = request.headers.get('X-Environment', 'uat').lower()
-        db_alias = 'prod' if 'prod' in env else 'default'
         chat_session_id=data.get('chat_session_id')
         chat_present = models.ChatSession.objects.using(db_alias).get(id=chat_session_id)
         if chat_present.show ==True:
@@ -414,11 +414,9 @@ def get_conversations(request):
 # Validate chat session id if it is active or not
 def validate_chat_session(chat_session_id,db_alias):
     try:
-        # print("chat_session_id - ",chat_session_id)
         chat_session = models.ChatSession.objects.using(db_alias).get(id=int(chat_session_id))
         return chat_session
     except Exception as e:
-        # print(str(e))
         logger.error( f"Failed to validate chat session id - {chat_session_id} due to - {str(e)}")
         return 
 
@@ -432,10 +430,13 @@ def delete_chat_session(request):
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return JsonResponse({"message":"missing header, please pass authentication token","data":{"response":"No authentication token present"},"status":False},status=400)
-        
+        env = request.headers.get('X-Environment', 'uat').lower()
+        db_alias = 'prod' if 'prod' in env else 'default'
+        URL = os.getenv('URL') if 'prod' in env else os.getenv('UAT_URL')
+        logger.info(f"Delete chat session db_alias - {db_alias}\nURL - {URL}")
         # Get the token and validate it
         token = auth_header.split(' ')[1]
-        token_valid,*extra = token_validation(token)
+        token_valid,*extra = token_validation(token,URL)
         del extra
         if token_valid is None:
             logger.error("error",f"Invalid Token, Token: {token}")            
@@ -443,8 +444,6 @@ def delete_chat_session(request):
             
         data = json.loads(request.body)
         chat_session_id = data.get("chat_session_id")
-        env = request.headers.get('X-Environment', 'uat').lower()
-        db_alias = 'prod' if 'prod' in env else 'default'
         try:
             chat = models.ChatSession.objects.using(db_alias).get(id=chat_session_id)
             chat.show = False
@@ -483,7 +482,7 @@ def search_on_internet(question):
 
 
 # Get user specific assets in which user has invested
-def users_assets(token,db_alias):
+def users_assets(token,db_alias,URL):
     url = f"https://{URL}/investor/investment/transactions"
     payload = {}
     headers = {
@@ -529,7 +528,6 @@ def users_assets(token,db_alias):
 # Get list of all assets from DB
 def get_asset_list(db_alias):
     asset_names = models.Asset.objects.using(db_alias).values_list('name',flat=True)
-    # logger.info(f"List of Assets from DB - {asset_names}")
     return asset_names
 
 
@@ -538,7 +536,7 @@ def safe_value(value):
 
 
 # Check category of question and then based on category generate response
-def category_based_question(db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR):
+def category_based_question(URL,db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR):
     question = current_question
     final_response = ""
     asset_found = current_asset
@@ -705,7 +703,7 @@ def category_based_question(db_alias,current_question,promp_cat,token,onboarding
                 if personalAssets==True:
                     idx = specific_category.index(promp_cat)
                     specific_category[idx] = 'Owned Assets'
-                    assets_identified = users_assets(token,db_alias)                    
+                    assets_identified = users_assets(token,db_alias,URL)                    
                     prompt = f"""Below are asset details in which user has invested. 
                     Understand user's question carefully and provide answer using below mentioned details. 
                     Answer should be clear, and in positive and polite tone. Make sure answer is readable. 
@@ -775,14 +773,14 @@ def category_based_question(db_alias,current_question,promp_cat,token,onboarding
                     # print(f"In else of personal assets cat - {current_asset}")
                     if 'This Asset is not avaialble right now' not in current_asset:
                         assets_identified = current_asset.split(",")
-                        response = get_asset_based_response(assets_identified,question,token)
+                        response = get_asset_based_response(assets_identified,question,token,URL)
                         if final_response == "":
                             final_response = response
                         else:
                             final_response = final_response + '\n' + response
                         asset_found = ",".join(assets_identified)    
                     else:
-                        prompt = f"""This asset is not available with us currently, but you can explore other assets present at our Marketplace(https://uat.account.v2.evident.capital/)"""
+                        prompt = f"""This asset is not available with us currently, but you can explore other assets present at our Marketplace"""
                         response = prompt
                         if final_response == "":
                             final_response = response
@@ -835,7 +833,7 @@ def category_based_question(db_alias,current_question,promp_cat,token,onboarding
 
 
 # Get details of individual asset details
-def get_specific_asset_details(asset_name,token): 
+def get_specific_asset_details(asset_name,token,URL): 
     try:
         all_asset_details = None
         # Investor assets
@@ -976,18 +974,18 @@ def get_specific_asset_details(asset_name,token):
 
 
 # Generate response based on provided asset specific detail
-def get_asset_based_response(assets_identified,question,token):
+def get_asset_based_response(assets_identified,question,token,URL):
     final_response = ''
     try:
         for ass in assets_identified:
-            data,asset_url = get_specific_asset_details(ass,token)
+            data,asset_url = get_specific_asset_details(ass,token,URL)
             note = f"""Response Guidelines:
                     If an answer is fully available: Provide a clear, concise response with proper structure and formatting.
                     If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable. If needed, suggest contacting support:
                     "Certain details are unavailable for this asset, but our support team would be happy to assist you. Please reach out to support@evident.capital with your query."
                     If no relevant information is available: Respond with:
                     "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
-                    Ask user to visit "Marketplace(https://uat.account.v2.evident.capital/)" for more details related to this asset and other asset. 
+                    Ask user to visit "Marketplace" for more details related to this asset and other asset. 
                     Note: The response should be clear, concise, and user-friendly, adhering to these guidelines. Encourage to ask more queries."""
             prompt = f"""Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about.
                 To get proper trade values, add all results of that perticular assets. Do not provide paramters like id, and also create proper response it **SHOULD NOT** be in key value format.
@@ -1021,7 +1019,7 @@ def get_asset_based_response(assets_identified,question,token):
 
 
 # Question handling flow - IP Count:9, OP Count:3
-def handle_questions(db_alias,token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR):     
+def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR):     
     logger.info(f"\nlast_asset - {last_asset}\nuser_role - {user_role}\nlast_ques_cat - {last_ques_cat}")
     asset_found = ''
     response = ''
@@ -1217,7 +1215,7 @@ def handle_questions(db_alias,token, last_asset, last_ques_cat, user_name, user_
     else:
         promp_cat = [p.strip() for p in promp_cat if 'Greetings' not in p.strip()]
     logger.info(f"Prompt categories - {promp_cat}")
-    response,asset_found,specific_category = category_based_question(db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR)
+    response,asset_found,specific_category = category_based_question(URL,db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR)
     logger.info(f"final response from handle_questions - {response}")
     specific_category = ",".join(specific_category)
     # print("specific_category= ",specific_category)
@@ -1227,8 +1225,7 @@ def handle_questions(db_alias,token, last_asset, last_ques_cat, user_name, user_
 # @csrf_exempt
 def login(request):
     # print("in login")
-    url = f"https://{URL}/user/login"
-    logger.info(url)
+    url = f"https://api-prod.evident.capital/user/login"
     payload = json.dumps({
     "email": "sai+0303ind@gmail.com",
     # "password": "Evident@2024",
@@ -1305,10 +1302,11 @@ def evidAI_chat(request):
 
             env = request.headers.get('X-Environment', 'uat').lower()
             db_alias = 'prod' if 'prod' in env else 'default'
-            logger.info(f"db_alias - {db_alias}")
+            URL = os.getenv('URL') if 'prod' in env else os.getenv('UAT_URL')
+            logger.info(f"db_alias - {db_alias}\nURL - {URL}")
             # Get the token and validate it
             token = auth_header.split(' ')[1]
-            token_valid,user_id,user_name,user_role,onboarding_step,isAR = token_validation(token)
+            token_valid,user_id,user_name,user_role,onboarding_step,isAR = token_validation(token,URL)
             logger.info(f"user_id - {user_id}")
             if token_valid is None:
                 logger.error(f"Invalid Token, Token: {token}")            
@@ -1331,7 +1329,7 @@ def evidAI_chat(request):
             if len(previous_questions)==1:
                 update_chat_title(current_question,chat_session_id,db_alias)
                 
-            response, current_asset, current_ques_cat = handle_questions(db_alias,token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR)
+            response, current_asset, current_ques_cat = handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR)
             response = response.replace("\n", "  \n")  
             add_to_conversations(db_alias,user_id, chat_session_id, current_question, response, current_asset, current_ques_cat)      
             
