@@ -162,7 +162,7 @@ def token_validation(token):
                 onboarding_steps=onboarding_steps+'\n'+temp_stp    
             else:
                 onboarding_steps=temp_stp
-        print(f"user id - {user_id}")
+        
         if validate:
             return token, user_id, user_name, user_role, onboarding_steps, isAR
         else:
@@ -1299,10 +1299,11 @@ def evidAI_chat(request):
 
             env = request.headers.get('X-Environment', 'uat').lower()
             db_alias = 'prod' if 'prod' in env else 'default'
+            logger.info(f"db_alias - {db_alias}")
             # Get the token and validate it
             token = auth_header.split(' ')[1]
             token_valid,user_id,user_name,user_role,onboarding_step,isAR = token_validation(token)
-
+            logger.info(f"user_id - {user_id}")
             if token_valid is None:
                 logger.error(f"Invalid Token, Token: {token}")            
                 return JsonResponse({"message":"Invalid user, please login again","data":{"response":"Failed to validate token for user, please check token"},"status":False},status=400)
