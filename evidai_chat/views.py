@@ -136,6 +136,7 @@ def token_validation(token):
 
         response = requests.request("GET", url, headers=headers, data=payload)
         data = response.json()
+        logger.info(f"token data - {data}")
         validate = data["user"]["twoFactorAuthenticationSession"]
         user_id = data["user"]["id"]
         user_name = data['user']['kyc']['fullName'].split()[0] if data['user']['kyc']['fullName'] != '' else ''
