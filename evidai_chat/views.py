@@ -527,7 +527,7 @@ def users_assets(token,db_alias,URL):
 
 # Get list of all assets from DB
 def get_asset_list(db_alias):
-    asset_names = models.Asset.objects.using(db_alias).values_list('name',flat=True)
+    asset_names = models.Asset.objects.using(db_alias).exclude(visibility='PRIVATE').values_list('name',flat=True)
     return asset_names
 
 
@@ -780,7 +780,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                             final_response = final_response + '\n' + response
                         asset_found = ",".join(assets_identified)    
                     else:
-                        prompt = f"""This asset is not available with us currently, but you can explore other assets present at our Marketplace"""
+                        prompt = f"""This asset is not available with us currently or might be you are asking about Private Asset for which I do not have much information. But you can explore other assets present at our Marketplace. Feel free to ask about other assets."""
                         response = prompt
                         if final_response == "":
                             final_response = response
@@ -856,6 +856,9 @@ def get_specific_asset_details(asset_name,token,URL):
         # print(data)
         visibility = all_asset_details['visibility'][0]+all_asset_details['visibility'][1:].lower()
         # print(visibility)
+        if visibility == 'Exclusive':
+            asset_info = "This is an Exlusive Asset, I can not directly provide details. To access this asset related information kindly visit Marketplace. Search for this asset in searchbar. Enter Access Code to view this asset."
+            return asset_info, ''
         retirementEligible = 'Not Available'
         if all_asset_details['retirementEligible'] == False:
             retirementEligible = 'Not Available for this asset'
@@ -972,6 +975,7 @@ def get_specific_asset_details(asset_name,token,URL):
         logger.error(f"failed to get asset details - {str(e)}")
         return "No information found","Not available"
 
+get_specific_asset_details("Exclusive Asset","NjQzOQ.qKVGYVFfDKhNSw22n-iU8u2iMyxJhLxZ31lHDDOr5uNLJ4X88UCClgusBMk4","api-uat.evident.capital")
 
 # Generate response based on provided asset specific detail
 def get_asset_based_response(assets_identified,question,token,URL):
