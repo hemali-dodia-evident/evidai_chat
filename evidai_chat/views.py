@@ -89,10 +89,10 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                         - "Tell me about manager"
                         - "Tell me about OpenAI."
                         - "What is OpenAI’s investment mode?"
-                 Assets_Creation: Detailed process only to create assets. 
+                 Asset_Investment: Complete step by step details about asset trading, place bid, sell asset now, place ask, Buy now assets, Committing on assets, and Deposit amount to account or add initial fund to account.
                  Forget_Password: Contains step by step process to change or update password.
                  Corp_Investor_Onboarding:Detailed process for Corp investor onboarding process. Can also be reffered as Corp Onboarding or in similar context. Contains Details adn step by step process about AR(Authorised Representative), CPI(Corporate Professional Investor), IPI(Institutional Professional Investor), Non-PI(Non Professional Investor).
-                 Onboarding_Investor:Detailed process for investor onboarding process. Which ONLY contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions, Investment personality or eligibility criteria, 
+                 Onboarding_Investor:Detailed process for investor onboarding process. Which ONLY contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions, Investment personality or eligibility criteria, Background Verification, Wealth Verification, Residence and Identity Verification, Non-PI details and steps, Sign agreement.
                  NOTE - IF MORE THAN ONE CATEGORY MATCHES THEN RETURN THEIR NAME WITH "," SEPERATED. 
                  - If user is talking or mentioning platform without specifying name of platform then it simply means Evident platform on which currently they are present. So refer all categories present above then provide answer.
                  E.g. Qestion: What are the steps for investor onboarding?
@@ -113,7 +113,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
     logger.info(f"prompt category - {response}")
     return response
 
-# get_prompt_category("how to set 2FA","investor","","Owned Assets")
+# get_prompt_category("how to perform trading","investor","Openai","Personal Assets")
 
 # Authenticate from jwt token we are getting from UI
 @csrf_exempt
@@ -1227,10 +1227,10 @@ def login(request):
     # print("in login")
     url = f"https://api-uat.evident.capital/user/login"
     payload = json.dumps({
-    "email": "sai+0303ind@gmail.com",
+    # "email": "sai+0303ind@gmail.com",
     # "password": "Evident@2024",
     # "email": "sai+1802ipi@evident.capital",
-    # "email":"hemali-ci@evident.capital",
+    "email":"hemali-ci@evident.capital",
     "password": "Evident@2025",
     "ipInfo": {
         "asn": "asn",
