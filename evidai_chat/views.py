@@ -975,7 +975,7 @@ def get_specific_asset_details(asset_name,token,URL):
         logger.error(f"failed to get asset details - {str(e)}")
         return "No information found","Not available"
 
-get_specific_asset_details("Exclusive Asset","NjQzOQ.qKVGYVFfDKhNSw22n-iU8u2iMyxJhLxZ31lHDDOr5uNLJ4X88UCClgusBMk4","api-uat.evident.capital")
+# get_specific_asset_details("Exclusive Asset","NjQzOQ.qKVGYVFfDKhNSw22n-iU8u2iMyxJhLxZ31lHDDOr5uNLJ4X88UCClgusBMk4","api-uat.evident.capital")
 
 # Generate response based on provided asset specific detail
 def get_asset_based_response(assets_identified,question,token,URL):
