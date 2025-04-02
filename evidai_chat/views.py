@@ -780,7 +780,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                             final_response = final_response + '\n' + response
                         asset_found = ",".join(assets_identified)    
                     else:
-                        prompt = f"""This asset is not available with us currently or might be you are asking about Private Asset for which I do not have much information. But you can explore other assets present at our Marketplace. Feel free to ask about other assets."""
+                        prompt = f"""This asset is not available with us currently or might be you are asking about Private Asset for which I do not have much information. But you can explore other assets present at our Marketplace or reach out to our support team at support@evident.capital. Feel free to ask about other assets."""
                         response = prompt
                         if final_response == "":
                             final_response = response
