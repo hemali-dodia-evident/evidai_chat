@@ -1442,7 +1442,7 @@ def get_all_prompt_catogiries(request):
         try:
             env = request.headers.get('X-Environment', 'uat').lower()
             db_alias = 'prod' if 'prod' in env else 'default'
-            prompt_table = models.BasicPrompts.objects.using(db_alias).values_list('id','prompt_category')
+            prompt_table = models.BasicPrompts.objects.using(db_alias).values_list('id','prompt_category','prompts')
             prompt_id = list(prompt_table)
             logger.info(f"Available Prompts - {prompt_table}")
             return JsonResponse({"message":"ID fetched successfully","data":{"IDs":prompt_id},"status":True},status=200)
