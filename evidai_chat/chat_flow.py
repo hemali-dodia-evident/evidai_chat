@@ -124,7 +124,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
     logger.info(f"prompt category - {response}")
     return response
 
-get_prompt_category("how i can invest in this","indivdual investor","dnd small cap funds","Personal asset")
+# get_prompt_category("how i can invest in this","indivdual investor","dnd small cap funds","Personal asset")
 # Generate answer from internet
 def search_on_internet(question):
     try:
