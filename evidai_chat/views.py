@@ -408,10 +408,7 @@ def login(request):
     # print("in login")
     url = f"https://api-uat.evident.capital/user/login"
     payload = json.dumps({
-    # "email": "sai+0303ind@gmail.com",
-    # "password": "Evident@2024",
-    "email": "sai+1802ipi@evident.capital",
-    # "email":"hemali-ci@evident.capital",
+    "email": "hemali-indi@evident.capital",
     "password": "Evident@2025",
     "ipInfo": {
         "asn": "asn",
@@ -532,11 +529,13 @@ def add_prompt_values(request):
             category = data['category'].replace("_"," ")
             asset_name = data['asset_name']
             asset_sub_cat = data['asset_sub_cat']
+            prm_id = data['id']
             # Convert to ISO 8601 format
             iso_format_datetime = current_datetime.isoformat()
             env = request.headers.get('X-Environment', 'uat').lower()
             db_alias = 'prod' if 'prod' in env else 'default'
             new_cat = models.BasicPrompts.objects.using(db_alias).create(
+                id=prm_id,
                 prompt_category=category,
                 prompt=value,
                 asset_name=asset_name,

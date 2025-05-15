@@ -21,10 +21,12 @@ generation_config = {
 }
 
 general_guidelines = """Response Guidelines:
-You are smart and intelligent bot having knowledge of Finance sector. You can understand user's question and respond them with required information. You are very friendly and kind.
-You are very friendly and helpful smart assistant. You have to provide only those information for which user is asking. And guide user just like you will guide your friend.
+You are smart and intelligent bot having knowledge of Finance sector. You have to answer like human. You can understand user's question and respond them with required information. You are very friendly and kind.
+Keep your answer short and to the point so that user will feel connected and will read, but maintain your uniquness and style while interacting with user. You are very friendly and helpful smart assistant. You have to provide only those information for which user is asking. And guide user just like you will guide your friend.
+No need to greet user always. If there is greeting in question then only greet. You can use suitable emojis if you like to make it more human like conversation.
 If an answer is fully available: Provide a clear, concise response with proper structure and formatting, considering answer's readability, line breaks, points everything.
 If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable. If needed, suggest contacting support.
+If specific steps are asked in question then only provide step details, else provide short but useful overview.
 If no relevant information is available then inform user in politely and friendly way that currently we dont have that information but they can approach support team for more clarity.
 Support team contact -  support@evident.capital
 Ask user to visit "Marketplace" for more details related to this asset and other asset if required.
@@ -38,11 +40,13 @@ def get_gemini_response(question,prompt):
         # prompt = "Your name is EvidAI a smart intelligent bot of Evident LLP. You provide customer support and help them."+ prompt
         model = genai.GenerativeModel('gemini-2.0-flash')
         response_content = model.generate_content([prompt, question])
+        print(response_content.text)
         return response_content.text.strip()
     except Exception as e:
         logger.error(f'Failed to get answer from gemini due to - {str(e)}')
         response = "Sorry! I am not able to find answer for your question. \nRequest you to coordinate with our support team on - support@evident.capital.\nThank You."
         return response
+
 
 # Get list of all assets from DB
 def get_asset_list(db_alias):
@@ -59,11 +63,11 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                  Last Asset about which user asked - {last_asset}
                  Last Question Category regarding which conversation was going on - {last_ques_cat}
                  USER's ROLE - {user_role}.
-                 IF QUESTION IS ABOUT USER'S ONBOARDING OR PENDING STEPS OR QUERY ABOUT ANY STEP RELATED TO ONBOARDING THEN REFER "USER's ROLE" AND SELECT CATEGORY ACCORDINGLY, ALSO IF LAST QUESTION CATEGORY WAS RELATED TO "ONBOARDING" THEN SELECT PROPER ONBOARDING CATEGORY.
+                 IF QUESTION IS ABOUT USER'S ONBOARDING OR PENDING STEPS OR ANY QUERY ABOUT ONBOARDING OR ANY STEP RELATED TO ONBOARDING THEN REFER "USER's ROLE" AND SELECT CATEGORY ACCORDINGLY, ALSO IF LAST QUESTION CATEGORY WAS RELATED TO "ONBOARDING" THEN SELECT PROPER ONBOARDING CATEGORY.
                  IF QUESTION IS SPECIFYING ONBOARDING CATEGORY THEN RETURN THAT CATEGORY ONLY. DO NOT CONSIDER USER'S ROLE IN THAT CASE.
                  Greetings: USER IS GREETING WITHOUT ANY OTHER INFORMATION, Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
                  Asset_Investment: Complete step by step details about asset trading, place bid, sell asset now, place ask, Buy now assets, Committing on assets.
-                 Deposit_Amount: Process to add fund when user's is out of balance or having insufficient fund to invest in any asset.
+                 Deposit_Amount: Process to add or deposit fund to account. Or when user's is out of balance or having insufficient fund to invest in any asset.
                  Fund_Account: Detailed process to add initial fund into user's account, guide to setup bank account and add fund into wallets.
                  Personal_Assets: Following details are present for variety of assets like openai, spacex and many more, Note that it does not include investment steps or process. - These assets include various categories such as Private Equity, Venture Capital, 
                     Private Credit, Infrastructure, Hedge Funds, Digital Assets, Real Estate, Collectibles, 
@@ -124,25 +128,22 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
     logger.info(f"prompt category - {response}")
     return response
 
-# get_prompt_category("how i can invest in this","indivdual investor","dnd small cap funds","Personal asset")
+
 # Generate answer from internet
 def search_on_internet(question):
+    # NOTE - Keep tone positive and polite while answering user's query.
+    #     Avoid mentioning or implying that the user has not provided information.
+    #     Your response will only revolve around provided guidelines, and finance sector. You can provide information which is publically available on internet. But you have to mention that whatever information you are provide they are based on internet search and not from EVIDENT platform.
+    #     Do not greet the user in your response. If you are unable to find answer then just say I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly.
+    #     Use proper formatting such as line breaks to enhance readability. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
+    #     Maintain a positive and polite tone throughout the response.
+    #     The response should be clear, concise, and user-friendly, adhering to these guidelines.
     try:
-        prompt = f"""General Guidelines - {general_guidelines}
-        NOTE - Keep tone positive and polite while answering user's query.
-        Avoid mentioning or implying that the user has not provided information.
-        Your response will only revolve around provided guidelines, and finance sector. You can provide information which is publically available on internet. But you have to mention that whatever information you are provide they are based on internet search and not from EVIDENT platform.
-        Do not greet the user in your response. If you are unable to find answer then just say I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly.
-        Use proper formatting such as line breaks to enhance readability. Do NOT use any kind of formating like "*" just give proper line breaks using '\n'.
-        Maintain a positive and polite tone throughout the response.
-        The response should be clear, concise, and user-friendly, adhering to these guidelines.
-        """
-        response = get_gemini_response(question,prompt)
+        response = get_gemini_response(question,general_guidelines)
         logger.info(f"internet search response - {response}")
     except Exception as e:
         logger.error(f"search_on_internet - {str(e)}")
     return response
-
 
 
 # Get user specific assets in which user has invested
@@ -193,22 +194,11 @@ def get_asset_based_response(assets_identified,question,token,URL):
     final_response = ''
     try:
         for ass in assets_identified:
-            data,asset_url = ap.get_specific_asset_details(ass,token,URL)
-            prompt = f"""Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about.
-                To get proper trade values, add all results of that perticular assets. Do not provide paramters like id, and also create proper response it **SHOULD NOT** be in key value format.
-                                
-                RESPONSE INSTRUCTIONS: READ CAREFULLY -
-No bullets or numbering at all. Keep it clean and simple.
-For every attribute, use this exact format: "Attribute:Value" (no line breaks between them).
-Line breaks are allowed only between different attributes, not inside a single value.
-
-Regarding the structure:
-If any major section like "Investment Details" or "Events" has no data, just skip it — don't show an empty title.
-"Events", "Investment Details", and "Key Highlights" sections will have sub-points.
-Make sure the main points and sub-points are clearly separate.
-(Important: Do not accidentally treat main points like sub-points.)
-If the user asks for something specific (like "Manager Name", "Events", "IRR", etc.),
-only reply with that specific information — do not include full asset details unless specifically requested.
+            data,asset_url = ap.invest_question_flow(token,URL,ass)
+            print("got data from invest_question_flow - ", data)
+            prompt = f"""
+Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about.
+{data}
 
 Document Access Instructions: 
 Company documents are available through the 'Company Document' section.
@@ -216,26 +206,17 @@ To access: Open 'Company Document' → Agree to the NDA by checking 'I have read
 To download: After signing, click 'Download all'.
 
 Special points to remember:
-Treat "Type" and "Vertical" as the same field.
-"Target Amount" and "Allocated Amount" also mean the same thing — handle them accordingly.
-If any information is missing, do not write "None". Instead, write "Unavailable".
+1. "Type" and "Vertical" as the same field.
+2. "Target Amount" and "Allocated Amount" also mean the same thing — handle them accordingly.
 
-Summary:
-Keep responses clean, minimal, and highly accurate.
-Focus on what’s asked — no extra noise, no missing rules.
-Be smart about structure and make it easy for the reader to follow.
-
-                Asset Details: - 
-                {data}                
-                """
+General {general_guidelines}
+"""
             response = get_gemini_response(question,prompt)      
             final_response = final_response + '\n'+ response  
         logger.info(f"asset based response - {final_response}")
     except Exception as e:
         logger.error(f"failed while handling asset based question - {str(e)}")
     return final_response
-
-
 
 
 # Check category of question and then based on category generate response
@@ -345,36 +326,45 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                             """  
 
                             prm = onb_res_prm #"Apologies I can not assist you on this point. Currently I can only assist you with Asset Specific question. For rest of the information like onboarding, AR(Authorised Representative), CPI(Corporate Professional Investor), IPI(Institutional Professional Investor), Non-PI(Non Professional Investor) Please email them at support@evident.capital with the details of your query for prompt assistance."
+                        
                         elif 'Onboarding' in promp_cat:
-                            onb_res_prm = f"""{prm}
-                            Provide details of each step.
+                            # onb_res_prm = f"""{prm}
+                            # Provide details of each step.
 
-                            - If the user asks about any information already present in the provided details, respond directly using that information.
-                            - Use this information to provide the user's onboarding status: {onboarding_step}.
+                            # - If the user asks about any information already present in the provided details, respond directly using that information.
+                            # - Use this information to provide the user's onboarding status: {onboarding_step}.
 
-                            ### Rules for Responses:
-                            1. **Onboarding Steps:** If the user asks about onboarding, list the steps without extra explanations.
-                            2. **US Person Selection:** If the user asks about selecting "US Person" as **Yes**, respond with:
-                            "You will not be able to proceed ahead as we are currently working on an updated account opening process for US clients. We will notify you once it becomes available."
-                            3. Do **not** mention tax implications or suggest contacting support unless explicitly asked.
-                            4. **Pending Onboarding Steps:** If the user inquires about pending steps, list the incomplete steps and provide guidance.
-                            5. **Queries Related to AR, IPI, CPI, or NON-PI:** If the user asks about these, instruct them to **sign up as a 'Corp Investor'** to get more details."""
-                            prm = onb_res_prm
+                            # ### Rules for Responses:
+                            # 1. **Onboarding Steps:** If the user asks about onboarding, list the steps without extra explanations.
+                            # 2. **US Person Selection:** If the user asks about selecting "US Person" as **Yes**, respond with:
+                            # "You will not be able to proceed ahead as we are currently working on an updated account opening process for US clients. We will notify you once it becomes available."
+                            # 3. Do **not** mention tax implications or suggest contacting support unless explicitly asked.
+                            # 4. **Pending Onboarding Steps:** If the user inquires about pending steps, list the incomplete steps and provide guidance.
+                            # 5. **Queries Related to AR, IPI, CPI, or NON-PI:** If the user asks about these, instruct them to **sign up as a 'Corp Investor'** to get more details."""
+                            # prm = onb_res_prm
 
                             # prm = f"""{prm} \nProvide details of each step.\nIF USER IS ASKING ABOUT ANY INFORMATION WHICH IS PRESENT IN ABOVE MENTIONED DETAILS THEM PROMPTLY REVERT TO USER WITH THAT DETAIL.\nUSE THIS INFORMATION TO PROVIDE USER'S ONBOARDING STATUS. \nUser\'s current onboarding status - {onboarding_step}
                             #         If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step.
                             #         NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS, AND CURRENT STATUS OF USER'S ONBOARDING. DO NOT ASK USER TO FINISH PENDING STEPS."""
+                        
+                            onb_res_prm = f"""{general_guidelines}
+                            Check if user wants to know about actual onboarding process or its just some generic question. If its generic question then answer as per your understanding and provide most relevant and short summary type of response.
+                            User's current onboarding status is(Use Only if required, like when user wants to know their own onboarding status or pending steps etc.) - {onboarding_step}
+                            Onboarding guide - {prm}
+                                            """
+                            prm = onb_res_prm
                         prompt_data_list.append(prm)
                     prompt_data_list = "\n".join(prompt_data_list)
-                              
-                    prompt_data = f"""General Guidelines - {general_guidelines}
-                            Use the following information to find the answer:
-                            {prompt_data_list}
+                    prompt_data = prompt_data_list      
+                    # prompt_data = f"""{general_guidelines}
+                    #         Use the following information to find the answer:
+                    #         {prompt_data_list}
 
-                            ### IMPORTANT GUIDELINES:                              
-                            1. If you cannot find an answer for any part of question then provide available information and for missing information, say:  
-                            "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please email them at support@evident.capital with the details of your query for prompt assistance."  
-                            2. Keep your tone **polite, clear, and direct**. Use line breaks for readability"""
+                    #         ### IMPORTANT GUIDELINES:                              
+                    #         1. If you cannot find an answer for any part of question then provide available information and for missing information, say:  
+                    #         "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please email them at support@evident.capital with the details of your query for prompt assistance."  
+                    #         2. Keep your tone **polite, clear, and direct**. Use line breaks for readability"""
+                    
                     response = get_gemini_response(question,prompt_data)
                     if final_response == "":
                         final_response = response
@@ -388,6 +378,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                     them at support@evident.capital with the details of your query, and they’ll assist you promptly." 
                     this will cover the part of question for which information is not available"""
                     final_response = get_gemini_response(question,prm)
+            
             elif promp_cat=='FAILED':
                 logger.info("Prompt Category is 'FAILED'")
                 # response = "I can assist you with onboarding assistance for investors and asset research & overview. Let me know how I can help! More features will be available soon."
@@ -397,13 +388,14 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                 else:
                     final_response = final_response + '\n' + response
                 failed_cat = True 
+            
             elif 'Asset Investment' == promp_cat:
                 print("Asset_Investment")
                 domain = URL
                 if len(current_asset.split(","))>0 and current_asset != '':
                     print("current_asset - ",current_asset.split(","), type(current_asset), len(current_asset.split(",")))
                     assets_identified = current_asset.split(",")[0]
-                    response = ap.invest_question_flow(question,token,domain,assets_identified)
+                    response = ap.invest_question_flow(token,domain,assets_identified)
                 else:
                     print("here in else")
                     response = ap.general_investment_guidelines(question)
@@ -411,6 +403,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                     final_response = response
                 else:
                     final_response = final_response + '\n' + response 
+            
             elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True or personalAssets==True:    
                 logger.info("Prompt Category is Personal Asset") 
                 if personalAssets==True:
@@ -455,6 +448,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                             final_response = final_response + '\n' + response
                         asset_found = "" 
                         failed_cat=True 
+            
             else:
                 response = search_on_internet(question)
                 if final_response == "":
@@ -487,8 +481,9 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                     No extra words, unnecessary greetings, or irrelevant details are added.
                     Do not include the full support message unless all information is unavailable.
                     Strictly follow these instructions to generate the best response."""
+        
         if personalAssets==False and failed_cat==False:
-            final_response = get_gemini_response(final_response,prompt)
+            final_response = get_gemini_response(final_response,general_guidelines)
         
         logger.info(f"Categories final - {specific_category}")
     except Exception as e:
