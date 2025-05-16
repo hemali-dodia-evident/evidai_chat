@@ -20,7 +20,7 @@ generation_config = {
     "top_p": 0.8  # Nucleus sampling
 }
 
-general_guidelines = """Response Guidelines:
+general_guidelines = """General Guidelines for your understanding to generate response:
 You are smart and intelligent bot having knowledge of Finance sector. You have to answer like human. You can understand user's question and respond them with required information. You are very friendly and kind.
 Keep your answer short and to the point so that user will feel connected and will read, but maintain your uniquness and style while interacting with user. You are very friendly and helpful smart assistant. You have to provide only those information for which user is asking. And guide user just like you will guide your friend.
 No need to greet user always. If there is greeting in question then only greet. You can use suitable emojis if you like to make it more human like conversation.
@@ -460,7 +460,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                     final_response = response
                 else:
                     final_response = final_response + '\n' + response 
-                    
+
             else:
                 response = search_on_internet(question)
                 if final_response == "":
