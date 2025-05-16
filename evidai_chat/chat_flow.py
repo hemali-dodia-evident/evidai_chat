@@ -24,6 +24,8 @@ general_guidelines = """Response Guidelines:
 You are smart and intelligent bot having knowledge of Finance sector. You have to answer like human. You can understand user's question and respond them with required information. You are very friendly and kind.
 Keep your answer short and to the point so that user will feel connected and will read, but maintain your uniquness and style while interacting with user. You are very friendly and helpful smart assistant. You have to provide only those information for which user is asking. And guide user just like you will guide your friend.
 No need to greet user always. If there is greeting in question then only greet. You can use suitable emojis if you like to make it more human like conversation.
+Make sure you use financial terms well while answering, as you are working in finance sector.
+And use terms which are present in descriptions to sound more professional.
 If an answer is fully available: Provide a clear, concise response with proper structure and formatting, considering answer's readability, line breaks, points everything.
 If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable. If needed, suggest contacting support.
 If specific steps are asked in question then only provide step details, else provide short but useful overview.
@@ -40,7 +42,6 @@ def get_gemini_response(question,prompt):
         # prompt = "Your name is EvidAI a smart intelligent bot of Evident LLP. You provide customer support and help them."+ prompt
         model = genai.GenerativeModel('gemini-2.0-flash')
         response_content = model.generate_content([prompt, question])
-        print(response_content.text)
         return response_content.text.strip()
     except Exception as e:
         logger.error(f'Failed to get answer from gemini due to - {str(e)}')
@@ -69,6 +70,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                  Asset_Investment: Complete step by step details about asset trading, place bid, sell asset now, place ask, Buy now assets, Committing on assets.
                  Deposit_Amount: Process to add or deposit fund to account. Or when user's is out of balance or having insufficient fund to invest in any asset.
                  Fund_Account: Detailed process to add initial fund into user's account, guide to setup bank account and add fund into wallets.
+                 Overall_Assets: Contains collective information of assets present on Marketplace. What type of assets are present, how many assets are there. 
                  Personal_Assets: Following details are present for variety of assets like openai, spacex and many more, Note that it does not include investment steps or process. - These assets include various categories such as Private Equity, Venture Capital, 
                     Private Credit, Infrastructure, Hedge Funds, Digital Assets, Real Estate, Collectibles, 
                     Structuring, Private Company Debenture, Note, Bond, Fund, and Equity. 
@@ -110,6 +112,8 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                       Bot: buy_and_sell_tokenized_assets
                       Question: Tell me about openai
                       Bot: Personal_Assets
+                      Question: what are the available assets?
+                      Bot: Overall_Assets
                       Question: Hey i want some help
                       Bot: Greetings
                       Question: How to logout from this platform?
@@ -449,6 +453,14 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                         asset_found = "" 
                         failed_cat=True 
             
+            elif 'Overall Assets' == promp_cat:
+                prompt = f"""All assets are listed on Marketplace. All assets which are listed on Marketplace are eligible for investment."""
+                response = get_gemini_response(question,prompt)
+                if final_response == "":
+                    final_response = response
+                else:
+                    final_response = final_response + '\n' + response 
+                    
             else:
                 response = search_on_internet(question)
                 if final_response == "":
@@ -502,7 +514,6 @@ def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, u
     isRelated = False
     isAssetRelated = False   
     isPersonalAsset = False
-    isInvestment = False
     asset_names  = get_asset_list(db_alias)
     asset_names = list(asset_names)
     asset_names = ", ".join(asset_names)
