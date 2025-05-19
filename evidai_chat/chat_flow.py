@@ -20,20 +20,32 @@ generation_config = {
     "top_p": 0.8  # Nucleus sampling
 }
 
-general_guidelines = """General Guidelines for your understanding to generate response:
-You are smart and intelligent bot having knowledge of Finance sector. You have to answer like human. You can understand user's question and respond them with required information. You are very friendly and kind.
-Keep your answer short and to the point so that user will feel connected and will read, but maintain your uniquness and style while interacting with user. You are very friendly and helpful smart assistant. You have to provide only those information for which user is asking. And guide user just like you will guide your friend.
-No need to greet user always. If there is greeting in question then only greet. You can use suitable emojis if you like to make it more human like conversation.
-Make sure you use financial terms well while answering, as you are working in finance sector.
-And use terms which are present in descriptions to sound more professional.
-If an answer is fully available: Provide a clear, concise response with proper structure and formatting, considering answer's readability, line breaks, points everything.
-If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable. If needed, suggest contacting support.
-If specific steps are asked in question then only provide step details, else provide short but useful overview.
-If no relevant information is available then inform user in politely and friendly way that currently we dont have that information but they can approach support team for more clarity.
-Support team contact -  support@evident.capital
-Ask user to visit "Marketplace" for more details related to this asset and other asset if required.
-Do not suggest or provide any recommendations, advice, or actions that may violate the rules, regulations, or guidelines set by the Securities and Futures Commission (SFC) and VARA. Ensure that all information and responses remain fully compliant with applicable laws and regulatory standards.
-"""
+general_guidelines = """You are a smart, professional, and helpful financial assistant. Your tone is friendly and conversational, but concise and focused. You understand and respond based on the user's question only.
+
+Response Rules:
+DO NOT say “Okay, I understand”, “Sure”, “Alright”, or any filler before giving the answer.
+
+If the question is general (e.g., "Tell me about onboarding"), start by explaining its purpose in our platform, then provide a short summary of the main steps involved.
+
+If the question is specific (e.g., "What’s the last step of onboarding?"), directly answer the exact question without extra information.
+
+DO NOT greet the user unless they greet first.
+
+Only respond based on what is explicitly asked. No extra info unless essential.
+
+Keep responses short, structured, and clear, using financial terms where applicable.
+
+Maintain a friendly, helpful tone like chatting with a knowledgeable friend.
+
+Use emojis only where they enhance clarity or friendliness.
+
+If data is unavailable, say so politely and mention: support@evident.capital
+
+For asset-specific info, suggest visiting Marketplace.
+
+NEVER suggest anything that violates SFC or VARA rules.
+
+⚠️ Your tone should be kind, smart, and human — but never overly formal or robotic."""
 
 
 # Get response from gemini
@@ -41,6 +53,10 @@ def get_gemini_response(question,prompt):
     try:
         # prompt = "Your name is EvidAI a smart intelligent bot of Evident LLP. You provide customer support and help them."+ prompt
         model = genai.GenerativeModel('gemini-2.0-flash')
+        token_info = model.count_tokens([prompt, question])
+        tokens_used = token_info.total_tokens
+        logger.info(f"Tokens used: {tokens_used}")
+
         response_content = model.generate_content([prompt, question])
         return response_content.text.strip()
     except Exception as e:
@@ -71,6 +87,9 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                  Deposit_Amount: Process to add or deposit fund to account. Or when user's is out of balance or having insufficient fund to invest in any asset.
                  Fund_Account: Detailed process to add initial fund into user's account, guide to setup bank account and add fund into wallets.
                  Overall_Assets: Contains collective information of assets present on Marketplace. What type of assets are present, how many assets are there. 
+                 Forget_Password: Contains step by step process to change or update password.
+                 Corp_Investor_Onboarding:Detailed process for Corp investor onboarding process. Can also be reffered as Corp Onboarding or in similar context. Contains Details adn step by step process about AR(Authorised Representative), CPI(Corporate Professional Investor), IPI(Institutional Professional Investor), Non-PI(Non Professional Investor).
+                 Onboarding_Investor:Detailed process for investor onboarding process. Which ONLY contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions, Investment personality or eligibility criteria, Background Verification, Wealth Verification, Residence and Identity Verification, Non-PI details and steps, Sign agreement.
                  Personal_Assets: Following details are present for variety of assets like openai, spacex and many more, Note that it does not include investment steps or process. - These assets include various categories such as Private Equity, Venture Capital, 
                     Private Credit, Infrastructure, Hedge Funds, Digital Assets, Real Estate, Collectibles, 
                     Structuring, Private Company Debenture, Note, Bond, Fund, and Equity. 
@@ -101,9 +120,6 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                         - "Tell me about manager"
                         - "Tell me about OpenAI."
                         - "What is OpenAI’s investment mode?"
-                 Forget_Password: Contains step by step process to change or update password.
-                 Corp_Investor_Onboarding:Detailed process for Corp investor onboarding process. Can also be reffered as Corp Onboarding or in similar context. Contains Details adn step by step process about AR(Authorised Representative), CPI(Corporate Professional Investor), IPI(Institutional Professional Investor), Non-PI(Non Professional Investor).
-                 Onboarding_Investor:Detailed process for investor onboarding process. Which ONLY contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions, Investment personality or eligibility criteria, Background Verification, Wealth Verification, Residence and Identity Verification, Non-PI details and steps, Sign agreement.
                  NOTE - IF MORE THAN ONE CATEGORY MATCHES THEN RETURN THEIR NAME WITH "," SEPERATED. 
                  - If user is talking or mentioning platform without specifying name of platform then it simply means Evident platform on which currently they are present. So refer all categories present above then provide answer.
                  E.g. Question: What are the steps for investor onboarding?
@@ -213,7 +229,7 @@ Special points to remember:
 1. "Type" and "Vertical" as the same field.
 2. "Target Amount" and "Allocated Amount" also mean the same thing — handle them accordingly.
 
-General {general_guidelines}
+General guidelines - {general_guidelines}
 """
             response = get_gemini_response(question,prompt)      
             final_response = final_response + '\n'+ response  
@@ -351,12 +367,14 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                             #         If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step.
                             #         NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS, AND CURRENT STATUS OF USER'S ONBOARDING. DO NOT ASK USER TO FINISH PENDING STEPS."""
                         
-                            onb_res_prm = f"""{general_guidelines}
-                            Check if user wants to know about actual onboarding process or its just some generic question. If its generic question then answer as per your understanding and provide most relevant and short summary type of response.
+                            onb_res_prm = f"""Check if user wants to know about actual onboarding process or its just some generic question. If its generic question then answer as per your understanding and provide most relevant and short summary type of response.
                             User's current onboarding status is(Use Only if required, like when user wants to know their own onboarding status or pending steps etc.) - {onboarding_step}
                             Onboarding guide - {prm}
-                                            """
+
+                            Other guidelines - {general_guidelines}
+                            """
                             prm = onb_res_prm
+                            print("question is about onboarding")
                         prompt_data_list.append(prm)
                     prompt_data_list = "\n".join(prompt_data_list)
                     prompt_data = prompt_data_list      
@@ -368,8 +386,10 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                     #         1. If you cannot find an answer for any part of question then provide available information and for missing information, say:  
                     #         "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please email them at support@evident.capital with the details of your query for prompt assistance."  
                     #         2. Keep your tone **polite, clear, and direct**. Use line breaks for readability"""
-                    
+                    # print("prompt_data - \n",prompt_data)
+                    # response = ""
                     response = get_gemini_response(question,prompt_data)
+                    print("response for onboarding - ", response)
                     if final_response == "":
                         final_response = response
                     else:
@@ -469,33 +489,33 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                     final_response = final_response + '\n' + response  
         if final_response == "":
             final_response = "Sorry! I am unable understand the question. Can you provide more details so I can assist you better?"
-        prompt = """Follow these instructions exactly to ensure a structured, clear, and user-friendly response:
-                    Remove all repetitive statements while preserving essential information.
-                    Maintain readability by structuring the response with appropriate line breaks.                    
-                    Use formatting correctly:
-                    If the response contains steps, ensure each step starts on a new line for proper formatting.
-                    Keep a positive and polite tone while responding.
-                    Never imply that the user has not provided information.
-                    Response Guidelines:
-                    If an answer is fully available: Provide a clear, concise response with proper structure and formatting.
-                    If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable.  Also make sure this statement SHOULD NOT be at start of respose: If needed, suggest contacting support:
-                    "Hey sorry these details are not handy with me. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly. Feel free to ask any other query that you have."
-                    If no relevant information is available: Respond with: Also make sure this statement SHOULD NOT be at start of respose:
-                    "I’m sorry I couldn’t assist you right now with this query. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly. Feel free to ask any other query that you have."
-                    For more assistance or further assistance scenario provide support contact - support@evident.capital
-                    Ensure:
-                    The response is structured well with line breaks for readability.
-                    Ensure line breaks are only applied between different attributes, or point, NOT within values.
-                    The tone remains friendly and professional.
-                    APPLY BOLD ONLY FOR HEADINGS, AND KEYS WHERE KEY-VALUE PAIR IS PRESENT.
-                    Format the steps in a clear, structured, and readable format. 
-                    Steps are properly formatted, with each step appearing on a new line.
-                    No extra words, unnecessary greetings, or irrelevant details are added.
-                    Do not include the full support message unless all information is unavailable.
-                    Strictly follow these instructions to generate the best response."""
+        # prompt = """Follow these instructions exactly to ensure a structured, clear, and user-friendly response:
+        #             Remove all repetitive statements while preserving essential information.
+        #             Maintain readability by structuring the response with appropriate line breaks.                    
+        #             Use formatting correctly:
+        #             If the response contains steps, ensure each step starts on a new line for proper formatting.
+        #             Keep a positive and polite tone while responding.
+        #             Never imply that the user has not provided information.
+        #             Response Guidelines:
+        #             If an answer is fully available: Provide a clear, concise response with proper structure and formatting.
+        #             If some information is unavailable but the rest is available: Mention that the specific missing information is unavailable.  Also make sure this statement SHOULD NOT be at start of respose: If needed, suggest contacting support:
+        #             "Hey sorry these details are not handy with me. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly. Feel free to ask any other query that you have."
+        #             If no relevant information is available: Respond with: Also make sure this statement SHOULD NOT be at start of respose:
+        #             "I’m sorry I couldn’t assist you right now with this query. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly. Feel free to ask any other query that you have."
+        #             For more assistance or further assistance scenario provide support contact - support@evident.capital
+        #             Ensure:
+        #             The response is structured well with line breaks for readability.
+        #             Ensure line breaks are only applied between different attributes, or point, NOT within values.
+        #             The tone remains friendly and professional.
+        #             APPLY BOLD ONLY FOR HEADINGS, AND KEYS WHERE KEY-VALUE PAIR IS PRESENT.
+        #             Format the steps in a clear, structured, and readable format. 
+        #             Steps are properly formatted, with each step appearing on a new line.
+        #             No extra words, unnecessary greetings, or irrelevant details are added.
+        #             Do not include the full support message unless all information is unavailable.
+        #             Strictly follow these instructions to generate the best response."""
         
-        if personalAssets==False and failed_cat==False:
-            final_response = get_gemini_response(final_response,general_guidelines)
+        # if personalAssets==False and failed_cat==False:
+        #     final_response = get_gemini_response(final_response,general_guidelines)
         
         logger.info(f"Categories final - {specific_category}")
     except Exception as e:
@@ -503,6 +523,189 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
         final_response = "I’m sorry I couldn’t assist you right now. However, our support team would be delighted to help! Please don’t hesitate to email them at support@evident.capital with the details of your query, and they’ll assist you promptly."
         
     return final_response, asset_found, specific_category
+
+
+# prompt = f"""
+#  Check if user wants to know about actual onboarding process or its just some generic question. If its generic question then answer as per your understanding and provide most relevant and short summary type of response.
+#                             User's current onboarding status is(Use Only if required, like when user wants to know their own onboarding status or pending steps etc.) - Identity verification:Pending
+# Investment personality:Pending
+# Sign agreements:Pending
+# Declarations terms:Completed
+# Email confirmation:Completed
+# Screening questions:Completed
+# Background wealth:Completed
+#                             Onboarding guide - Individual Investor Onboarding Steps -
+# ________________
+
+
+# Required Documents
+# To ensure a smooth onboarding experience, please have the following documents at hand:
+# * Valid government-issued ID (e.g., passport, national ID card, or driver's license)
+# * Proof of address (e.g., utility bill, bank statement, or tenancy agreement) not older than three months
+# * Professional Investor Confirmation (e.g., statement of account/portfolio, confirmation of public filing, confirmation letter from CPA) accounting for higher than 8 million Hong Kong Dollars or equivalent in other currencies.
+# * Documents in non-English are also accepted.
+# Key Information About Investing on EVIDENT
+# * Risk: Investments involve alternative digital assets and are high-risk. Only invest money you can afford to lose. Transaction limits may apply based on your investor status.        
+
+# * Diversification: Alternative assets are speculative and may result in loss. Diversify across multiple assets to manage risk.
+
+# * Limited Transfer & Cancellation: Asset transfers can be difficult and depend on market availability and local regulations. Cancellations are only allowed before settlement.
+
+# * Research: Always review documents and consult legal, financial, or accounting professionals. Contact the Asset Issuer for questions.
+
+# * Confirmation & Arbitration: By proceeding, you confirm understanding and agree to binding arbitration for disputes with EVIDENT, its users, or employees.
+
+# * Declarations - I confirm I choose to be treated as a professional investor, meet the corresponding criteria under my country's regulations, and access this platform on my own initiative without solicitation from EVIDENT.
+
+# * Terms - I have read and agreed to the General Terms and Conditions and the Investor Terms and Conditions .
+
+# ________________
+
+
+# Registration Steps
+# Step 1: Create Account
+#    1. Visit the EVIDENT Portal: Navigate to the EVIDENT investor portal through https://app.evident.capital/ and click on Create an Account
+#    2. Register as a New Investor: Select your investment role as Individual Investor, and provide your email.
+#    3. Click the Create Account button. A temporary password will be sent to your registered email. Please update your password promptly before proceeding with the next steps of the onboarding process.
+# Step 2: Declaration
+#    * Complete the declaration form or revisit later.
+
+#    * Once declared YES, a snackbar will notify that a verification email has been sent.
+
+#    * Why sign the Risk Declaration?: To assess potential losses and align decisions with your financial goals.
+
+# Step 3: Email Verification
+#  Click the link sent to your email to verify your account.
+# ________________
+
+
+# Sign-In
+# Step 1: Enter your registered email and password.
+# ________________
+
+
+# Onboarding Steps
+#       1. Confirmed: With a confirmed account, you will be able to manage your watchlist and set notifications.
+# After completing Declarations & Terms, access the Market page and continue with verification.
+# Step 1: Declaration & Email Confirmation
+#  Go to: Account Centre -> Verification -> Confirmed
+#       * If already confirmed, green ticks will appear.
+
+#       * Option to resend confirmation email.
+# Step 2: Screening Questions Located under Account Centre -> Verification -> Confirmed
+#          * 1. US Person:
+
+#             * Selecting "Yes" blocks progression (due to pending account updates for US clients).
+
+#             * Criteria include US citizenship, birth, address, phone, or financial connections.
+
+#                * 2. Politically Exposed Person (PEP):
+
+#                   * Includes individuals with or connected to high public office.
+
+#                      * 3. Crime:
+
+#                         * Confirm if ever convicted of fraud/dishonesty.
+
+#                            2. Verifications: With a verified account, you will be able to sign documents and access content requiring NDAs.
+# Step 1: Identity & Residence
+#  Located at: Account Centre -> Verification -> Verified
+# Requirements:
+#                            * Country of Residence (Learn more: Sumsub Info)
+
+#                            * Steps:
+
+#                               1. Provide address
+
+#                               2. Submit ID document
+
+#                               3. Enter personal info
+
+#                               4. Complete a liveness check
+
+# Acceptable Documents (not older than 3 months):
+#                                  * Valid ID with address
+
+#                                  * Bank or utility statements
+
+#                                  * Government-issued letters
+
+#                                  * Mobile bills, employer letters, rent receipts
+
+# Not Accepted: Screenshots, receipts, medical bills.
+# Note: Approval may take time. In case of rejection, re-upload documents as per the rejection email.
+# Step 2: Background & Wealth
+#                                     * Occupation: Select the option that best describes your profession from given drop down
+#                                     * Industry: Select the option that best describes your working industry from given drop down
+
+#                                     * Primary Source of Wealth: Select the option that best fits from given drop down
+
+#                                     * Confirm if your investment portfolio (excluding real estate) exceeds:
+
+#                                        * HKD 8 million or USD 1.1 million
+
+# Upload documents for PI (Professional Investor)
+# Select 'No' for Non-PI (Non Professional Investor)
+# Step 3: Investment Personality
+# Answer 8 questions to identify your investor profile.
+# Scenario 1: Passed (Balanced and above)
+#  -> Click "Confirm" or redo the test.
+# Scenario 2: Failed
+#  -> Mandatory redo of the test to proceed.
+
+
+#                                           3. Complete: With a complete account, you will be able to invest in assets and trade on the secondary market.
+# Step 1: Sign Agreements
+# Once verification is complete, sign agreements and review identity, residence, and wealth summaries.
+
+
+# ________________
+
+
+# Case Scenarios
+#                                           1. Identity Verification Rejected
+#  -> Re-upload documents. Email notification will be sent.
+
+#                                           2. Wealth Verification Rejected
+#  -> Re-upload required documents.
+
+#                                           3. Both Rejected
+#  -> Address in order starting with Identity.
+
+#                                           4. Verification Update Required
+#  -> Triggered during compliance reviews.
+
+#                                           5. Personality Test Expiry (Every 2 Years)
+#  -> Redo required by compliance.
+
+#                                           6. All Three Errors
+#  -> Resolve in sequence: Identity -> Wealth -> Personality
+
+#                             Other guidelines - You are a smart, professional, and helpful financial assistant. Your tone is friendly and conversational, but concise and focused. You understand and respond based on the user's question only.
+
+# Response Rules:
+# DO NOT say “Okay, I understand”, “Sure”, “Alright”, or any filler before giving the answer.
+
+# DO NOT greet the user unless they greet first.
+
+# Only respond based on what is explicitly asked. No extra info unless essential.
+
+# Keep responses short, structured, and clear, using financial terms where applicable.
+
+# Maintain a friendly, helpful tone like chatting with a knowledgeable friend.
+
+# Use emojis only where they enhance clarity or friendliness.
+
+# If data is unavailable, say so politely and mention: support@evident.capital
+
+# For asset-specific info, suggest visiting Marketplace.
+
+# NEVER suggest anything that violates SFC or VARA rules.
+
+# ⚠️ Your tone should be kind, smart, and human — but never overly formal or robotic."""
+
+# response = get_gemini_response("tell me about onboarding",prompt)
+# print(response)
 
 
 # Question handling flow - IP Count:9, OP Count:3
@@ -595,7 +798,7 @@ def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, u
                 - If the question does not match any of the above steps, RETURN `"0"`.  
 
                 **STRICTLY REPLY WITH EITHER 0, 1, 2, OR THE EXACT ASSET NAME. NO ADDITIONAL TEXT IS ALLOWED.**"""
-
+    print(asset_names)
     asset_identified_flag = get_gemini_response(current_question,prompt)
     logger.info(f'asset_identified_flag - {asset_identified_flag}')
     promp_cat = []
@@ -705,9 +908,9 @@ def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, u
     # Remove greetings category from prompt categories
     else:
         promp_cat = [p.strip() for p in promp_cat if 'Greetings' not in p.strip()]
-    logger.info(f"Prompt categories - {promp_cat}")
+    # logger.info(f"Prompt categories - {promp_cat}")
     response,asset_found,specific_category = category_based_question(URL,db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR)
-    logger.info(f"final response from handle_questions - {response}")
+    # logger.info(f"final response from handle_questions - {response}")
     specific_category = ",".join(specific_category)
     # print("specific_category= ",specific_category)
     return response,asset_found,specific_category
