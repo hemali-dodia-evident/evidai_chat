@@ -240,7 +240,7 @@ General guidelines - {general_guidelines}
 
 
 # Check category of question and then based on category generate response
-def category_based_question(URL,db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR):
+def category_based_question(URL,db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR,isPI):
     question = current_question
     final_response = ""
     asset_found = current_asset
@@ -254,6 +254,10 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
             logger.info(f"Getting answer for category - {promp_cat}")    
             if promp_cat not in ['FAILED','Personal Assets','Asset Investment']:
                 try:
+                    if isPI:
+                        isPI = "User is Professional Investor(PI)."
+                    else:
+                        isPI = "User is Non-professional Investor(Non-PI)."
                     categories = last_ques_cat.split(",")
                     categories.append(promp_cat)
                     data = models.BasicPrompts.objects.using(db_alias).filter(prompt_category__in=categories)
@@ -341,6 +345,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                             
                             Current Onboarding Status: {onboarding_step}
                             Is User Authorised Representative :- {isAR}
+                            {isPI}
                             ### Onboarding Guide with AR, Non-AR, CPI, IPI, and Non-PI steps -
                             {prm}  
                             """  
@@ -369,6 +374,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                         
                             onb_res_prm = f"""Check if user wants to know about actual onboarding process or its just some generic question. If its generic question then answer as per your understanding and provide most relevant and short summary type of response.
                             User's current onboarding status is(Use Only if required, like when user wants to know their own onboarding status or pending steps etc.) - {onboarding_step}
+                            {isPI}
                             Onboarding guide - {prm}
 
                             Other guidelines - {general_guidelines}
@@ -709,7 +715,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
 
 
 # Question handling flow - IP Count:9, OP Count:3
-def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR):     
+def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR, isPI):     
     logger.info(f"\nlast_asset - {last_asset}\nuser_role - {user_role}\nlast_ques_cat - {last_ques_cat}")
     asset_found = ''
     response = ''
@@ -909,7 +915,7 @@ def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, u
     else:
         promp_cat = [p.strip() for p in promp_cat if 'Greetings' not in p.strip()]
     # logger.info(f"Prompt categories - {promp_cat}")
-    response,asset_found,specific_category = category_based_question(URL,db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR)
+    response,asset_found,specific_category = category_based_question(URL,db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR,isPI)
     # logger.info(f"final response from handle_questions - {response}")
     specific_category = ",".join(specific_category)
     # print("specific_category= ",specific_category)

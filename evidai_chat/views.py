@@ -105,9 +105,9 @@ def token_validation(token,URL):
                 onboarding_steps=onboarding_steps+'\n'+temp_stp    
             else:
                 onboarding_steps=temp_stp
-        
+        isPI = data["user"]["investmentExperience"]["isProfessionalInvestor"]
         if validate:
-            return token, user_id, user_name, user_role, onboarding_steps, isAR
+            return token, user_id, user_name, user_role, onboarding_steps, isAR, isPI
         else:
             return token, user_id, None, None, None, None
 
@@ -408,7 +408,7 @@ def login(request):
     # print("in login")
     url = f"https://api-uat.evident.capital/user/login"
     payload = json.dumps({
-    "email": "hemali-indi@evident.capital",
+    "email": "sai.mansanpally+0602ipi@evident.capital",
     "password": "Evident@2025",
     "ipInfo": {
         "asn": "asn",
@@ -458,7 +458,7 @@ def evidAI_chat(request):
             logger.info(f"db_alias - {db_alias}\nURL - {URL}")
             # Get the token and validate it
             token = auth_header.split(' ')[1]
-            token_valid,user_id,user_name,user_role,onboarding_step,isAR = token_validation(token,URL)
+            token_valid,user_id,user_name,user_role,onboarding_step,isAR,isPI = token_validation(token,URL)
             logger.info(f"user_id - {user_id}")
             if token_valid is None:
                 logger.error(f"Invalid Token, Token: {token}")            
@@ -481,7 +481,7 @@ def evidAI_chat(request):
             if len(previous_questions)==1:
                 update_chat_title(current_question,chat_session_id,db_alias)
                 
-            response, current_asset, current_ques_cat = cf.handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR)
+            response, current_asset, current_ques_cat = cf.handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR, isPI)
             response = response.replace("\n", "  \n")  
             add_to_conversations(db_alias,user_id, chat_session_id, current_question, response, current_asset, current_ques_cat)      
             
@@ -592,7 +592,7 @@ def get_all_prompt_catogiries(request):
         try:
             env = request.headers.get('X-Environment', 'uat').lower()
             db_alias = 'prod' if 'prod' in env else 'default'
-            prompt_table = models.BasicPrompts.objects.using(db_alias).values_list('id','prompt_category')
+            prompt_table = models.BasicPrompts.objects.using(db_alias).values_list('id','prompt_category','prompt')
             prompt_id = list(prompt_table)
             logger.info(f"Available Prompts - {prompt_table}")
             return JsonResponse({"message":"ID fetched successfully","data":{"IDs":prompt_id},"status":True},status=200)
