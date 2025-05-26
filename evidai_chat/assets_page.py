@@ -47,11 +47,10 @@ def get_specific_asset_details(asset_name,token,domain):
             all_asset_details = data['data'][0]
         except:
             logger.info(f"failed to get asset info - {data}")
-            print("all_asset_details - ",all_asset_details)
-            return "Asset is not available at Marketplace", "Not available"
+            return "Asset is not available at Marketplace", "Not available", None
         
         visibility = all_asset_details['visibility'][0]+all_asset_details['visibility'][1:].lower()
-
+        # print("visibility - ",visibility)
         if visibility == 'Exclusive':
             asset_info = "This is an Exlusive Asset, I can not directly provide details. To access this asset related information kindly visit Marketplace. Search for this asset in searchbar. Enter Access Code to view this asset."
             return asset_info, ''
@@ -61,26 +60,33 @@ def get_specific_asset_details(asset_name,token,domain):
         else:
             retirementEligible = 'Asset is retairement elgible.'
         # asset_url = all_asset_details['shortUrl']
+        # print("Retairment eligibility - ",retirementEligible)
         investment_details = ''
         if all_asset_details['investmentMode']=='Commitment':
-            commitmentDetails = all_asset_details['commitmentDetails'][0]        
-            commitmentStatus = commitmentDetails['status'].replace("_"," ") 
-            startDate = commitmentDetails['startAt'].split("T")[0] if commitmentDetails['startAt'] is not None or commitmentDetails['startAt'] !='' else ''
-            endDate = commitmentDetails['endAt'].split("T")[0] if commitmentDetails['endAt'] is not None or commitmentDetails['endAt'] !='' else ''
-            investment_details = f"""
-            Commitment Status - {commitmentStatus}
-            Target Amount - {str(commitmentDetails['targetAmount'])}
-            Minimum Investment Amount - {str(commitmentDetails['minimumAmount'])}
-            Maximum Investment Amounr - {str(commitmentDetails['maximumAmount'])}
-            Raised Amount - {str(commitmentDetails['raisedAmount'])}
-            Start On - {startDate}
-            End On - {endDate}"""
+            # print("Asset is in commit mode")
+            if all_asset_details['commitmentDetails'] != []:
+                commitmentDetails = all_asset_details['commitmentDetails'][0] 
+                # print("Commitment details - ",commitmentDetails)   
+                commitmentStatus = commitmentDetails['status'].replace("_"," ") 
+                startDate = commitmentDetails['startAt'].split("T")[0] if commitmentDetails['startAt'] is not None or commitmentDetails['startAt'] !='' else ''
+                endDate = commitmentDetails['endAt'].split("T")[0] if commitmentDetails['endAt'] is not None or commitmentDetails['endAt'] !='' else ''
+                investment_details = f"""
+                Commitment Status - {commitmentStatus}
+                Target Amount - {str(commitmentDetails['targetAmount'])}
+                Minimum Investment Amount - {str(commitmentDetails['minimumAmount'])}
+                Maximum Investment Amounr - {str(commitmentDetails['maximumAmount'])}
+                Raised Amount - {str(commitmentDetails['raisedAmount'])}
+                Start On - {startDate}
+                End On - {endDate}"""
+            else:
+                commitmentDetails = "The commitment details of this asset will come soon. This asset is not active yet to perform commitment."
         elif all_asset_details['investmentMode']=='Trading':
+            # print("Asset is in trade mode")
             tardeDetails = all_asset_details['investmentDetails']
             investment_details = f"""Open Offers - {tardeDetails['openOffers']}
             Number of Investors - {tardeDetails['numberOfInvestors']}
             Total invested amount - {tardeDetails['totalInvested']}"""
-            
+        # print("Investment Details - ",investment_details)
         updates_details = all_asset_details['updates']
         updates = ""
         if updates_details !=[]:
@@ -88,6 +94,7 @@ def get_specific_asset_details(asset_name,token,domain):
                 updates = f"Title: {u['title']}\nDescription: {u['description']}\n"
         else:
             updates = "Will notify as soon as there is any new update!"
+        # print("Updates - ",updates)
         keyHighlights = "Key highlights are - "
         try:
             knum = 1
@@ -96,18 +103,23 @@ def get_specific_asset_details(asset_name,token,domain):
                 knum+=1
         except:
             keyHighlights = "No highlights are present..."
-            
+        # print("Keyhighlights - ",keyHighlights)
         rateOfReturn = all_asset_details['rateOfReturn'] if all_asset_details['rateOfReturn'] is not None else ''
+        # print("rate of return -", rateOfReturn)
         exitStrategy = all_asset_details['exitStrategy'] if all_asset_details['exitStrategy'] is not None else ''
+        # print("Exit strategy - ",exitStrategy)
+        manager = ''
         try:
             manager = "Asset manager is "+all_asset_details['manager']['kyc']['firstName'][0]+all_asset_details['manager']['kyc']['firstName'][1:].lower()+' '+all_asset_details['manager']['kyc']['lastName'][0]+all_asset_details['manager']['kyc']['lastName'][1:].lower()
         except:
             manager = ''
+        # print("manager-",manager)
+        company = ""
         try:
             company = f"Company name is {all_asset_details['manager']['company']['companyName']}"
         except:
             company = ""
-
+        # print("Comapny - ",company)
         impact_details = "These are impacts of this asset - "
         try:
             impacts = all_asset_details['impacts']
@@ -118,15 +130,19 @@ def get_specific_asset_details(asset_name,token,domain):
             impact_details = impact_details+immpct
         except:
             impact_details = "No impacts!!!"
+        # print("Impact details - ",impact_details)
+        
         status = "Asset status - "
         try:
             status = status + all_asset_details['status'][0].upper()+all_asset_details['status'][1:].lower()
         except:
             status = ""
+        # print("status - ",status)
+        asset_id = data['data'][0]['id']
         try:
             url = f"https://{domain}/event/get-events-by-asset"
             payload = json.dumps({
-            "assetId": data['data'][0]['id']
+            "assetId": asset_id
             })
             headers = {
                         'Authorization': f'Bearer {token}',
@@ -172,11 +188,11 @@ def get_specific_asset_details(asset_name,token,domain):
                       Events - 
                             {event_details}
                       """
-
-        return asset_info,all_asset_details['investmentMode']
+        # print(asset_info)
+        return asset_info,all_asset_details['investmentMode'],asset_id
     except Exception as e:
         logger.error(f"failed to get asset details - {str(e)}")
-        return "No information found","Not available"
+        return "Asset is not available at Marketplace", "Not available", None
 
 
 def invest_page_trading_order_book_data(domain,asset_id,token):
@@ -299,9 +315,13 @@ def invest_page_commitment_page_data(domain,asset_id,token):
     return MarketCommitData,unit_price,allocation_remaining,raised_amount,mini_amount,max_amount,myTotalCommitted
 
 
+# all_asset_details,investment_mode = get_specific_asset_details('Tesla','NzQzNg.r4x3C7ktLgBKxlwKLLzljM-GtTTxX96EPbVRIM3SRc6Tk6twxQj-r5Bl6p6n','api-uat.evident.capital')
+# print(304)
+# print(all_asset_details)
 def invest_question_flow(token,domain,asset_name):
-    all_asset_details,investment_mode = get_specific_asset_details(asset_name,token,domain)
-    print(304)
+    all_asset_details,investment_mode,asset_id = get_specific_asset_details(asset_name,token,domain)
+    # print(304)
+    # print(all_asset_details)
     # all_asset_details = None
     # url = f"https://{domain}/asset/investor/list?page=1"
     # payload = json.dumps({"name":f"{asset_name.strip()}"})
@@ -321,9 +341,9 @@ def invest_question_flow(token,domain,asset_name):
     #     return "Hey! sorry... Asset you are looking for is not available currently for investment. But don't worry we have other assets for you to checkout at our Marketplace..."
     # # print(313)
     if all_asset_details == "Asset is not available at Marketplace":
-        print("323")
+        # print("323")
         return all_asset_details, "Not available"
-    asset_id = all_asset_details['id']
+
     # investment_mode = all_asset_details['investmentMode']
     # print(investment_mode)
     # if asset is trade
@@ -389,6 +409,8 @@ def invest_question_flow(token,domain,asset_name):
     return prompt
 
 
+# prompt= invest_question_flow('NzQzNg.r4x3C7ktLgBKxlwKLLzljM-GtTTxX96EPbVRIM3SRc6Tk6twxQj-r5Bl6p6n','api-uat.evident.capital','Tesla')
+# print(prompt)
 def general_investment_guidelines(question):
     prompt = f"""User can invest in any asset based on Asset's investment mode. An Asset can be in Trading or in Commitment. Following are ways to invest in any Asset based on its investment mode.
     Provide below information to user to beign with investment.

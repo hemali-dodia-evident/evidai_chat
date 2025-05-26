@@ -74,6 +74,9 @@ def get_asset_list(db_alias):
 # Identify prompt category based on current and previous questions
 def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
     # logger.info("Finding prompt from get_prompt_category")
+    # Fund_Account: Detailed process to add initial fund into user's account, guide to setup bank account and add fund into wallets.
+    # Asset_Investment: Complete step by step details about asset trading, place bid, sell asset now, place ask, Buy now assets, Committing on assets.
+    
     prompt = f"""Based on user's question identify the category of a question from below mentioned categories. STRICTLY PROVIDE ONLY NAME OF CATEGORIES NOTHING ELSE, IF NO CATEGORY MATCHES THEN RETURN "FAILED". DO NOT CREATE CATEGORY NAME BY YOURSELF, STRICTLY REFER BELOW MENTIONED CATEGORIES ONLY.
                  Note - While answering do not add any other information or words. Just reply as per specified way. ONLY PROVIDE ONLY NAME OF CATEGORIES. CONSIDER GENERIC ABRIAVATIONS IN CONTEXT OF QUESTION, LIKE 'CORP INV' WILL BE 'Corp Investor'.
                  USER's QUESTION - {current_question}
@@ -83,13 +86,11 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                  IF QUESTION IS ABOUT USER'S ONBOARDING OR PENDING STEPS OR ANY QUERY ABOUT ONBOARDING OR ANY STEP RELATED TO ONBOARDING THEN REFER "USER's ROLE" AND SELECT CATEGORY ACCORDINGLY, ALSO IF LAST QUESTION CATEGORY WAS RELATED TO "ONBOARDING" THEN SELECT PROPER ONBOARDING CATEGORY.
                  IF QUESTION IS SPECIFYING ONBOARDING CATEGORY THEN RETURN THAT CATEGORY ONLY. DO NOT CONSIDER USER'S ROLE IN THAT CASE.
                  Greetings: USER IS GREETING WITHOUT ANY OTHER INFORMATION, Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
-                 Asset_Investment: Complete step by step details about asset trading, place bid, sell asset now, place ask, Buy now assets, Committing on assets.
                  Deposit_Amount: Process to add or deposit fund to account. Or when user's is out of balance or having insufficient fund to invest in any asset.
-                 Fund_Account: Detailed process to add initial fund into user's account, guide to setup bank account and add fund into wallets.
                  Overall_Assets: Contains collective information of assets present on Marketplace. What type of assets are present, how many assets are there. 
                  Forget_Password: Contains step by step process to change or update password.
-                 Corp_Investor_Onboarding:Detailed process for Corp investor onboarding process. Can also be reffered as Corp Onboarding or in similar context. Contains Details adn step by step process about AR(Authorised Representative), CPI(Corporate Professional Investor), IPI(Institutional Professional Investor), Non-PI(Non Professional Investor).
-                 Onboarding_Investor:Detailed process for investor onboarding process. Which ONLY contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions, Investment personality or eligibility criteria, Background Verification, Wealth Verification, Residence and Identity Verification, Non-PI details and steps, Sign agreement.
+                 Corp_Investor_Onboarding: Detailed process for Corp investor onboarding process. Can also be reffered as Corp Onboarding or in similar context. Contains Details adn step by step process about AR(Authorised Representative), CPI(Corporate Professional Investor), IPI(Institutional Professional Investor), Non-PI(Non Professional Investor).
+                 Onboarding_Investor: Detailed process for investor onboarding process. Which ONLY contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions, Investment personality or eligibility criteria, Background Verification, Wealth Verification, Residence and Identity Verification, PI(Professional Investor) and Non-PI(Non-professional Investor) details like what are they, what rights they have and steps, Sign agreement.
                  Personal_Assets: Following details are present for variety of assets like openai, spacex and many more, Note that it does not include investment steps or process. - These assets include various categories such as Private Equity, Venture Capital, 
                     Private Credit, Infrastructure, Hedge Funds, Digital Assets, Real Estate, Collectibles, 
                     Structuring, Private Company Debenture, Note, Bond, Fund, and Equity. 
@@ -214,9 +215,11 @@ def get_asset_based_response(assets_identified,question,token,URL):
     final_response = ''
     try:
         for ass in assets_identified:
-            data,asset_url = ap.invest_question_flow(token,URL,ass)
-            print("got data from invest_question_flow - ", data)
-            prompt = f"""
+            # print(token,URL,ass)
+            data= ap.invest_question_flow(token,URL,ass)
+            # print(data)
+            # print("got data from invest_question_flow - ", data)
+            prompt = f"""General guidelines - {general_guidelines}
 Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about.
 {data}
 
@@ -228,8 +231,6 @@ To download: After signing, click 'Download all'.
 Special points to remember:
 1. "Type" and "Vertical" as the same field.
 2. "Target Amount" and "Allocated Amount" also mean the same thing — handle them accordingly.
-
-General guidelines - {general_guidelines}
 """
             response = get_gemini_response(question,prompt)      
             final_response = final_response + '\n'+ response  
@@ -266,7 +267,8 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                     for d in data:
                         prm = d.prompt
                         if 'Onboarding' in promp_cat and 'Corp' in promp_cat:
-                            onb_res_prm = f"""### INSTRUCTIONS FOR GENERATING RESPONSE CONSIDERING FOLLOWING SCENARIOS -
+                            onb_res_prm = f"""{general_guidelines}
+                            ### INSTRUCTIONS FOR GENERATING RESPONSE CONSIDERING FOLLOWING SCENARIOS -
                             
                             ### SCENARIO 1: IF USER ASKS ABOUT THE ONBOARDING PROCESS  
                                 - Provide **only** onboarding step details.  
@@ -372,12 +374,11 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                             #         If user's any step is not having 'stepStatus' as 'COMPLETED' then ask user to Complete that step.
                             #         NOTE - IF USER IS ASKING ABOUT ONLY ONBOARDING STEPS AND NOT ABOUT HIS PENDING ONBOARDING DETAILS THEN PROVIDE ONLY ONBOARDING STEPS, AND CURRENT STATUS OF USER'S ONBOARDING. DO NOT ASK USER TO FINISH PENDING STEPS."""
                         
-                            onb_res_prm = f"""Check if user wants to know about actual onboarding process or its just some generic question. If its generic question then answer as per your understanding and provide most relevant and short summary type of response.
+                            onb_res_prm = f"""{general_guidelines}
+                            Check if user wants to know about actual onboarding process or its just some generic question. If its generic question then answer as per your understanding and provide most relevant and short summary type of response.
                             User's current onboarding status is(Use Only if required, like when user wants to know their own onboarding status or pending steps etc.) - {onboarding_step}
                             {isPI}
-                            Onboarding guide - {prm}
-
-                            Other guidelines - {general_guidelines}
+                            Onboarding guide - {prm}                            
                             """
                             prm = onb_res_prm
                             print("question is about onboarding")
@@ -521,7 +522,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
         #             Strictly follow these instructions to generate the best response."""
         
         # if personalAssets==False and failed_cat==False:
-        #     final_response = get_gemini_response(final_response,general_guidelines)
+        #   final_response = get_gemini_response(final_response,general_guidelines)
         
         logger.info(f"Categories final - {specific_category}")
     except Exception as e:
@@ -725,7 +726,7 @@ def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, u
     isPersonalAsset = False
     asset_names  = get_asset_list(db_alias)
     asset_names = list(asset_names)
-    asset_names = ", ".join(asset_names)
+    asset_names = ", ".join(asset_names) + ', MSC Cruises, Tesla'
     prompt = f"""TO RETURN NAME OF ASSET:  
                 Last Question Category - `{last_ques_cat}`  
 
@@ -804,7 +805,7 @@ def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, u
                 - If the question does not match any of the above steps, RETURN `"0"`.  
 
                 **STRICTLY REPLY WITH EITHER 0, 1, 2, OR THE EXACT ASSET NAME. NO ADDITIONAL TEXT IS ALLOWED.**"""
-    print(asset_names)
+    # print(asset_names)
     asset_identified_flag = get_gemini_response(current_question,prompt)
     logger.info(f'asset_identified_flag - {asset_identified_flag}')
     promp_cat = []
