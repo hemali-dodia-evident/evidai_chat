@@ -7,10 +7,23 @@ from datetime import datetime,timezone
 from . import models
 import logging
 import requests
-import re
-from . import assets_page as ap
 from . import chat_flow as cf
+# from evidai_chat.qdrant import search_assets_by_question as sa
 
+# def get_asset_list(db_alias):
+#     asset_names = models.Asset.objects.using(db_alias).exclude(visibility='PRIVATE').values_list('name',flat=True)
+#     return asset_names
+
+# assets = ['tell me about tesla','how i can invest in dnd small cap fund?', 'what is openai',"is there any updates available on isro",'how many investors are there in open-ai', 'provide me more details on MSC Cruises']
+# asset_names  = get_asset_list('prod')
+# asset_names = list(asset_names)
+# print(", ".join(asset_names))
+# for ass in assets:
+#     print(datetime.now())
+#     res = sa.search_assets(ass)
+#     print(res)
+#     print(datetime.now())
+#     print("******************")
 
 key = os.environ["GOOGLE_API_KEY"]
 genai.configure(api_key=f"{key}")
@@ -544,6 +557,7 @@ def add_prompt_values(request):
                 updated_at=iso_format_datetime               
             )
             new_cat.save()
+            logger.info("")
             return JsonResponse({"message":"Value added successfully",
                                  "data":{"prompt_category":category,'prompt':value,
                                          "asset_name":asset_name,"asset_sub_cat":asset_sub_cat},"status":True},status=200) 

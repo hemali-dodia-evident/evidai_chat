@@ -4,6 +4,8 @@ from . import models
 import logging
 import requests
 from . import assets_page as ap
+import datetime
+# from evidai_chat.qdrant import search_assets_by_question as sa
 
 key = os.environ["GOOGLE_API_KEY"]
 genai.configure(api_key=f"{key}")
@@ -74,8 +76,6 @@ def get_asset_list(db_alias):
 # Identify prompt category based on current and previous questions
 def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
     # logger.info("Finding prompt from get_prompt_category")
-    # Fund_Account: Detailed process to add initial fund into user's account, guide to setup bank account and add fund into wallets.
-    # Asset_Investment: Complete step by step details about asset trading, place bid, sell asset now, place ask, Buy now assets, Committing on assets.
     
     prompt = f"""Based on user's question identify the category of a question from below mentioned categories. STRICTLY PROVIDE ONLY NAME OF CATEGORIES NOTHING ELSE, IF NO CATEGORY MATCHES THEN RETURN "FAILED". DO NOT CREATE CATEGORY NAME BY YOURSELF, STRICTLY REFER BELOW MENTIONED CATEGORIES ONLY.
                  Note - While answering do not add any other information or words. Just reply as per specified way. ONLY PROVIDE ONLY NAME OF CATEGORIES. CONSIDER GENERIC ABRIAVATIONS IN CONTEXT OF QUESTION, LIKE 'CORP INV' WILL BE 'Corp Investor'.
@@ -86,7 +86,9 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                  IF QUESTION IS ABOUT USER'S ONBOARDING OR PENDING STEPS OR ANY QUERY ABOUT ONBOARDING OR ANY STEP RELATED TO ONBOARDING THEN REFER "USER's ROLE" AND SELECT CATEGORY ACCORDINGLY, ALSO IF LAST QUESTION CATEGORY WAS RELATED TO "ONBOARDING" THEN SELECT PROPER ONBOARDING CATEGORY.
                  IF QUESTION IS SPECIFYING ONBOARDING CATEGORY THEN RETURN THAT CATEGORY ONLY. DO NOT CONSIDER USER'S ROLE IN THAT CASE.
                  Greetings: USER IS GREETING WITHOUT ANY OTHER INFORMATION, Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
-                 Deposit_Amount: Process to add or deposit fund to account. Or when user's is out of balance or having insufficient fund to invest in any asset.
+                 Deposit_Amount: Process to add or deposit fund to account. Or when user's is out of balance or having insufficient fund to invest in any asset, User can do direct bank transfer or they can SWAP amount from one account to another account.
+                 Fund_Account: Detailed process to add initial fund into user's account, guide to setup bank account and add fund into wallets.
+                 Asset_Investment: Complete step by step details about asset trading, place bid, sell asset now, place ask, Buy now assets, Committing on assets. This is only and only related to investing methods in asset.
                  Overall_Assets: Contains collective information of assets present on Marketplace. What type of assets are present, how many assets are there. 
                  Forget_Password: Contains step by step process to change or update password.
                  Corp_Investor_Onboarding: Detailed process for Corp investor onboarding process. Can also be reffered as Corp Onboarding or in similar context. Contains Details adn step by step process about AR(Authorised Representative), CPI(Corporate Professional Investor), IPI(Institutional Professional Investor), Non-PI(Non Professional Investor).
@@ -532,189 +534,6 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
     return final_response, asset_found, specific_category
 
 
-# prompt = f"""
-#  Check if user wants to know about actual onboarding process or its just some generic question. If its generic question then answer as per your understanding and provide most relevant and short summary type of response.
-#                             User's current onboarding status is(Use Only if required, like when user wants to know their own onboarding status or pending steps etc.) - Identity verification:Pending
-# Investment personality:Pending
-# Sign agreements:Pending
-# Declarations terms:Completed
-# Email confirmation:Completed
-# Screening questions:Completed
-# Background wealth:Completed
-#                             Onboarding guide - Individual Investor Onboarding Steps -
-# ________________
-
-
-# Required Documents
-# To ensure a smooth onboarding experience, please have the following documents at hand:
-# * Valid government-issued ID (e.g., passport, national ID card, or driver's license)
-# * Proof of address (e.g., utility bill, bank statement, or tenancy agreement) not older than three months
-# * Professional Investor Confirmation (e.g., statement of account/portfolio, confirmation of public filing, confirmation letter from CPA) accounting for higher than 8 million Hong Kong Dollars or equivalent in other currencies.
-# * Documents in non-English are also accepted.
-# Key Information About Investing on EVIDENT
-# * Risk: Investments involve alternative digital assets and are high-risk. Only invest money you can afford to lose. Transaction limits may apply based on your investor status.        
-
-# * Diversification: Alternative assets are speculative and may result in loss. Diversify across multiple assets to manage risk.
-
-# * Limited Transfer & Cancellation: Asset transfers can be difficult and depend on market availability and local regulations. Cancellations are only allowed before settlement.
-
-# * Research: Always review documents and consult legal, financial, or accounting professionals. Contact the Asset Issuer for questions.
-
-# * Confirmation & Arbitration: By proceeding, you confirm understanding and agree to binding arbitration for disputes with EVIDENT, its users, or employees.
-
-# * Declarations - I confirm I choose to be treated as a professional investor, meet the corresponding criteria under my country's regulations, and access this platform on my own initiative without solicitation from EVIDENT.
-
-# * Terms - I have read and agreed to the General Terms and Conditions and the Investor Terms and Conditions .
-
-# ________________
-
-
-# Registration Steps
-# Step 1: Create Account
-#    1. Visit the EVIDENT Portal: Navigate to the EVIDENT investor portal through https://app.evident.capital/ and click on Create an Account
-#    2. Register as a New Investor: Select your investment role as Individual Investor, and provide your email.
-#    3. Click the Create Account button. A temporary password will be sent to your registered email. Please update your password promptly before proceeding with the next steps of the onboarding process.
-# Step 2: Declaration
-#    * Complete the declaration form or revisit later.
-
-#    * Once declared YES, a snackbar will notify that a verification email has been sent.
-
-#    * Why sign the Risk Declaration?: To assess potential losses and align decisions with your financial goals.
-
-# Step 3: Email Verification
-#  Click the link sent to your email to verify your account.
-# ________________
-
-
-# Sign-In
-# Step 1: Enter your registered email and password.
-# ________________
-
-
-# Onboarding Steps
-#       1. Confirmed: With a confirmed account, you will be able to manage your watchlist and set notifications.
-# After completing Declarations & Terms, access the Market page and continue with verification.
-# Step 1: Declaration & Email Confirmation
-#  Go to: Account Centre -> Verification -> Confirmed
-#       * If already confirmed, green ticks will appear.
-
-#       * Option to resend confirmation email.
-# Step 2: Screening Questions Located under Account Centre -> Verification -> Confirmed
-#          * 1. US Person:
-
-#             * Selecting "Yes" blocks progression (due to pending account updates for US clients).
-
-#             * Criteria include US citizenship, birth, address, phone, or financial connections.
-
-#                * 2. Politically Exposed Person (PEP):
-
-#                   * Includes individuals with or connected to high public office.
-
-#                      * 3. Crime:
-
-#                         * Confirm if ever convicted of fraud/dishonesty.
-
-#                            2. Verifications: With a verified account, you will be able to sign documents and access content requiring NDAs.
-# Step 1: Identity & Residence
-#  Located at: Account Centre -> Verification -> Verified
-# Requirements:
-#                            * Country of Residence (Learn more: Sumsub Info)
-
-#                            * Steps:
-
-#                               1. Provide address
-
-#                               2. Submit ID document
-
-#                               3. Enter personal info
-
-#                               4. Complete a liveness check
-
-# Acceptable Documents (not older than 3 months):
-#                                  * Valid ID with address
-
-#                                  * Bank or utility statements
-
-#                                  * Government-issued letters
-
-#                                  * Mobile bills, employer letters, rent receipts
-
-# Not Accepted: Screenshots, receipts, medical bills.
-# Note: Approval may take time. In case of rejection, re-upload documents as per the rejection email.
-# Step 2: Background & Wealth
-#                                     * Occupation: Select the option that best describes your profession from given drop down
-#                                     * Industry: Select the option that best describes your working industry from given drop down
-
-#                                     * Primary Source of Wealth: Select the option that best fits from given drop down
-
-#                                     * Confirm if your investment portfolio (excluding real estate) exceeds:
-
-#                                        * HKD 8 million or USD 1.1 million
-
-# Upload documents for PI (Professional Investor)
-# Select 'No' for Non-PI (Non Professional Investor)
-# Step 3: Investment Personality
-# Answer 8 questions to identify your investor profile.
-# Scenario 1: Passed (Balanced and above)
-#  -> Click "Confirm" or redo the test.
-# Scenario 2: Failed
-#  -> Mandatory redo of the test to proceed.
-
-
-#                                           3. Complete: With a complete account, you will be able to invest in assets and trade on the secondary market.
-# Step 1: Sign Agreements
-# Once verification is complete, sign agreements and review identity, residence, and wealth summaries.
-
-
-# ________________
-
-
-# Case Scenarios
-#                                           1. Identity Verification Rejected
-#  -> Re-upload documents. Email notification will be sent.
-
-#                                           2. Wealth Verification Rejected
-#  -> Re-upload required documents.
-
-#                                           3. Both Rejected
-#  -> Address in order starting with Identity.
-
-#                                           4. Verification Update Required
-#  -> Triggered during compliance reviews.
-
-#                                           5. Personality Test Expiry (Every 2 Years)
-#  -> Redo required by compliance.
-
-#                                           6. All Three Errors
-#  -> Resolve in sequence: Identity -> Wealth -> Personality
-
-#                             Other guidelines - You are a smart, professional, and helpful financial assistant. Your tone is friendly and conversational, but concise and focused. You understand and respond based on the user's question only.
-
-# Response Rules:
-# DO NOT say “Okay, I understand”, “Sure”, “Alright”, or any filler before giving the answer.
-
-# DO NOT greet the user unless they greet first.
-
-# Only respond based on what is explicitly asked. No extra info unless essential.
-
-# Keep responses short, structured, and clear, using financial terms where applicable.
-
-# Maintain a friendly, helpful tone like chatting with a knowledgeable friend.
-
-# Use emojis only where they enhance clarity or friendliness.
-
-# If data is unavailable, say so politely and mention: support@evident.capital
-
-# For asset-specific info, suggest visiting Marketplace.
-
-# NEVER suggest anything that violates SFC or VARA rules.
-
-# ⚠️ Your tone should be kind, smart, and human — but never overly formal or robotic."""
-
-# response = get_gemini_response("tell me about onboarding",prompt)
-# print(response)
-
-
 # Question handling flow - IP Count:9, OP Count:3
 def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, user_role, current_question, onboarding_step, isAR, isPI):     
     logger.info(f"\nlast_asset - {last_asset}\nuser_role - {user_role}\nlast_ques_cat - {last_ques_cat}")
@@ -727,6 +546,7 @@ def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, u
     asset_names  = get_asset_list(db_alias)
     asset_names = list(asset_names)
     asset_names = ", ".join(asset_names) + ', MSC Cruises, Tesla'
+    # print(", ".join(asset_names))
     prompt = f"""TO RETURN NAME OF ASSET:  
                 Last Question Category - `{last_ques_cat}`  
 
@@ -805,11 +625,14 @@ def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, u
                 - If the question does not match any of the above steps, RETURN `"0"`.  
 
                 **STRICTLY REPLY WITH EITHER 0, 1, 2, OR THE EXACT ASSET NAME. NO ADDITIONAL TEXT IS ALLOWED.**"""
-    # print(asset_names)
+    
+    # print(datetime.datetime.now())
     asset_identified_flag = get_gemini_response(current_question,prompt)
+    # print(datetime.datetime.now())
     logger.info(f'asset_identified_flag - {asset_identified_flag}')
+    # asset_vector = sa.search_assets(current_question)
+    # print("asset_vector", asset_vector)
     promp_cat = []
-    # print(asset_names)
     try:
         if int(asset_identified_flag)==1:
             """Owned asset"""
