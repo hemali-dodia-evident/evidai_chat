@@ -75,6 +75,7 @@ def get_gemini_response(question,prompt):
 # Authenticate from jwt token we are getting from UI
 @csrf_exempt
 def token_validation(token,URL):
+    # print(datetime.now())
     try:
         
         # Get User details
@@ -91,6 +92,7 @@ def token_validation(token,URL):
 
         response = requests.request("GET", url, headers=headers, data=payload)
         data = response.json()
+        # print(datetime.now())
         # logger.info(f"token data - {data}")
         validate = data["user"]["twoFactorAuthenticationSession"]
         user_id = data["user"]["id"]
@@ -119,6 +121,7 @@ def token_validation(token,URL):
             else:
                 onboarding_steps=temp_stp
         isPI = data["user"]["investmentExperience"]["isProfessionalInvestor"]
+        # print(datetime.now())
         if validate:
             return token, user_id, user_name, user_role, onboarding_steps, isAR, isPI
         else:
@@ -421,8 +424,8 @@ def login(request):
     # print("in login")
     url = f"https://api-uat.evident.capital/user/login"
     payload = json.dumps({
-    "email": "sai+0303ind@gmail.com",
-    "password": "Evident@2025",
+    "email": "sai+2105@ind.com",
+    "password": "Evident@01",
     "ipInfo": {
         "asn": "asn",
         "asnName": "asnName",
@@ -471,6 +474,7 @@ def evidAI_chat(request):
             logger.info(f"db_alias - {db_alias}\nURL - {URL}")
             # Get the token and validate it
             token = auth_header.split(' ')[1]
+            # Token validation takes almost 2.5 to 3 seconds
             token_valid,user_id,user_name,user_role,onboarding_step,isAR,isPI = token_validation(token,URL)
             logger.info(f"user_id - {user_id}")
             if token_valid is None:
