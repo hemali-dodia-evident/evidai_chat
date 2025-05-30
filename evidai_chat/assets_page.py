@@ -113,7 +113,7 @@ def get_specific_asset_details(asset_name,token,domain):
             manager = "Asset manager is "+all_asset_details['manager']['kyc']['firstName'][0]+all_asset_details['manager']['kyc']['firstName'][1:].lower()+' '+all_asset_details['manager']['kyc']['lastName'][0]+all_asset_details['manager']['kyc']['lastName'][1:].lower()
         except:
             manager = ''
-        # print("manager-",manager)
+        # print("manager - ",manager)
         company = ""
         try:
             company = f"Company name is {all_asset_details['manager']['company']['companyName']}"
@@ -164,7 +164,7 @@ def get_specific_asset_details(asset_name,token,domain):
         except:
             logger.error(f"Data from event api - \n{data}")
             event_details = 'No ongoing events.'
-
+        # print("Events - ",event_details)
         asset_info = f"""**{all_asset_details['name']}**
                       Description - {all_asset_details['description']}
                       Asset's Location is {all_asset_details['location']}.
@@ -185,10 +185,9 @@ def get_specific_asset_details(asset_name,token,domain):
                       Exit Strategy - {exitStrategy}
                       Key Highlights - 
                             {keyHighlights}                      
-                      Events - 
-                            {event_details}
+                      {event_details}
                       """
-        # print(asset_info)
+        # print(asset_info,all_asset_details['investmentMode'],asset_id)
         return asset_info,all_asset_details['investmentMode'],asset_id
     except Exception as e:
         logger.error(f"failed to get asset details - {str(e)}")
@@ -207,14 +206,17 @@ def invest_page_trading_order_book_data(domain,asset_id,token):
     data = response.json() 
     BIDS = "BIDS from Order BOOK - \n"
     c = 0
-    for d in data['data']:
-        if c==4:
-            break
-        tempBid = f"Available Unit - {d['availableUnits']} at Price - {d['price']}"
-        BIDS = BIDS +'\n'+ tempBid
-        c=c+1
-    BIDS = BIDS + '\n' + f"For more details on BIDs or Asks and Trading for this asset checkout - 'Invest' Tab for this asset. Or you can reach out to our support team support@evident.capital incase of any query."
-
+    try:
+        for d in data['data']:
+            if c==4:
+                break
+            tempBid = f"Available Unit - {d['availableUnits']} at Price - {d['price']}"
+            BIDS = BIDS +'\n'+ tempBid
+            c=c+1
+        BIDS = BIDS + '\n' + f"For more details on BIDs or Asks and Trading for this asset checkout - 'Invest' Tab for this asset. Or you can reach out to our support team support@evident.capital incase of any query."
+    except:
+        BIDS = "No data available on Bids at this moment."
+    # print("BIDS no error")
     # Asks
     url = f"https://{domain}/investor/trade/{asset_id}/open/sell/offers"
     payload = {}
@@ -226,14 +228,17 @@ def invest_page_trading_order_book_data(domain,asset_id,token):
     data = response.json() 
     ASKS = "Asks from Order Book - \n"
     c=0
-    for d in data['data']:
-        if c==4:
-            break
-        tempAsks = f"Available Unit - {d['availableUnits']} at Price - {d['price']}"
-        ASKS = ASKS + '\n' + tempAsks
-        c=c+1
-    ASKS = ASKS + '\n' + f"For more details on Asks or Bids and Trading for this asset checkout - 'Invest' Tab for this asset. Or you can reach out to our support team support@evident.capital incase of any query."
-    
+    try:
+        for d in data['data']:
+            if c==4:
+                break
+            tempAsks = f"Available Unit - {d['availableUnits']} at Price - {d['price']}"
+            ASKS = ASKS + '\n' + tempAsks
+            c=c+1
+        ASKS = ASKS + '\n' + f"For more details on Asks or Bids and Trading for this asset checkout - 'Invest' Tab for this asset. Or you can reach out to our support team support@evident.capital incase of any query."
+    except:
+        ASK = "No Data Available at this moment for 'ASKs'."
+    # print("ASKS no error")
     # Holdings
     url = f"https://{domain}/investor/trade/{asset_id}/holdings"
     payload = {}
@@ -242,9 +247,20 @@ def invest_page_trading_order_book_data(domain,asset_id,token):
                 'Content-Type': 'application/json'
             }
     response = requests.request("GET", url, headers=headers, data=payload)
-    response = response.json()
-    Units = float(response['holding']['units'])
-    Currency = response['holding']['asset']['currency']
+    data = response.json()
+    # print(data)
+    try:
+        if data['holding'] is not None:
+            Units = float(data['holding']['units'])
+            # print("Units - ", Units)
+            Currency = data['holding']['asset']['currency']
+            # print("Currency Units no error")
+        else:
+            Units = 0.0
+            Currency = ""
+    except:
+        Units = 0.0
+        Currency = ""
     url = f"https://{domain}/investor/trade/{asset_id}/tickers?range=iM"
     payload = {}
     headers = {
@@ -253,9 +269,12 @@ def invest_page_trading_order_book_data(domain,asset_id,token):
             }
     response = requests.request("GET", url, headers=headers, data=payload)
     response = response.json()
-    ltp = float(response['ltp']) if response['ltp'] is not None else 0
-    Holdings = Currency +' ' + str(Units*ltp)
-    
+    try:
+        ltp = float(response['ltp']) if response['ltp'] is not None else 0
+        Holdings = Currency +' ' + str(Units*ltp)
+    except:
+        Holdings = "No Holdings available"
+    # print("Holdings no error")
     url = f"https://{domain}/investor/trade/{asset_id}/market-data"
     payload = {}
     headers = {
@@ -264,9 +283,13 @@ def invest_page_trading_order_book_data(domain,asset_id,token):
             }
     response = requests.request("GET", url, headers=headers, data=payload)
     response = response.json()
-    highest_bid = response['open_offers']['highestBid']['price'] if not None else 0
-    lowest_ask = response['open_offers']['lowestAsk']['price'] if not None else 0
-
+    try:
+        highest_bid = response['open_offers']['highestBid']['price'] if not None else 0
+        lowest_ask = response['open_offers']['lowestAsk']['price'] if not None else 0
+    except:
+        highest_bid = 0
+        lowest_ask = 0
+    # print("no error in asks")
     return BIDS, ASKS, Holdings, highest_bid, lowest_ask
 
 
@@ -279,74 +302,63 @@ def invest_page_commitment_page_data(domain,asset_id,token):
     }
     response = requests.request('GET', url, headers=headers,data=payload)
     data = response.json()
-    unit_price = data['ratio']
-    target_amount = data['targetAmount']
-    raised_amount = data['raisedAmount'] # this is also total committed amount shown in market commitments
-    allocation_remaining = target_amount - raised_amount
-    mini_amount = data['minimumAmount']
-    max_amount = data['maximumAmount']
-    myTotalCommitted = data['myTotalCommitted']
-    commit_id = data['id']
-    url = f"https://{domain}/investor/commitment/{commit_id}/market-commitment?page=1"
-    payload = {}
-    headers = {
-        'Authorization': f'Bearer {token}',
-        'Content-Type': 'application/json' 
-    }
-    response = requests.request('GET', url, headers=headers,data=payload)
-    market_commitments = response.json()['data']
+    try:
+        unit_price = data['ratio']
+    except:
+        unit_price = "Not available"
+    try:
+        target_amount = data['targetAmount']
+        raised_amount = data['raisedAmount'] # this is also total committed amount shown in market commitments
+        allocation_remaining = target_amount - raised_amount
+    except:
+        target_amount = "Not available"
+        raised_amount = "Not available"
+        allocation_remaining = "Not available"
+    try:
+        mini_amount = data['minimumAmount']
+        max_amount = data['maximumAmount']
+        myTotalCommitted = data['myTotalCommitted']
+    except:
+        mini_amount = "Not available"
+        max_amount = "Not available"
+        myTotalCommitted = "Not available"
+    try:
+        commit_id = data['id']
+        url = f"https://{domain}/investor/commitment/{commit_id}/market-commitment?page=1"
+        payload = {}
+        headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json' 
+        }
+        response = requests.request('GET', url, headers=headers,data=payload)
+        market_commitments = response.json()['data']
 
-    # Market Commitments
-    c = 0
-    MarketCommitData = 'On going Market Commits are as follow - '
-    for mc in market_commitments:
-        if c==4:
-            break
-        date = mc['createdAt'].split('T')[0]
-        time = mc['createdAt'].split('T')[1].split(".")[0]
-        status = mc['status'][0]+mc['status'][1:].lower()
-        commitmentAmount = mc['commitmentAmount']
-        totalAmount = mc['totalAmount']
-        temp_commits = f"On {date} at {time}, an {status} of {commitmentAmount} TPLT worth USD {totalAmount} was recorded."
-        MarketCommitData = MarketCommitData + '\n' + temp_commits
-        c+=1
-    MarketCommitData = MarketCommitData +'\n\n'+ 'For more details about Market Commitments you can reach out to our support team at support@evident.capital'
-    
+        # Market Commitments
+        c = 0
+        MarketCommitData = 'On going Market Commits are as follow - '
+        for mc in market_commitments:
+            if c==4:
+                break
+            date = mc['createdAt'].split('T')[0]
+            time = mc['createdAt'].split('T')[1].split(".")[0]
+            status = mc['status'][0]+mc['status'][1:].lower()
+            commitmentAmount = mc['commitmentAmount']
+            totalAmount = mc['totalAmount']
+            temp_commits = f"On {date} at {time}, an {status} of {commitmentAmount} TPLT worth USD {totalAmount} was recorded."
+            MarketCommitData = MarketCommitData + '\n' + temp_commits
+            c+=1
+        MarketCommitData = MarketCommitData +'\n\n'+ 'For more details about Market Commitments you can reach out to our support team at support@evident.capital'
+    except:
+        MarketCommitData = "Market Commits are unavailable right now."
     return MarketCommitData,unit_price,allocation_remaining,raised_amount,mini_amount,max_amount,myTotalCommitted
 
 
-# all_asset_details,investment_mode = get_specific_asset_details('Tesla','NzQzNg.r4x3C7ktLgBKxlwKLLzljM-GtTTxX96EPbVRIM3SRc6Tk6twxQj-r5Bl6p6n','api-uat.evident.capital')
-# print(304)
-# print(all_asset_details)
 def invest_question_flow(token,domain,asset_name):
     all_asset_details,investment_mode,asset_id = get_specific_asset_details(asset_name,token,domain)
-    # print(304)
-    # print(all_asset_details)
-    # all_asset_details = None
-    # url = f"https://{domain}/asset/investor/list?page=1"
-    # payload = json.dumps({"name":f"{asset_name.strip()}"})
-
-    # headers = {
-    #             'Authorization': f'Bearer {token}',
-    #             'Content-Type': 'application/json'
-    #         }
-
-    # response = requests.request("POST", url, headers=headers, data=payload)
-    # data = response.json()
-    # try:
-    #     # logger.info(f"got asset information - {data}")
-    #     all_asset_details = data['data'][0]
-    # except:
-    #     # logger.info(f"failed to get asset info - {data}")
-    #     return "Hey! sorry... Asset you are looking for is not available currently for investment. But don't worry we have other assets for you to checkout at our Marketplace..."
-    # # print(313)
+    # print(all_asset_details,investment_mode,asset_id)
     if all_asset_details == "Asset is not available at Marketplace":
-        # print("323")
         return all_asset_details, "Not available"
 
-    # investment_mode = all_asset_details['investmentMode']
-    # print(investment_mode)
-    # if asset is trade
     prompt = ""
     if investment_mode.lower() == 'trading':
         # print("Asset is in trade")
@@ -385,8 +397,8 @@ def invest_question_flow(token,domain,asset_name):
         # response = get_gemini_response(question,prompt)
 
     # if asset is commitment
-    if investment_mode.lower() == 'commitment':
-        # print("Asset is in commitment")
+    elif investment_mode.lower() == 'commitment':
+        print("Asset is in commitment")
         MarketCommitData,unit_price,allocation_remaining,raised_amount,mini_amount,max_amount,myTotalCommitted = invest_page_commitment_page_data(domain,asset_id,token)
         commit_flow = """You need to specify a Target Total Amount, which will be used to allocate units based on the price per unit. If your Available Balance is less than the Total to be Debited, you’ll need to either add the required amount or choose to Show Interest if you prefer not to add funds immediately. Otherwise, you can proceed directly by clicking Commit Now to confirm your commitment to the asset."""
         prompt = f"""Understand user's question and based on following information provide most relevant answer to user's query. If you are unable to find answer from following information then revert politely that you do not have information for this question currently however our support team will be able to help you quickly with your query. please feel free to reach out our team at support@evident.capital
@@ -406,11 +418,14 @@ def invest_question_flow(token,domain,asset_name):
                 """
         # response = get_gemini_response(question,prompt)
 
+    else:
+        prompt = f"""Understand user's question and based on following information provide most relevant answer to user's query. If you are unable to find answer from following information then revert politely that you do not have information for this question currently however our support team will be able to help you quickly with your query. Please feel free to reach out our team at support@evident.capital
+        Asset Basic Overview Information - 
+                    {all_asset_details}
+        """
     return prompt
 
 
-# prompt= invest_question_flow('NzQzNg.r4x3C7ktLgBKxlwKLLzljM-GtTTxX96EPbVRIM3SRc6Tk6twxQj-r5Bl6p6n','api-uat.evident.capital','Tesla')
-# print(prompt)
 def general_investment_guidelines(question):
     prompt = f"""User can invest in any asset based on Asset's investment mode. An Asset can be in Trading or in Commitment. Following are ways to invest in any Asset based on its investment mode.
     Provide below information to user to beign with investment.

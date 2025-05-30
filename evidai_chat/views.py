@@ -561,7 +561,6 @@ def add_prompt_values(request):
                 updated_at=iso_format_datetime               
             )
             new_cat.save()
-            logger.info("")
             return JsonResponse({"message":"Value added successfully",
                                  "data":{"prompt_category":category,'prompt':value,
                                          "asset_name":asset_name,"asset_sub_cat":asset_sub_cat},"status":True},status=200) 
