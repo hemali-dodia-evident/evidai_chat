@@ -122,6 +122,7 @@ def token_validation(token,URL):
                 onboarding_steps=temp_stp
         isPI = data["user"]["investmentExperience"]["isProfessionalInvestor"]
         # print(datetime.now())
+        
         if validate:
             return token, user_id, user_name, user_role, onboarding_steps, isAR, isPI
         else:
@@ -238,16 +239,16 @@ def create_chat_session(request):
 
             # Convert to ISO 8601 format
             iso_format_datetime = current_datetime.isoformat()
-            # Create a new ChatSession instance
-            new_chat_session = models.ChatSession.objects.using(db_alias).create(
-                user_id=user_id,
-                title="New Conversation",
-                created_at=iso_format_datetime,
-                updated_at=iso_format_datetime
-            )
-            new_chat_session.save()
-            # Return a success response
-            return JsonResponse({
+            try:
+                # Create a new ChatSession instance
+                new_chat_session = models.ChatSession.objects.using(db_alias).create(
+                    user_id=user_id,
+                    title="New Conversation",
+                    created_at=iso_format_datetime,
+                    updated_at=iso_format_datetime
+                )
+                new_chat_session.save()
+                return JsonResponse({
                 'message': 'Response generated successfully',
                 'status': True,
                 'data': {
@@ -259,6 +260,14 @@ def create_chat_session(request):
                     'updated_at': new_chat_session.updated_at,
                 }
             }, status=200)
+            except Exception as e:
+                return JsonResponse({
+                    "message": f"Failed to create chatsession due to - {e}",
+                    "status": False,
+                    "data": {"response":''}
+                }, status=400)
+            # Return a success response
+            
         logger.info("New chat session created successfully")
     except json.JSONDecodeError:
         logger.error('Invalid JSON format while creating new chat session')
@@ -424,8 +433,8 @@ def login(request):
     # print("in login")
     url = f"https://api-uat.evident.capital/user/login"
     payload = json.dumps({
-    "email": "sai+2105@ind.com",
-    "password": "Evident@01",
+    "email": "shwetac0106@yopmail.com",
+    "password": "Evident@2025",
     "ipInfo": {
         "asn": "asn",
         "asnName": "asnName",
