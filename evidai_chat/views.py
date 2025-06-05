@@ -433,7 +433,8 @@ def login(request):
     # print("in login")
     url = f"https://api-uat.evident.capital/user/login"
     payload = json.dumps({
-    "email": "shwetac0106@yopmail.com",
+    # "email": "shwetac0106@yopmail.com",
+    "email": "rahul0606+@ind.com",
     "password": "Evident@2025",
     "ipInfo": {
         "asn": "asn",

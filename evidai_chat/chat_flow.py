@@ -252,6 +252,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                     data = models.BasicPrompts.objects.using(db_alias).filter(prompt_category__in=categories)
                     logger.info(f"Fetched category from database - {len(data)}")
                     prompt_data_list = []
+                    print(onboarding_step)
                     for d in data:
                         prm = d.prompt
                         if 'Onboarding' in promp_cat and 'Corp' in promp_cat:
@@ -333,9 +334,17 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                                 ii) Select 'Yes' for first question - 'Are you a business providing investment services regulated or registered with a regulator or under the law?' 
                                 iii) Proceed with other questions
                             
-                            Current Onboarding Status: {onboarding_step}
-                            Is User Authorised Representative :- {isAR}
-                            {isPI}
+                            ### Refer current onboarding status carefully to provide further assistance. 
+                                # If any step is "rejected" then ask user to complete that on priority. 
+                                # If step is "in-process" then ask user to wait till its completed and shows green tick. 
+                                # If Identity verification is pending/rejected/in-process user can still proceed for Organisation verification, and Personality test.
+                                # If Organisation Verification is pending/rejected/in-process user can still proceed for identity verification(Only if its pending or rejected), and personality test. And same is applicable for Pesonality test also.
+                                # But user can not sign agreement without completing all steps of verification and confirmation.
+                            Current Onboarding Status: 
+                            {onboarding_step}
+
+                            ### Is User Authorised Representative :- {isAR}
+                            ### {isPI}
                             ### Onboarding Guide with AR, Non-AR, CPI, IPI, and Non-PI steps -
                             {prm}  
                             """  
@@ -344,9 +353,28 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                         
                         elif 'Onboarding' in promp_cat:
                             onb_res_prm = f"""{general_guidelines}
+                            ### General Notes Related step sequences - 
+                                # User first have to complete declarations & tema, email confirmation, and Screening questions, Till these steps are incomplete user verification steps will be unavailable to proceed.
+                                # Once declarations & tema, email confirmation, and Screening questions are done, User can complete Identity & residence, Background & wealth, Investment personality all these steps in any order. Till all these steps are not completed user can not sign agreement.
+                                # User can not invest if onboarding is incomplete.
+                                # Onboarding completes only after final step of  "Sign Agreements".
+
                             Check if user wants to know about actual onboarding process or its just some generic question. If its generic question then answer as per your understanding and provide most relevant and short summary type of response.
-                            User's current onboarding status is(Use Only if required, like when user wants to know their own onboarding status or pending steps etc.) - {onboarding_step}
-                            {isPI}
+                            Current Onboarding Status: 
+                            {onboarding_step}
+
+                            ### Refer Current Onboarding Status provided above carefully to provide further assistance, also consider below points while generating response -
+                                # Check each step's status and then see if any below scenario is matching or not. If matches then based on below information provide response to user.
+                                # "Declarations terms", "Email confirmation", and "Screening questions" comes under "Confirmed" Steps. Without completing these steps user can not proceed with "Verified" steps.
+                                # "Identity verification", "Background wealth", "Investment personality" comes under "Verified" Steps. User can not proceed for "Complete" i.e. "Sign Agreement" Step. Also user can complete "Identity verification", "Background wealth", "Investment personality" in any sequence.
+                                # If any step is "Rejected" then ask user to complete that on priority. 
+                                # If step is "in-process" then ask user to wait till its completed and shows green tick. E.g. "Background wealth: In_Process", then ask user to wait till verification is completed only if other steps of verification is completed i.e. "Identity Verification" and "Investment personality". 
+                                # Also do not ask user to complete steps with status is already "Completed". 
+                                E.g. "Identity verification:Rejected", ask user to complete this step before proceeding for next step.
+                                E.g. If "Background wealth" is already complted no need to ask user to complete background and wealth verification.
+                                E.g. If "Screening questions" is already complted no need to ask user to complete screening questions again.
+
+                            ### {isPI}
                             Onboarding guide - {prm}                            
                             """
                             prm = onb_res_prm
