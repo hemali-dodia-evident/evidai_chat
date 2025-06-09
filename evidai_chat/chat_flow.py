@@ -509,7 +509,7 @@ Do not refer to any document, source, or provided information (e.g., avoid phras
 
 Do not use uncertain or indirect phrasing (e.g., 'it seems', 'appears', 'doesn't definitively state'). Be direct, confident, and professional.
 
-Eliminate any repetitive statements and keep the response concise.
+Eliminate any repetitive statements and keep the response concise. Also Maintain readability, proper line breaks, bold effects as it is present or enhance it.
 
 Question: "{current_question}"
 """
