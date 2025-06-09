@@ -304,6 +304,30 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                                 3. If the user asks for **steps to proceed as CPI**, provide **only those steps** without suggesting alternatives.  
                                 4. **Do not suggest an alternative category** unless the user explicitly asks for a comparison.  
                             
+                            ### SCENARIO 7: IF USER's CURRENT ONBOARDING STATUS ARE "COMPLETE", "REJECTED", OR "IN_PROGRESS"
+                                **GIVE PRIORITY TO CASES WHERE STEPS ARE "IN_PROGRESS" FOLLOWED BY "PENDING".**
+                                *CASE 1: ANY ONE STEP IS "IN_PROGRESS" AND OTHER STEPS ARE "COMPLETED", ASK USER TO WAIT TILL THAT STEP GETS "COMEPLTED"*
+                                *CASE 2: ANY ONE STEP IS "PENDING" AND OTHER STEPS ARE "COMPLETED", ASK USER TO FINISH THAT STEP BEFORE MOVING AHEAD.*
+                                *CASE 3: ANY ONE STEP IS "REJECTED" AND OTHER STEPS ARE "COMPLETED", ASK USER TO REDO THAT STEP BEFORE MOVING AHEASA.*
+                                
+                                Current Onboarding Status: 
+                                {onboarding_step}
+
+                                ## Refer Current Onboarding Status provided above carefully to provide further assistance, also consider below points while generating response -
+                                    # Check each step's status and then see if any below scenario is matching or not. If matches then based on below information provide response to user.
+                                    # "Declarations terms", "Email confirmation", "Authorized representative", and "Screening questions" comes under "Confirmed" Steps. Without completing these steps user can not proceed with "Verified" steps.
+                                    # "Identity verification", "Organization verification", "Investment profile" comes under "Verified" Steps. User can not proceed for "Complete" i.e. "Sign Agreement" Step. Also user can complete "Identity verification", "Organization verification", "Investment profile" in any sequence.
+                                    # If any step is "Rejected" then ask user to complete that on priority. 
+                                    # If step is "in-process" then ask user to wait till its completed and shows green tick. E.g. "Organization verification: In_Process", then ask user to wait till verification is completed only if other steps of verification is completed i.e. "Identity Verification" and "Investment profile". 
+                                    # Also do not ask user to complete steps with status is already "Completed". 
+                                    # Until and Unless all "Confirmed" is not "Complete" user can not go for "Verified" steps, all "Verified" is not "Complete" user can not sign agreement.
+                                    # If "Authorized representative" is in-progress then ask user to wait till its completed.
+                                    # If all steps of "Confirmed" or "Verified" are completed but any one is in "In_progress" state then ask user till it gets complete before proceeding for next step as next steps will be unavailable for that user.
+                                    E.g. "Identity verification:Rejected", ask user to complete this step before proceeding for next step.
+                                    E.g. If "Organization verification" is already complted no need to ask user to complete background and wealth verification.
+                                    E.g. If "Screening questions" is already complted no need to ask user to complete screening questions again.
+                                    E.g. If "Authorized representative:In_progress", user can not proceed for verification.
+                            
                             ### GENERAL RULES TO FOLLOW WHILE GENERATING RESPONSES  
                                 1. Answer **only** what the user is asking for – Do **not** suggest alternatives unless explicitly requested.  
                                 2. Provide **detailed information** for each requested step – Ensure all relevant details are included.  
@@ -313,20 +337,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                                 6. **US Person Selection:** If the user asks about selecting "US Person" as **Yes**, respond with:
                             "You will not be able to proceed ahead as we are currently working on an updated account opening process for US clients. We will notify you once it becomes available."
                          
-                            Current Onboarding Status: 
-                            {onboarding_step}
-
-                            ### Refer Current Onboarding Status provided above carefully to provide further assistance, also consider below points while generating response -
-                                # Check each step's status and then see if any below scenario is matching or not. If matches then based on below information provide response to user.
-                                # "Declarations terms", "Email confirmation", "Authorized representative", and "Screening questions" comes under "Confirmed" Steps. Without completing these steps user can not proceed with "Verified" steps.
-                                # "Identity verification", "Organization verification", "Investment profile" comes under "Verified" Steps. User can not proceed for "Complete" i.e. "Sign Agreement" Step. Also user can complete "Identity verification", "Organization verification", "Investment profile" in any sequence.
-                                # If any step is "Rejected" then ask user to complete that on priority. 
-                                # If step is "in-process" then ask user to wait till its completed and shows green tick. E.g. "Organization verification: In_Process", then ask user to wait till verification is completed only if other steps of verification is completed i.e. "Identity Verification" and "Investment profile". 
-                                # Also do not ask user to complete steps with status is already "Completed". 
-                                E.g. "Identity verification:Rejected", ask user to complete this step before proceeding for next step.
-                                E.g. If "Organization verification" is already complted no need to ask user to complete background and wealth verification.
-                                E.g. If "Screening questions" is already complted no need to ask user to complete screening questions again.
-
+                            
                             ### Is User Authorised Representative :- {isAR}
                             ### {isPI}
                             ### Onboarding Guide with AR, Non-AR, CPI, IPI, and Non-PI steps -
