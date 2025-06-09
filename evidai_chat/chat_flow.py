@@ -341,6 +341,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                             ### Is User Authorised Representative :- {isAR}
                             ### {isPI}
                             ### Onboarding Guide with AR, Non-AR, CPI, IPI, and Non-PI steps -
+                            Special Note - There are 3 types of investors: CPI, IPI, And Non-PI.
                             {prm}
 
 
@@ -393,7 +394,9 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                                 E.g. If "Screening questions" is already complted no need to ask user to complete screening questions again.
 
                             ### {isPI}
-                            Onboarding guide - {prm}                            
+                            Onboarding guide - 
+                                Special Note: There are 2 type of investors i.e. PI and Non-PI.
+                            {prm}                            
                             """
                             prm = onb_res_prm
                             # print("question is about onboarding")
