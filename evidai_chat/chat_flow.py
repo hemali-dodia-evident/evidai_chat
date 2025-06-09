@@ -208,6 +208,7 @@ def get_asset_based_response(assets_identified,question,token,URL):
             # print(data)
             # print("got data from invest_question_flow - ", data)
             prompt = f"""General guidelines - {general_guidelines}
+## IF user is Non-PI, user can not invest in complex asset. To invest in complex asset user have to classify as professional investor i.e. PI/CPI/IPI.
 Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about. If question is generic, provide overall short summary of important details.
 {data}
 
@@ -346,6 +347,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                             ### {isPI}
                             ### Onboarding Guide with AR, Non-AR, CPI, IPI, and Non-PI steps -
                             Special Note - There are 3 types of investors: CPI, IPI, And Non-PI.
+                            CPI stands for Coporate professional investor, IPI stands for Institutional Professional Investor, Non-PI stands for Non Professional Investor, and PI stands for Professional Investor only. **DO NOT USE ANY OTHER FULL FORM FOR THESE TERMS.**
                             {prm}
 
 
