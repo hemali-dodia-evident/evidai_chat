@@ -39,7 +39,8 @@ Response Rules:
 - For asset-specific info, recommend visiting Marketplace.
 - NEVER suggest anything that may violate SFC or VARA regulations.
 - As you are specifically designed for finance sector and only for Evident platform, you will avoid to answer on out of the box topics which are not relevant. For such questions, inform user that you can help them with Evident platform only. For any other information reach out to support team support@evident.capital
-⚠️ Your tone should be kind, smart, and human — never overly formal, robotic, or uncertain."""
+- Apply proper like breaks and bold effects as per readability.
+⚠️ Your tone should be kind, smart, professional, and human — never overly formal, robotic, or uncertain."""
 
 
 # Get response from gemini
@@ -82,7 +83,6 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                  IF QUESTION IS RELATED TO ONBOARDING GIVE PRFERENCE TO CATEGORY BASED ON USER'S ROLE. 
                  Greetings: USER IS GREETING WITHOUT ANY OTHER INFORMATION, Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
                  Deposit_Amount: Process to add or deposit fund to account. Or when user's is out of balance or having insufficient fund to invest in any asset, User can do direct bank transfer or they can SWAP amount from one account to another account.
-                 Fund_Account: Detailed process to add initial fund into user's account, guide to setup bank account and add fund into wallets.
                  Asset_Investment: Complete step by step details about asset trading, place bid, sell asset now, place ask, Buy now assets, Committing on assets. This is only and only related to investing methods in asset.
                  Overall_Assets: Contains collective information of assets present on Marketplace. What type of assets are present, how many assets are there. 
                  Forget_Password: Contains step by step process to change or update password.
@@ -208,7 +208,7 @@ def get_asset_based_response(assets_identified,question,token,URL):
             # print(data)
             # print("got data from invest_question_flow - ", data)
             prompt = f"""General guidelines - {general_guidelines}
-Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about.
+Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about. If question is generic, provide overall short summary of important details.
 {data}
 
 Document Access Instructions: 
@@ -592,7 +592,7 @@ def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, u
                 """
         asset_identified_flag = get_gemini_response(current_question, prompt)
         asset_identified_flag = asset_identified_flag.replace("Bot:","").strip()
-        logger.info("asset_identified_flag - ",asset_identified_flag)
+        logger.info(f"asset_identified_flag - {asset_identified_flag}")
         if asset_identified_flag != "0":
             current_asset = asset_identified_flag
 
