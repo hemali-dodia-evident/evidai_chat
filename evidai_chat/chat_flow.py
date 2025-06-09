@@ -79,6 +79,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                  USER's ROLE - {user_role}.
                  IF QUESTION IS ABOUT USER'S ONBOARDING OR PENDING STEPS OR ANY QUERY ABOUT ONBOARDING OR ANY STEP RELATED TO ONBOARDING THEN REFER "USER's ROLE" AND SELECT CATEGORY ACCORDINGLY, ALSO IF LAST QUESTION CATEGORY WAS RELATED TO "ONBOARDING" THEN SELECT PROPER ONBOARDING CATEGORY.
                  IF QUESTION IS SPECIFYING ONBOARDING CATEGORY THEN RETURN THAT CATEGORY ONLY. DO NOT CONSIDER USER'S ROLE IN THAT CASE.
+                 IF QUESTION IS RELATED TO ONBOARDING GIVE PRFERENCE TO CATEGORY BASED ON USER'S ROLE. 
                  Greetings: USER IS GREETING WITHOUT ANY OTHER INFORMATION, Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
                  Deposit_Amount: Process to add or deposit fund to account. Or when user's is out of balance or having insufficient fund to invest in any asset, User can do direct bank transfer or they can SWAP amount from one account to another account.
                  Fund_Account: Detailed process to add initial fund into user's account, guide to setup bank account and add fund into wallets.
@@ -336,9 +337,12 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                                 5. **Do not lead the user to another option** (e.g., If the user asks about Non-PI, do not suggest CPI or any other alternative).  
                                 6. **US Person Selection:** If the user asks about selecting "US Person" as **Yes**, respond with:
                             "You will not be able to proceed ahead as we are currently working on an updated account opening process for US clients. We will notify you once it becomes available."
-                         
+                                7. User can not change their email-id which is register during onboarding. For more details get in touch with support team at support@evident.capital
                             
                             ### Is User Authorised Representative :- {isAR}
+                                **CASE 1: IF USER IS AR(Authorised Representative) THEN DO NOT ASK USER TO INVITE AN AR(Authorised Representative), TREAT USER AS Authorised Representative AND GUIDE ACCORDINGLY**
+                                **CASE 2: IF USER IS NOT AN Authorised Representative(AR) THEN IF USER HAS ALREADY INVITED AN Authorised Representative ASK USER TO WAIT TILL Authorised Representative IS COMPLETELY ONBOARDED.**
+
                             ### {isPI}
                             ### Onboarding Guide with AR, Non-AR, CPI, IPI, and Non-PI steps -
                             Special Note - There are 3 types of investors: CPI, IPI, And Non-PI.
@@ -377,7 +381,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                                 # Once declarations & tema, email confirmation, and Screening questions are done, User can complete Identity & residence, Background & wealth, Investment personality all these steps in any order. Till all these steps are not completed user can not sign agreement.
                                 # User can not invest if onboarding is incomplete.
                                 # Onboarding completes only after final step of  "Sign Agreements".
-
+                            
                             Check if user wants to know about actual onboarding process or its just some generic question. If its generic question then answer as per your understanding and provide most relevant and short summary type of response.
                             Current Onboarding Status: 
                             {onboarding_step}
@@ -395,7 +399,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
 
                             ### {isPI}
                             Onboarding guide - 
-                                Special Note: There are 2 type of investors i.e. PI and Non-PI.
+                                Special Note: 1. There are 2 type of investors i.e. PI and Non-PI. \n2. User can not change register email-id.
                             {prm}                            
                             """
                             prm = onb_res_prm

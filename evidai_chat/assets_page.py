@@ -1,14 +1,7 @@
 import google.generativeai as genai
-import os
 import json
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-from datetime import datetime,timezone
-from . import models
 import logging
 import requests
-from . import views
-
 
 
 # Configure the logging settings
@@ -237,7 +230,7 @@ def invest_page_trading_order_book_data(domain,asset_id,token):
             c=c+1
         ASKS = ASKS + '\n' + f"For more details on Asks or Bids and Trading for this asset checkout - 'Invest' Tab for this asset. Or you can reach out to our support team support@evident.capital incase of any query."
     except:
-        ASK = "No Data Available at this moment for 'ASKs'."
+        ASKS = "No Data Available at this moment for 'ASKs'."
     # print("ASKS no error")
     # Holdings
     url = f"https://{domain}/investor/trade/{asset_id}/holdings"
@@ -249,6 +242,8 @@ def invest_page_trading_order_book_data(domain,asset_id,token):
     response = requests.request("GET", url, headers=headers, data=payload)
     data = response.json()
     # print(data)
+    Units = None
+    Currency = None
     try:
         if data['holding'] is not None:
             Units = float(data['holding']['units'])
@@ -269,6 +264,7 @@ def invest_page_trading_order_book_data(domain,asset_id,token):
             }
     response = requests.request("GET", url, headers=headers, data=payload)
     response = response.json()
+    Holdings = None
     try:
         ltp = float(response['ltp']) if response['ltp'] is not None else 0
         Holdings = Currency +' ' + str(Units*ltp)
@@ -283,6 +279,8 @@ def invest_page_trading_order_book_data(domain,asset_id,token):
             }
     response = requests.request("GET", url, headers=headers, data=payload)
     response = response.json()
+    highest_bid = 0
+    lowest_ask = 0
     try:
         highest_bid = response['open_offers']['highestBid']['price'] if not None else 0
         lowest_ask = response['open_offers']['lowestAsk']['price'] if not None else 0
@@ -302,6 +300,14 @@ def invest_page_commitment_page_data(domain,asset_id,token):
     }
     response = requests.request('GET', url, headers=headers,data=payload)
     data = response.json()
+    unit_price = "Not available"
+    target_amount = "Not available"
+    raised_amount = "Not available"
+    allocation_remaining = "Not available"
+    mini_amount = "Not available"
+    max_amount = "Not available"
+    myTotalCommitted = "Not available"
+    MarketCommitData = "Market Commits are unavailable right now."
     try:
         unit_price = data['ratio']
     except:
@@ -398,7 +404,7 @@ def invest_question_flow(token,domain,asset_name):
 
     # if asset is commitment
     elif investment_mode.lower() == 'commitment':
-        print("Asset is in commitment")
+        # print("Asset is in commitment")
         MarketCommitData,unit_price,allocation_remaining,raised_amount,mini_amount,max_amount,myTotalCommitted = invest_page_commitment_page_data(domain,asset_id,token)
         commit_flow = """You need to specify a Target Total Amount, which will be used to allocate units based on the price per unit. If your Available Balance is less than the Total to be Debited, you’ll need to either add the required amount or choose to Show Interest if you prefer not to add funds immediately. Otherwise, you can proceed directly by clicking Commit Now to confirm your commitment to the asset."""
         prompt = f"""Understand user's question and based on following information provide most relevant answer to user's query. If you are unable to find answer from following information then revert politely that you do not have information for this question currently however our support team will be able to help you quickly with your query. please feel free to reach out our team at support@evident.capital
