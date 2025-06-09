@@ -312,8 +312,28 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                                 5. **Do not lead the user to another option** (e.g., If the user asks about Non-PI, do not suggest CPI or any other alternative).  
                                 6. **US Person Selection:** If the user asks about selecting "US Person" as **Yes**, respond with:
                             "You will not be able to proceed ahead as we are currently working on an updated account opening process for US clients. We will notify you once it becomes available."
-                            
-                           - Example queries:  
+                         
+                            Current Onboarding Status: 
+                            {onboarding_step}
+
+                            ### Refer Current Onboarding Status provided above carefully to provide further assistance, also consider below points while generating response -
+                                # Check each step's status and then see if any below scenario is matching or not. If matches then based on below information provide response to user.
+                                # "Declarations terms", "Email confirmation", "Authorized representative", and "Screening questions" comes under "Confirmed" Steps. Without completing these steps user can not proceed with "Verified" steps.
+                                # "Identity verification", "Organization verification", "Investment profile" comes under "Verified" Steps. User can not proceed for "Complete" i.e. "Sign Agreement" Step. Also user can complete "Identity verification", "Organization verification", "Investment profile" in any sequence.
+                                # If any step is "Rejected" then ask user to complete that on priority. 
+                                # If step is "in-process" then ask user to wait till its completed and shows green tick. E.g. "Organization verification: In_Process", then ask user to wait till verification is completed only if other steps of verification is completed i.e. "Identity Verification" and "Investment profile". 
+                                # Also do not ask user to complete steps with status is already "Completed". 
+                                E.g. "Identity verification:Rejected", ask user to complete this step before proceeding for next step.
+                                E.g. If "Organization verification" is already complted no need to ask user to complete background and wealth verification.
+                                E.g. If "Screening questions" is already complted no need to ask user to complete screening questions again.
+
+                            ### Is User Authorised Representative :- {isAR}
+                            ### {isPI}
+                            ### Onboarding Guide with AR, Non-AR, CPI, IPI, and Non-PI steps -
+                            {prm}
+
+
+                            - Example queries:  
                             Q: "How can I proceed as a Non-PI?"
                             A: Steps To be Non-PI :
                                 i) Go to Account Centre(Manage Account) -> Verification -> Verified -> Investment profile
@@ -333,20 +353,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                                 i) Go to Account Centre(Manage Account) -> Verification -> Verified -> Investment profile
                                 ii) Select 'Yes' for first question - 'Are you a business providing investment services regulated or registered with a regulator or under the law?' 
                                 iii) Proceed with other questions
-                            
-                            ### Refer current onboarding status carefully to provide further assistance. 
-                                # If any step is "rejected" then ask user to complete that on priority. 
-                                # If step is "in-process" then ask user to wait till its completed and shows green tick. 
-                                # If Identity verification is pending/rejected/in-process user can still proceed for Organisation verification, and Personality test.
-                                # If Organisation Verification is pending/rejected/in-process user can still proceed for identity verification(Only if its pending or rejected), and personality test. And same is applicable for Pesonality test also.
-                                # But user can not sign agreement without completing all steps of verification and confirmation.
-                            Current Onboarding Status: 
-                            {onboarding_step}
-
-                            ### Is User Authorised Representative :- {isAR}
-                            ### {isPI}
-                            ### Onboarding Guide with AR, Non-AR, CPI, IPI, and Non-PI steps -
-                            {prm}  
+                           
                             """  
 
                             prm = onb_res_prm #"Apologies I can not assist you on this point. Currently I can only assist you with Asset Specific question. For rest of the information like onboarding, AR(Authorised Representative), CPI(Corporate Professional Investor), IPI(Institutional Professional Investor), Non-PI(Non Professional Investor) Please email them at support@evident.capital with the details of your query for prompt assistance."
