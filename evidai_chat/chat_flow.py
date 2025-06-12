@@ -4,7 +4,7 @@ from . import models
 import logging
 import requests
 from . import assets_page as ap
-import datetime
+import pandas as pd
 # from evidai_chat.qdrant import search_assets_by_question as sa
 
 key = os.environ["GOOGLE_API_KEY"]
@@ -107,7 +107,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                     - Asset Name, Description, Location, Currency, Asset Code, Investment Mode, Structuring Type, Asset Vertical, Status, Status Tag, Visibility.  
 
                     - **Investment Details:**  
-                    - Target Amount, Minimum Investment Amount, Raised Amount, Investment Start Date, Investment End Date, Open Offers, Number of Investors, Total Invested Amount.  
+                    - Target Amount, Minimum Investment Amount, Raised Amount, Investment Start Date, Investment End Date, Open Offers, Number of Investors, Total Invested Amount, User holdings and commitments done by user.  
 
                     - **Exit & Performance Details:**  
                     - Rate of Return, Exit Strategy, Latest Ticker, Previous Ticker.  
@@ -119,6 +119,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                         - "Tell me about manager"
                         - "Tell me about OpenAI."
                         - "What is OpenAI’s investment mode?"
+                 Owned_Assets: This contains overall holdings of user, in which assets overall user has made commitment and performed trades.
                  NOTE - IF MORE THAN ONE CATEGORY MATCHES THEN RETURN THEIR NAME WITH "," SEPERATED. 
                  - If user is talking or mentioning platform without specifying name of platform then it simply means Evident platform on which currently they are present. So refer all categories present above then provide answer.
                  E.g. Question: What are the steps for investor onboarding?
@@ -147,10 +148,10 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
     logger.info(f"prompt category - {response}")
     return response
 
-# current_question = "in which asset i can invest?"
+# current_question = "provide me details about my commitments"
 # user_role = "Individual Investor"
-# last_asset = ""
-# last_ques_cat = ""
+# last_asset = "tesla"
+# last_ques_cat = "personal assets"
 # get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
 
 # Generate answer from internet
@@ -164,7 +165,7 @@ def search_on_internet(question):
 
 
 # Get user specific assets in which user has invested
-def users_assets(token,db_alias,URL):
+def users_assets(token,URL):
     my_assets = ""
     try:
         trade_details = ''
@@ -180,7 +181,24 @@ def users_assets(token,db_alias,URL):
             data = response.json() 
             # print(data)
             trades = data['data']
-            trade_details = None
+            trade_details = []
+            for tr in trades:
+                temp = {
+                "assetId": tr['assetId'],
+                "price": tr['price'],
+                "totalUnits": tr['totalUnits'],
+                "availableUnits": tr['availableUnits'],
+                "tradedUnits": tr['tradedUnits'],
+                "status": tr['status'],
+                "name": tr["asset"]["name"],
+                "location": tr["asset"]["location"],
+                "currency": tr["asset"]["currency"]
+                }
+                trade_details.append(temp)
+            df = pd.DataFrame(trade_details)
+            # df.to_excel("tradeData.xlsx",index=False)
+            trade_details = df.groupby(['assetId','name','location','currency','status']).sum().reset_index()
+            trade_details = trade_details.to_string(index=False)
         except:
             trade_details = "No trade found"
         try:
@@ -194,14 +212,33 @@ def users_assets(token,db_alias,URL):
             data = response.json() 
             # print(data)
             commitments = data['data']
-            commitment_details = None
+            commitment_details = []
+            for cm in commitments:
+                temp = {
+                    "commitmentAmount":cm['commitmentAmount'],
+                    "allotedUnits":cm['allotedUnits'],
+                    "status":cm['status'],
+                    "assetId":cm['commitmentDetails']['assetId'],
+                    "name":cm['commitmentDetails']['asset']['name'],
+                    "location":cm['commitmentDetails']['asset']['location'],
+                    "currency":cm['commitmentDetails']['asset']['currency']
+                }
+                commitment_details.append(temp)
+            df = pd.DataFrame(commitment_details)
+            # print(df)
+            # df.to_excel("tradeData.xlsx",index=False)
+            commitment_details = df.groupby(['assetId','name','location','currency','status']).sum().reset_index().drop()
+            commitment_details.to_string(index=False)
         except:
             commitment_details = "No commitments found"
-        my_assets = f"Trades: {trade_details}\nCommitments: {commitment_details}"
+        
+        my_assets = f"Trades: \n{trade_details}\n\nCommitments: \n{commitment_details}"
     except:
         my_assets = "Currenlty I can not check your holding on assets but our support team can help you with that. Please feel free to connect at support@evident.capital"
+
     return my_assets
 
+# users_assets('ODMwNA.GefCAYiMXgLr9yIN-l2YSdCYjS4DFNCT5tI5MnOg-bYxjJzs6iuYApZpdpfE','api-uat.evident.capital')
 
 # Generate response based on provided asset specific detail
 def get_asset_based_response(assets_identified,question,token,URL,user_role):
@@ -245,7 +282,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
         promp_cat_new = ",".join(promp_cat)
         specific_category = promp_cat_new.replace("_",' ').split(',')
         assets_identified = ""
-        personalAssets = isPersonalAsset 
+        # personalAssets = isPersonalAsset 
         failed_cat = False
         for promp_cat in specific_category:   
             logger.info(f"Getting answer for category - {promp_cat}")    
@@ -472,41 +509,16 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
             
             elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True or personalAssets==True:    
                 logger.info("Prompt Category is Personal Asset") 
-                if personalAssets==True:
-                    # print("Owned asset based 443")
-                    idx = specific_category.index(promp_cat)
-                    specific_category[idx] = 'Owned Assets'
-                    assets_identified = users_assets(token,db_alias,URL)                    
-                    prompt = f"""Below are asset details in which user has invested. 
-                    Understand user's question carefully and provide answer using below mentioned details. 
-                    Answer should be clear, and in positive and polite tone. Make sure answer is readable. 
-                    If you are unable to answer then ask user to visit - "Assets Section in Portfolio"
-                    User's Trade:-{assets_identified[0]}
-                    User's Commitments:-{assets_identified[1]}
-
-                    
-                    ### **IMPORTANT RULES:**  
-                     **KEEP the tone positive, polite, and user-friendly.**  
-                     **DO NOT mention or imply that the user has not provided information.**  
-                     **Ensure line breaks are only applied between different attributes, NOT within values.**  
-
-                    FAILURE TO FOLLOW THIS RESPONSE FORMAT IS NOT ACCEPTABLE. STRICTLY ADHERE TO THE GUIDELINES."""
-                    response = get_gemini_response(question,prompt)
+                
+                if 'This Asset is not avaialble right now' not in current_asset:
+                    assets_identified = current_asset.split(",")
+                    response = get_asset_based_response(assets_identified,question,token,URL,user_role)
                     if final_response == "":
                         final_response = response
                     else:
                         final_response = final_response + '\n' + response
-                    personalAssets = False                
+                    asset_found = ",".join(assets_identified)    
                 else:
-                    if 'This Asset is not avaialble right now' not in current_asset:
-                        assets_identified = current_asset.split(",")
-                        response = get_asset_based_response(assets_identified,question,token,URL,user_role)
-                        if final_response == "":
-                            final_response = response
-                        else:
-                            final_response = final_response + '\n' + response
-                        asset_found = ",".join(assets_identified)    
-                    else:
                         prompt = f"""This asset is not available with us currently or might be you are asking about Private Asset for which I do not have much information. But you can explore other assets present at our Marketplace or reach out to our support team at support@evident.capital. Feel free to ask about other assets."""
                         response = prompt
                         if final_response == "":
@@ -515,6 +527,30 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                             final_response = final_response + '\n' + response
                         asset_found = "" 
                         failed_cat=True 
+            elif 'Owned Assets' in promp_cat:
+                print("Owned asset based")
+                idx = specific_category.index(promp_cat)
+                specific_category[idx] = 'Owned Assets'
+                assets_identified = users_assets(token,db_alias,URL)                    
+                prompt = f"""Below are asset details in which user has invested. 
+                Understand user's question carefully and provide answer using below mentioned details. 
+                Answer should be clear, and in positive and polite tone. Make sure answer is readable. 
+                If you are unable to answer then ask user to visit - "Assets Section in Portfolio"
+                User's Trade:-{assets_identified[0]}
+                User's Commitments:-{assets_identified[1]}
+                
+                ### **IMPORTANT RULES:**  
+                    **KEEP the tone positive, polite, and user-friendly.**  
+                    **DO NOT mention or imply that the user has not provided information.**  
+                    **Ensure line breaks are only applied between different attributes, NOT within values.**  
+
+                FAILURE TO FOLLOW THIS RESPONSE FORMAT IS NOT ACCEPTABLE. STRICTLY ADHERE TO THE GUIDELINES."""
+                response = get_gemini_response(question,prompt)
+                if final_response == "":
+                    final_response = response
+                else:
+                    final_response = final_response + '\n' + response
+                personalAssets = False                
 
             else:
                 response = search_on_internet(question)
@@ -525,12 +561,14 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
         
         prompt = f"""Answer the question clearly and naturally based on the available context. 
 
-        Do not refer to any document, source, or provided information (e.g., avoid phrases like 'the document says', 'provided information', 'it is stated', or 'Based on the information'). 
+        Do not refer to any document, source, or provided information (e.g., avoid phrases like 'the document says', 'provided information', 'it is stated', or 'Based on the information', 'Details are not mentioned','The provided text doesn't specify '). 
 
         Do not use uncertain or indirect phrasing (e.g., 'it seems', 'appears', 'doesn't definitively state'). Be direct, confident, and professional.
 
         Eliminate any repetitive statements and keep the response concise. Also Maintain readability, proper line breaks, bold effects as it is present or enhance it.
 
+        If any information is not available just ask user to get in touch with support team at support@evident.capita
+        
         Question: "{current_question}"
         """
 

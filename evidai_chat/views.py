@@ -435,7 +435,8 @@ def login(request):
     payload = json.dumps({
     # "email": "shwetac0106@yopmail.com",
     # "email": "rahul0606+@ind.com",
-    "email":"sai+0906nonpihk@corpinv.com",
+    # "email":"sai+0906nonpihk@corpinv.com",
+    "email":"sai+2105@ind.com",
     "password": "Evident@01",
     "ipInfo": {
         "asn": "asn",

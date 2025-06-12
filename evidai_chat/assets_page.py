@@ -386,9 +386,9 @@ def invest_question_flow(token,domain,asset_name,user_role):
                 ## Asks for asset - 
                     {ASKS}
 
-                ## User's holdings for asset - {Holdings}
-                ## Highest bid for asset - {highest_bid}
-                ## Lowest ask for  asset - {lowest_ask}
+                ## User's holdings for this asset - {Holdings}
+                ## Highest bid for this asset - {highest_bid}
+                ## Lowest ask for this asset - {lowest_ask}
                 ## Asset Information - 
                     {all_asset_details}
                     
@@ -420,7 +420,7 @@ def invest_question_flow(token,domain,asset_name,user_role):
                 Total Raised/Committed Amount based on Market - {raised_amount}
                 Minimum Investment amount that you can do - {mini_amount}
                 Maximum Investment amount that you can do - {max_amount}
-                User's Total Committed amount for asset is - {myTotalCommitted}
+                User's Total Committed amount for this asset is - {myTotalCommitted}
                 Market Commitment Details - 
                     {MarketCommitData}
 
