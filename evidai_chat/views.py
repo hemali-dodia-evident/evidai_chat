@@ -556,8 +556,8 @@ def add_prompt_values(request):
             data = json.loads(request.body)
             value = data['value']
             category = data['category'].replace("_"," ")
-            asset_name = data['asset_name']
-            asset_sub_cat = data['asset_sub_cat']
+            # asset_name = data['asset_name']
+            # asset_sub_cat = data['asset_sub_cat']
             prm_id = data['id']
             # Convert to ISO 8601 format
             iso_format_datetime = current_datetime.isoformat()
@@ -567,15 +567,15 @@ def add_prompt_values(request):
                 id=prm_id,
                 prompt_category=category,
                 prompt=value,
-                asset_name=asset_name,
-                asset_sub_cat=asset_sub_cat,
+                # asset_name=asset_name,
+                # asset_sub_cat=asset_sub_cat,
                 created_at=iso_format_datetime,
                 updated_at=iso_format_datetime               
             )
             new_cat.save()
             return JsonResponse({"message":"Value added successfully",
-                                 "data":{"prompt_category":category,'prompt':value,
-                                         "asset_name":asset_name,"asset_sub_cat":asset_sub_cat},"status":True},status=200) 
+                                 "data":{"prompt_category":category,'prompt':value
+                                         },"status":True},status=200) 
         except Exception as e:
             return JsonResponse({"message":"Failed to add prompt","data":{"error":str(e)},"status":False},status=400)
 
