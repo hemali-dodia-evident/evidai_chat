@@ -62,12 +62,12 @@ def get_gemini_response(question,prompt):
 
 # Get list of all assets from DB
 def get_asset_list(db_alias):
-    # print(datetime.datetime.now())
-    asset_names = models.Asset.objects.using(db_alias).exclude(visibility='PRIVATE').values_list('name',flat=True)
+    # print(datetime.datetime.now()).exclude(visibility='PRIVATE')
+    asset_names = models.Asset.objects.using(db_alias).values_list('name',flat=True)
     # print(datetime.datetime.now())
     return asset_names
 
-# get_asset_list("prod")
+
 # Identify prompt category based on current and previous questions
 def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
     # logger.info("Finding prompt from get_prompt_category")
@@ -82,9 +82,10 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                  IF QUESTION IS SPECIFYING ONBOARDING CATEGORY THEN RETURN THAT CATEGORY ONLY. DO NOT CONSIDER USER'S ROLE IN THAT CASE.
                  IF QUESTION IS RELATED TO ONBOARDING GIVE PRFERENCE TO CATEGORY BASED ON USER'S ROLE. 
                  Greetings: USER IS GREETING WITHOUT ANY OTHER INFORMATION, Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
+                 About_Evident: General details about Evident platform. All information about what evident does, how it works, how they operate, their services and plans, fees and structures, about their team, etc.
                  Deposit_Amount: Process to add or deposit fund to account. Or when user's is out of balance or having insufficient fund to invest in any asset, User can do direct bank transfer or they can SWAP amount from one account to another account.
                  Asset_Investment: Complete step by step details about asset trading, place bid, sell asset now, place ask, Buy now assets, Committing on assets. This is only and only related to investing methods in asset.
-                 Overall_Assets: Contains collective information of assets present on Marketplace. What type of assets are present, how many assets are there. 
+                 Overall_Assets: Contains collective information of assets present on Marketplace. What type of assets are present, how many assets are there. It can give total number or name of assets which can be filtered as Coming Soon, Realized Investment, On Request, Available for Trading, Completed, Open for Commitments, Private Company Debenture, Note, Bond, Fund, Equity, Private Equity, Private Credit, Infrastructure, Hedge Funds, Real Estate, Collectibles, Fixed Income, Commodities. Also can be filtered by minimum investment amount, and Rate of return. When question is not related to any specific asset and about overall assets present on Evident's platform, marketplace for investment. 
                  Forget_Password: Contains step by step process to change or update password.
                  Corp_Investor_Onboarding: Detailed process for Corp investor onboarding process. Can also be reffered as Corp Onboarding or in similar context. Contains Details adn step by step process about AR(Authorised Representative), CPI(Corporate Professional Investor), IPI(Institutional Professional Investor), Non-PI(Non Professional Investor).
                  Onboarding_Investor: Detailed process for investor onboarding process. Which ONLY contains following detailed steps - REGISTRATION, Verification -> Confirmed -> Declaration and terms, email confirmation, Screening questions, Investment personality or eligibility criteria, Background Verification, Wealth Verification, Residence and Identity Verification, PI(Professional Investor) and Non-PI(Non-professional Investor) details like what are they, what rights they have and steps, Sign agreement.
@@ -146,6 +147,11 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
     logger.info(f"prompt category - {response}")
     return response
 
+# current_question = "in which asset i can invest?"
+# user_role = "Individual Investor"
+# last_asset = ""
+# last_ques_cat = ""
+# get_prompt_category(current_question,user_role,last_asset,last_ques_cat)
 
 # Generate answer from internet
 def search_on_internet(question):
@@ -198,13 +204,13 @@ def users_assets(token,db_alias,URL):
 
 
 # Generate response based on provided asset specific detail
-def get_asset_based_response(assets_identified,question,token,URL):
+def get_asset_based_response(assets_identified,question,token,URL,user_role):
     final_response = ''
     # print("in get asset based response  - ",assets_identified)
     try:
         for ass in assets_identified:
             # print(token,URL,ass)
-            data= ap.invest_question_flow(token,URL,ass)
+            data= ap.invest_question_flow(token,URL,ass,user_role)
             # print(data)
             # print("got data from invest_question_flow - ", data)
             prompt = f"""General guidelines - {general_guidelines}
@@ -231,7 +237,7 @@ Special points to remember:
 
 
 # Check category of question and then based on category generate response
-def category_based_question(URL,db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR,isPI):
+def category_based_question(URL,db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR,isPI,user_role):
     question = current_question
     final_response = ""
     asset_found = current_asset
@@ -243,7 +249,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
         failed_cat = False
         for promp_cat in specific_category:   
             logger.info(f"Getting answer for category - {promp_cat}")    
-            if promp_cat not in ['FAILED','Personal Assets','Asset Investment']:
+            if promp_cat not in ['FAILED','Personal Assets','Asset Investment','Overall Assets']:
                 try:
                     if isPI:
                         isPI = "User is Professional Investor(PI)."
@@ -254,7 +260,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                     data = models.BasicPrompts.objects.using(db_alias).filter(prompt_category__in=categories)
                     logger.info(f"Fetched category from database - {len(data)}")
                     prompt_data_list = []
-                    print(onboarding_step)
+                    # print(onboarding_step)
                     for d in data:
                         prm = d.prompt
                         if 'Onboarding' in promp_cat and 'Corp' in promp_cat:
@@ -345,6 +351,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                                 **CASE 2: IF USER IS NOT AN Authorised Representative(AR) THEN IF USER HAS ALREADY INVITED AN Authorised Representative ASK USER TO WAIT TILL Authorised Representative IS COMPLETELY ONBOARDED.**
 
                             ### {isPI}
+                            ### Documents Signed and Uploaded by User can be found via Click on "Manage Account" -> Click on "Documents"  
                             ### Onboarding Guide with AR, Non-AR, CPI, IPI, and Non-PI steps -
                             Special Note - There are 3 types of investors: CPI, IPI, And Non-PI.
                             CPI stands for Coporate professional investor, IPI stands for Institutional Professional Investor, Non-PI stands for Non Professional Investor, and PI stands for Professional Investor only. **DO NOT USE ANY OTHER FULL FORM FOR THESE TERMS.**
@@ -402,7 +409,9 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                             ### {isPI}
                             Onboarding guide - 
                                 Special Note: 1. There are 2 type of investors i.e. PI and Non-PI. \n2. User can not change register email-id.
-                            {prm}                            
+                            {prm}  
+
+                            ### Documents Signed and Uploaded by User can be found via Click on "Manage Account" -> Click on "Documents"                     
                             """
                             prm = onb_res_prm
                             # print("question is about onboarding")
@@ -411,7 +420,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                     prompt_data = prompt_data_list      
                     
                     response = get_gemini_response(question,prompt_data)
-                    logger.info(f"response for  - {promp_cat}\n{response}")
+                    # logger.info(f"response for  - {promp_cat}\n{response}")
                     if final_response == "":
                         final_response = response
                     else:
@@ -441,14 +450,25 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                 if len(current_asset.split(","))>0 and current_asset != '':
                     # print("current_asset - ",current_asset.split(","), type(current_asset), len(current_asset.split(",")))
                     assets_identified = current_asset.split(",")[0]
-                    response = ap.invest_question_flow(token,domain,assets_identified)
+                    response = ap.invest_question_flow(token,domain,assets_identified,user_role)
                 else:
                     # print("here in else")
-                    response = ap.general_investment_guidelines(question)
+                    response = ap.general_investment_guidelines(question, user_role)
                 if final_response == "":
                     final_response = response
                 else:
                     final_response = final_response + '\n' + response 
+            
+            elif 'Overall Assets' == promp_cat:
+                marketplace_data = ap.overall_marketplace_assets(db_alias)
+                prompt = f"""{general_guidelines}  
+                            Understand the question and provide response to user, if user is asking about all assets without much specification, provide top 5 records. Do not flood user with lots of data, be sensible while providing information. Also ask user to visit marketplace if want to see more records.
+                            {marketplace_data}"""
+                response = get_gemini_response(question,prompt)
+                if final_response == "":
+                    final_response = response
+                else:
+                    final_response = final_response + '\n' + response
             
             elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True or personalAssets==True:    
                 logger.info("Prompt Category is Personal Asset") 
@@ -480,7 +500,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                 else:
                     if 'This Asset is not avaialble right now' not in current_asset:
                         assets_identified = current_asset.split(",")
-                        response = get_asset_based_response(assets_identified,question,token,URL)
+                        response = get_asset_based_response(assets_identified,question,token,URL,user_role)
                         if final_response == "":
                             final_response = response
                         else:
@@ -502,19 +522,20 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                     final_response = response
                 else:
                     final_response = final_response + '\n' + response  
-        prompt = f"""
-Answer the question clearly and naturally based on the available context. 
+        
+        prompt = f"""Answer the question clearly and naturally based on the available context. 
 
-Do not refer to any document, source, or provided information (e.g., avoid phrases like 'the document says', 'provided information', or 'it is stated'). 
+        Do not refer to any document, source, or provided information (e.g., avoid phrases like 'the document says', 'provided information', 'it is stated', or 'Based on the information'). 
 
-Do not use uncertain or indirect phrasing (e.g., 'it seems', 'appears', 'doesn't definitively state'). Be direct, confident, and professional.
+        Do not use uncertain or indirect phrasing (e.g., 'it seems', 'appears', 'doesn't definitively state'). Be direct, confident, and professional.
 
-Eliminate any repetitive statements and keep the response concise. Also Maintain readability, proper line breaks, bold effects as it is present or enhance it.
+        Eliminate any repetitive statements and keep the response concise. Also Maintain readability, proper line breaks, bold effects as it is present or enhance it.
 
-Question: "{current_question}"
-"""
+        Question: "{current_question}"
+        """
 
         final_response = get_gemini_response(final_response,prompt)
+        logger.info(f"Final Response - {final_response}")
         logger.info(f"Categories final - {specific_category}")
     except Exception as e:
         logger.error(f"While generating answer from category based question following error occured - {str(e)}")
@@ -598,7 +619,7 @@ def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, u
         if asset_identified_flag != "0":
             current_asset = asset_identified_flag
 
-    response,asset_found,specific_category = category_based_question(URL,db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR,isPI)
+    response,asset_found,specific_category = category_based_question(URL,db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR,isPI,user_role)
 
     specific_category = ",".join(specific_category)
 

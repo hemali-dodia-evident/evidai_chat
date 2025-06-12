@@ -2,7 +2,8 @@ import google.generativeai as genai
 import json
 import logging
 import requests
-
+from . import models
+import pandas as pd
 
 # Configure the logging settings
 logger = logging.getLogger(__name__)
@@ -316,6 +317,7 @@ def invest_page_commitment_page_data(domain,asset_id,token):
         target_amount = data['targetAmount']
         raised_amount = data['raisedAmount'] # this is also total committed amount shown in market commitments
         allocation_remaining = target_amount - raised_amount
+        # print(target_amount,raised_amount,allocation_remaining)
     except:
         target_amount = "Not available"
         raised_amount = "Not available"
@@ -359,7 +361,10 @@ def invest_page_commitment_page_data(domain,asset_id,token):
     return MarketCommitData,unit_price,allocation_remaining,raised_amount,mini_amount,max_amount,myTotalCommitted
 
 
-def invest_question_flow(token,domain,asset_name):
+def invest_question_flow(token,domain,asset_name,user_role):
+    invest_role = "Professional Investor(PI)"
+    if user_role in 'Corp Investor':
+        invest_role = "CPI/IPI"
     all_asset_details,investment_mode,asset_id = get_specific_asset_details(asset_name,token,domain)
     # print(all_asset_details,investment_mode,asset_id)
     if all_asset_details == "Asset is not available at Marketplace":
@@ -399,6 +404,8 @@ def invest_question_flow(token,domain,asset_name):
 
                     4. "Place Ask" - Make a sell offer (wait for buyer to match).
                     {place_ask}
+
+                Special Note - If user is Non-professional investor, then he/she wont be able to invest in complex assets when both asset and user is from same country. To invest in assets which are complex user have to classify as - {invest_role}
                 """
         # response = get_gemini_response(question,prompt)
 
@@ -421,6 +428,8 @@ def invest_question_flow(token,domain,asset_name):
                     {all_asset_details}
                     
                 How user can do commitment on this asset - {commit_flow}
+
+                Special Note - If user is Non-professional investor, then he/she wont be able to invest in complex assets when both asset and user is from same country. To invest in assets which are complex user have to classify as - {invest_role}
                 """
         # response = get_gemini_response(question,prompt)
 
@@ -428,11 +437,18 @@ def invest_question_flow(token,domain,asset_name):
         prompt = f"""Understand user's question and based on following information provide most relevant answer to user's query. If you are unable to find answer from following information then revert politely that you do not have information for this question currently however our support team will be able to help you quickly with your query. Please feel free to reach out our team at support@evident.capital
         Asset Basic Overview Information - 
                     {all_asset_details}
+        
+        Special Note - If user is Non-professional investor, then he/she wont be able to invest in complex assets when both asset and user is from same country. To invest in assets which are complex user have to classify as - {invest_role}
+        Also to invest in this asset, kindly reach out to support team via support@evident.capital
         """
     return prompt
 
 
-def general_investment_guidelines(question):
+def general_investment_guidelines(question, user_role):
+    invest_role = "Professional Investor(PI)"
+    if user_role in 'Corp Investor':
+        invest_role = "CPI/IPI"
+
     prompt = f"""User can invest in any asset based on Asset's investment mode. An Asset can be in Trading or in Commitment. Following are ways to invest in any Asset based on its investment mode.
     Provide below information to user to beign with investment.
     1. Trading - 
@@ -442,6 +458,8 @@ def general_investment_guidelines(question):
     Place Ask: Define a price and the amount of units you would like to sell, and place an open order on the order book.\nStep 1: Click on Asset in which you want to invest\nStep 2: Click on 'Invest' tab present at top-right\nStep 3: Scrolldown little bit and Click on 'Place Ask'\nStep 4: Enter Price per unit you want.\nStep 5: Provide number of units you want to sell\nStep 6: Click on 'I agree to the asset specific terms' checkbox, make sure you read all terms carefully if present.\nStep 7: Click on 'Place Ask'.\nIf you are unable to proceed as 'Place Ask' option then check if you have sufficient Units for that asset or not. If not then you can not proceed further."
     
     2. Commitment - You need to specify a Target Total Amount, which will be used to allocate units based on the price per unit. If your Available Balance is less than the Total to be Debited, you’ll need to either add the required amount or choose to Show Interest if you prefer not to add funds immediately. Otherwise, you can proceed directly by clicking Commit Now to confirm your commitment to the asset.
+    
+    Special Note - Asset Name is - "Duplicated asset". If user is Non-professional investor, then he/she wont be able to invest in complex assets. To invest in assets which are complex user have to classify as - {invest_role}
     """    
 
     response = get_gemini_response(question,prompt)
@@ -456,3 +474,39 @@ def deposit_fund(question):
     response = get_gemini_response(question,prompt)
     return response
 
+
+def overall_marketplace_assets(db_alias):
+    # Step 1: Get assets
+    assets_available = models.Asset.objects.using(db_alias).values_list(
+        'id', 'asset_vertical_id', 'name', 'location', 'currency',
+        'investment_mode', 'status_tag', 'visibility', 'structuring', 'rate_of_return')
+
+    # Step 2: Get vertical id-name mapping as a dictionary
+    vertical_names = dict(models.Asset_Verticals.objects.using(db_alias).values_list('id', 'name'))
+
+    # Step 3: Get commitment details as a dictionary keyed by asset_id
+    commitment_details = dict(models.CommitmentDetails.objects.using(db_alias).values_list('asset_id', 'minimum_amount'))
+
+    # Step 4: Merge all
+    merged_assets = "Assets available on Marketplace of Evident's Platform - \n"
+    for asset in assets_available:
+        asset_id = asset[0]
+        asset_vertical_id = asset[1]    
+        merged_assets = merged_assets + f"""
+            'Asset': {asset[2]},
+            'Vertical': {vertical_names.get(asset_vertical_id, 'Unknown')},
+            'Location': {asset[3]},
+            'Currency': {asset[4]},
+            'Investment Mode': {asset[5]},
+            'Deal Status': {asset[6]},
+            'Visibility': {asset[7]},
+            'Structuring': {asset[8]},
+            'Internal Rate of Return/IRR': {asset[9]},
+            'Minimum Investment Amount': {commitment_details.get(asset_id, None)}\n----------------"""
+
+    merged_assets = merged_assets.replace("None","Not Available")
+    prompt = f"""Understand all asset details carefully. If user's question asks for any specific count or other details then based on below provided details calculate or identify and respond to user properly.
+                {merged_assets}
+            """
+    return prompt
+# overall_marketplace_assets('default')

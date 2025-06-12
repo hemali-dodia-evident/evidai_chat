@@ -30,8 +30,8 @@ class BasicPrompts(models.Model):
     id = models.BigAutoField(primary_key=True)
     prompt_category = models.TextField()
     prompt = models.TextField()
-    asset_name = models.TextField(null=True)
-    asset_sub_cat = models.TextField(null=True)
+    # asset_name = models.TextField(null=True)
+    # asset_sub_cat = models.TextField(null=True)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
     
@@ -120,6 +120,16 @@ class Asset(models.Model):
     class Meta:
         db_table = 'assets'
         managed = False
+
+class Asset_Verticals(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255)
+    created_at = models.DateTimeField(null=True)
+    updated_at = models.DateTimeField(null=True)
+
+    class Meta:
+        db_table = 'asset_verticals'
+        managed = False  # Set to False if the table is managed outside Django (e.g., legacy or raw SQL)
 
 class CommitmentDetails(models.Model):
     id = models.AutoField(primary_key=True)  # Primary key with auto-increment
