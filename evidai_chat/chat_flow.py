@@ -81,6 +81,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                  IF QUESTION IS ABOUT USER'S ONBOARDING OR PENDING STEPS OR ANY QUERY ABOUT ONBOARDING OR ANY STEP RELATED TO ONBOARDING THEN REFER "USER's ROLE" AND SELECT CATEGORY ACCORDINGLY, ALSO IF LAST QUESTION CATEGORY WAS RELATED TO "ONBOARDING" THEN SELECT PROPER ONBOARDING CATEGORY.
                  IF QUESTION IS SPECIFYING ONBOARDING CATEGORY THEN RETURN THAT CATEGORY ONLY. DO NOT CONSIDER USER'S ROLE IN THAT CASE.
                  IF QUESTION IS RELATED TO ONBOARDING GIVE PRFERENCE TO CATEGORY BASED ON USER'S ROLE. 
+                 IF ASSET NAME IS MENTIONED OR QUESTION IS RELATED TO PREVIOUS ASSET THEN STRICTLY CONSIDER 'Personal_Assets' OVER 'Owned_Assets'.
                  Greetings: USER IS GREETING WITHOUT ANY OTHER INFORMATION, Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
                  About_Evident: General details about Evident platform. All information about what evident does, how it works, how they operate, their services and plans, fees and structures, about their team, etc.
                  Deposit_Amount: Process to add or deposit fund to account. Or when user's is out of balance or having insufficient fund to invest in any asset, User can do direct bank transfer or they can SWAP amount from one account to another account.
@@ -107,7 +108,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                     - Asset Name, Description, Location, Currency, Asset Code, Investment Mode, Structuring Type, Asset Vertical, Status, Status Tag, Visibility.  
 
                     - **Investment Details:**  
-                    - Target Amount, Minimum Investment Amount, Raised Amount, Investment Start Date, Investment End Date, Open Offers, Number of Investors, Total Invested Amount, User holdings and commitments done by user.  
+                    - Target Amount, Minimum Investment Amount, Raised Amount, Investment Start Date, Investment End Date, Open Offers, Number of Investors, Total Invested Amount 
 
                     - **Exit & Performance Details:**  
                     - Rate of Return, Exit Strategy, Latest Ticker, Previous Ticker.  
@@ -119,7 +120,9 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                         - "Tell me about manager"
                         - "Tell me about OpenAI."
                         - "What is OpenAI’s investment mode?"
-                 Owned_Assets: This contains overall holdings of user, in which assets overall user has made commitment and performed trades. If question is about specific asset holdings, asset name is mentioned, or Last Asset about which user asked - {last_asset} then DO NOT consider this category.
+                    - **User's Holdings:**
+                    - User holdings and commitments done by user as My Commitments and My Holdings for the asset.
+                 Owned_Assets: If question is about specific asset holdings, asset name is mentioned, or Last Asset about which user asked - {last_asset} then DO NOT consider this category. This category contains all holdings of user, in which assets overall user has made commitment and performed trades. 
                  NOTE - IF MORE THAN ONE CATEGORY MATCHES THEN RETURN THEIR NAME WITH "," SEPERATED. 
                  - If user is talking or mentioning platform without specifying name of platform then it simply means Evident platform on which currently they are present. So refer all categories present above then provide answer.
                  E.g. Question: What are the steps for investor onboarding?
