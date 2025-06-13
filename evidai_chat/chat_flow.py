@@ -241,34 +241,30 @@ def users_assets(token,URL):
 
     return my_assets
 
-# users_assets('ODMwNA.GefCAYiMXgLr9yIN-l2YSdCYjS4DFNCT5tI5MnOg-bYxjJzs6iuYApZpdpfE','api-uat.evident.capital')
 
 # Generate response based on provided asset specific detail
 def get_asset_based_response(assets_identified,question,token,URL,user_role):
     final_response = ''
-    # print("in get asset based response  - ",assets_identified)
     try:
         for ass in assets_identified:
-            # print(token,URL,ass)
             data= ap.invest_question_flow(token,URL,ass,user_role)
-            # print(data)
-            # print("got data from invest_question_flow - ", data)
+            
             prompt = f"""General guidelines - {general_guidelines}
-## IF user is Non-PI, user can not invest in complex asset. To invest in complex asset user have to classify as professional investor i.e. PI/CPI/IPI.
-Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about. If question is generic, provide overall short summary of important details.
-{data}
+                        ## IF user is Non-PI, user can not invest in complex asset. To invest in complex asset user have to classify as professional investor i.e. PI/CPI/IPI.
+                        Below is the asset details you have from Evident. Refer them carefully to generate answer. Check what kind of details user is asking about. If question is generic, provide overall short summary of important details.
+                        {data}
 
-Document Access Instructions: 
-Company documents are available through the 'Company Document' section.
-To access: Open 'Company Document' → Agree to the NDA by checking 'I have read and agree to the terms of this NDA.' → Click 'Sign'.
-To download: After signing, click 'Download all'.
+                        Document Access Instructions: 
+                        Company documents are available through the 'Company Document' section.
+                        To access: Open 'Company Document' → Agree to the NDA by checking 'I have read and agree to the terms of this NDA.' → Click 'Sign'.
+                        To download: After signing, click 'Download all'.
 
-Special points to remember:
-1. "Type" and "Vertical" as the same field.
-2. "Target Amount" and "Allocated Amount" also mean the same thing — handle them accordingly.
-"""
+                        Special points to remember:
+                        1. "Type" and "Vertical" as the same field.
+                        2. "Target Amount" and "Allocated Amount" also mean the same thing — handle them accordingly.
+                    """
             response = get_gemini_response(question,prompt)   
-            # print("response --- ", response)   
+
             final_response = final_response + '\n'+ response  
         logger.info(f"asset based response - {final_response}")
     except Exception as e:
@@ -502,6 +498,8 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                 marketplace_data = ap.overall_marketplace_assets(db_alias)
                 prompt = f"""{general_guidelines}  
                             Understand the question and provide response to user, if user is asking about all assets without much specification, provide top 5 records. Do not flood user with lots of data, be sensible while providing information. Also ask user to visit marketplace if want to see more records.
+                            ## Minimum Investment and Maximum Investment will depend of asset. There is not common Minimum and Maximum amount for asset.
+                            ## Also IRR i.e. Internal Rate of Return for any asset may range from 1% to 12%.
                             {marketplace_data}"""
                 response = get_gemini_response(question,prompt)
                 if final_response == "":
@@ -521,14 +519,13 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                         final_response = final_response + '\n' + response
                     asset_found = ",".join(assets_identified)    
                 else:
-                        prompt = f"""This asset is not available with us currently or might be you are asking about Private Asset for which I do not have much information. But you can explore other assets present at our Marketplace or reach out to our support team at support@evident.capital. Feel free to ask about other assets."""
-                        response = prompt
-                        if final_response == "":
-                            final_response = response
-                        else:
-                            final_response = final_response + '\n' + response
-                        asset_found = "" 
-                        failed_cat=True 
+                    prompt = f"""This asset is not available with us currently or might be you are asking about Private Asset for which I do not have much information. But you can explore other assets present at our Marketplace or reach out to our support team at support@evident.capital. Feel free to ask about other assets."""
+                    response = prompt
+                    if final_response == "":
+                        final_response = response
+                    else:
+                        final_response = final_response + '\n' + response
+                    asset_found = "" 
             
             elif 'Owned Assets' in promp_cat:
                 print("Owned asset based")
