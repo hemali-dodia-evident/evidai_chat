@@ -119,7 +119,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                         - "Tell me about manager"
                         - "Tell me about OpenAI."
                         - "What is OpenAI’s investment mode?"
-                 Owned_Assets: This contains overall holdings of user, in which assets overall user has made commitment and performed trades. If question is about specific asset holdings then DO NOT consider this category.
+                 Owned_Assets: This contains overall holdings of user, in which assets overall user has made commitment and performed trades. If question is about specific asset holdings, asset name is mentioned, or Last Asset about which user asked - {last_asset} then DO NOT consider this category.
                  NOTE - IF MORE THAN ONE CATEGORY MATCHES THEN RETURN THEIR NAME WITH "," SEPERATED. 
                  - If user is talking or mentioning platform without specifying name of platform then it simply means Evident platform on which currently they are present. So refer all categories present above then provide answer.
                  E.g. Question: What are the steps for investor onboarding?
