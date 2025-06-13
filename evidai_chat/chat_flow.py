@@ -529,6 +529,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                             final_response = final_response + '\n' + response
                         asset_found = "" 
                         failed_cat=True 
+            
             elif 'Owned Assets' in promp_cat:
                 print("Owned asset based")
                 idx = specific_category.index(promp_cat)
@@ -569,7 +570,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
 
         Eliminate any repetitive statements and keep the response concise. Also Maintain readability, proper line breaks, bold effects as it is present or enhance it.
 
-        If any information is not available just ask user to get in touch with support team at support@evident.capita
+        If any information is not available just ask user to get in touch with support team at support@evident.capital
         
         If required then only provide support email id and details - support@evident.capital
         
