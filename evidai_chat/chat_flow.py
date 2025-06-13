@@ -282,11 +282,10 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
         promp_cat_new = ",".join(promp_cat)
         specific_category = promp_cat_new.replace("_",' ').split(',')
         assets_identified = ""
-        # personalAssets = isPersonalAsset 
-        failed_cat = False
+
         for promp_cat in specific_category:   
             logger.info(f"Getting answer for category - {promp_cat}")    
-            if promp_cat not in ['FAILED','Personal Assets','Asset Investment','Overall Assets']:
+            if promp_cat not in ['FAILED','Personal Assets','Asset Investment','Overall Assets','Owned Assets']:
                 try:
                     if isPI:
                         isPI = "User is Professional Investor(PI)."
@@ -507,7 +506,7 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
                 else:
                     final_response = final_response + '\n' + response
             
-            elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True) or isAssetRelated==True or personalAssets==True:    
+            elif 'Personal Assets' in promp_cat or (isRelated==True and isAssetRelated==True):    
                 logger.info("Prompt Category is Personal Asset") 
                 
                 if 'This Asset is not avaialble right now' not in current_asset:
@@ -656,6 +655,7 @@ def handle_questions(URL,db_alias,token, last_asset, last_ques_cat, user_name, u
         logger.info(f"asset_identified_flag - {asset_identified_flag}")
         if asset_identified_flag != "0":
             current_asset = asset_identified_flag
+            isAssetRelated = True 
 
     response,asset_found,specific_category = category_based_question(URL,db_alias,current_question,promp_cat,token,onboarding_step,isRelated,isAssetRelated,last_ques_cat,current_asset,isPersonalAsset,isAR,isPI,user_role)
 
