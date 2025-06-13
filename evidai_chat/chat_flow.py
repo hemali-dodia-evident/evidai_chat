@@ -83,7 +83,7 @@ def get_prompt_category(current_question,user_role,last_asset,last_ques_cat):
                  IF QUESTION IS RELATED TO ONBOARDING GIVE PRFERENCE TO CATEGORY BASED ON USER'S ROLE. 
                  IF ASSET NAME IS MENTIONED OR QUESTION IS RELATED TO PREVIOUS ASSET THEN STRICTLY CONSIDER 'Personal_Assets' OVER 'Owned_Assets'.
                  Greetings: USER IS GREETING WITHOUT ANY OTHER INFORMATION, Contains generic formal or friendly greetings like hi, hello, how are you, who are you, etc. It DOES NOT contain any other query related to below catrgories mentioned below.
-                 About_Evident: General details about Evident platform. All information about what evident does, how it works, how they operate, their services and plans, fees and structures, about their team, etc.
+                 About_Evident: General details about Evident platform. All information about what evident does, how it works, how they operate, their services and plans, fees and structures, about their team, support contact details, etc.
                  Deposit_Amount: Process to add or deposit fund to account. Or when user's is out of balance or having insufficient fund to invest in any asset, User can do direct bank transfer or they can SWAP amount from one account to another account.
                  Asset_Investment: Complete step by step details about asset trading, place bid, sell asset now, place ask, Buy now assets, Committing on assets. This is only and only related to investing methods in asset.
                  Overall_Assets: Contains collective information of assets present on Marketplace. What type of assets are present, how many assets are there. It can give total number or name of assets which can be filtered as Coming Soon, Realized Investment, On Request, Available for Trading, Completed, Open for Commitments, Private Company Debenture, Note, Bond, Fund, Equity, Private Equity, Private Credit, Infrastructure, Hedge Funds, Real Estate, Collectibles, Fixed Income, Commodities. Also can be filtered by minimum investment amount, and Rate of return. When question is not related to any specific asset and about overall assets present on Evident's platform, marketplace for investment. 
@@ -571,6 +571,10 @@ def category_based_question(URL,db_alias,current_question,promp_cat,token,onboar
 
         If any information is not available just ask user to get in touch with support team at support@evident.capita
         
+        If required then only provide support email id and details - support@evident.capital
+        
+        DO NOT write lots of additional fillers like what you can do what you can not, provide only important information.
+
         Question: "{current_question}"
         """
 
